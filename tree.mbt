@@ -2849,7 +2849,11 @@ fn[C] compute_block_layout_with_measure(
   // Minimal block sizing: border-box.
   let raw_width = match specified_width {
     Some(w) => max_double(w, horiz_inset)
-    None => horiz_inset
+    None =>
+      match available_space.width {
+        AvailDefinite(v) => max_double(v, horiz_inset)
+        _ => horiz_inset
+      }
   }
   let raw_height = match specified_height {
     Some(h) => max_double(h, vert_inset)
@@ -2897,9 +2901,12 @@ fn[C] compute_block_layout_with_measure(
   )
   let flow_available = Size::new(
     width=AvailDefinite(content_width),
-    height=AvailDefinite(content_height),
+    height=match specified_height {
+      Some(_) => AvailDefinite(content_height)
+      None => AvailMaxContent
+    },
   )
-  let mut cursor_y = 0.0
+  let mut flow_cursor_y = 0.0
   for child_id in node.children {
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
@@ -3077,7 +3084,7 @@ fn[C] compute_block_layout_with_measure(
                     v -
                     resolved_margin.right -
                     final_size.width
-                  None => resolved_margin.left
+                  None => padding.left + resolved_margin.left
                 }
             }
             let y_in_padding = match top {
@@ -3089,7 +3096,7 @@ fn[C] compute_block_layout_with_measure(
                     v -
                     resolved_margin.bottom -
                     final_size.height
-                  None => resolved_margin.top
+                  None => padding.top + flow_cursor_y + resolved_margin.top
                 }
             }
             compute_node_layout_with_measure(
@@ -3114,12 +3121,30 @@ fn[C] compute_block_layout_with_measure(
               child_id,
               Size::new(width=None, height=None),
               flow_available,
-              Point::new(x=content_origin.x, y=content_origin.y + cursor_y),
+              Point::new(x=content_origin.x, y=content_origin.y + flow_cursor_y),
               measure_function,
             )
-            cursor_y = cursor_y + tree.nodes[child_id].layout.size.height
+            flow_cursor_y = flow_cursor_y +
+              tree.nodes[child_id].layout.size.height
           }
         }
+    }
+  }
+
+  // Auto height: grow to fit in-flow children, then clamp by min/max.
+  match specified_height {
+    Some(_) => ()
+    None => {
+      let computed = clamp_dimension(
+        max_double(vert_inset + flow_cursor_y, vert_inset),
+        node.style.min_size.height,
+        node.style.max_size.height,
+        available_space.height,
+      )
+      tree.nodes[node_id].layout = Layout::{
+        location: absolute_origin,
+        size: Size::new(width=border_box_width, height=computed),
+      }
     }
   }
 }

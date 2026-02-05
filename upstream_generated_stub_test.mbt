@@ -3117,59 +3117,360 @@ test "upstream/generated/block/block_display_none_with_child" {
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_display_none_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_display_none_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_display_none_with_inset.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default().with_size(Size::new(width=auto(), height=length(10.0))),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node1 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_display(display_none())
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_inset(
+      Rect::new(left=auto(), right=auto(), top=length(10.0), bottom=auto()),
+    ),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let layout = taffy.layout(node)
+  assert_eq(layout.size.width, 100.0)
+  assert_eq(layout.size.height, 100.0)
+  assert_eq(layout.location.x, 0.0)
+  assert_eq(layout.location.y, 0.0)
+  let c0 = taffy.layout(node0)
+  assert_eq(c0.size.width, 100.0)
+  assert_eq(c0.size.height, 10.0)
+  assert_eq(c0.location.x, 0.0)
+  assert_eq(c0.location.y, 0.0)
+  let c1 = taffy.layout(node1)
+  assert_eq(c1.size.width, 0.0)
+  assert_eq(c1.size.height, 0.0)
+  assert_eq(c1.location.x, 0.0)
+  assert_eq(c1.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_display_none_with_margin" {
-  // TODO: port from taffy-reference/tests/generated/block/block_display_none_with_margin.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_display_none_with_margin.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_display(display_none())
+    .with_size(Size::new(width=length(20.0), height=length(20.0)))
+    .with_margin(
+      Rect::new(
+        left=length(10.0),
+        right=length(10.0),
+        top=length(10.0),
+        bottom=length(10.0),
+      ),
+    ),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node1 = taffy.new_leaf_with_context(
+    Style::default().with_size(Size::new(width=auto(), height=length(10.0))),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let layout = taffy.layout(node)
+  assert_eq(layout.size.width, 100.0)
+  assert_eq(layout.size.height, 100.0)
+  assert_eq(layout.location.x, 0.0)
+  assert_eq(layout.location.y, 0.0)
+  let c0 = taffy.layout(node0)
+  assert_eq(c0.size.width, 0.0)
+  assert_eq(c0.size.height, 0.0)
+  assert_eq(c0.location.x, 0.0)
+  assert_eq(c0.location.y, 0.0)
+  let c1 = taffy.layout(node1)
+  assert_eq(c1.size.width, 100.0)
+  assert_eq(c1.size.height, 10.0)
+  assert_eq(c1.location.x, 0.0)
+  assert_eq(c1.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_display_none_with_position_absolute" {
-  // TODO: port from taffy-reference/tests/generated/block/block_display_none_with_position_absolute.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_display_none_with_position_absolute.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_display(display_none())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let layout = taffy.layout(node)
+  assert_eq(layout.size.width, 100.0)
+  assert_eq(layout.size.height, 100.0)
+  assert_eq(layout.location.x, 0.0)
+  assert_eq(layout.location.y, 0.0)
+  let c0 = taffy.layout(node0)
+  assert_eq(c0.size.width, 0.0)
+  assert_eq(c0.size.height, 0.0)
+  assert_eq(c0.location.x, 0.0)
+  assert_eq(c0.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_inset_fixed" {
-  // TODO: port from taffy-reference/tests/generated/block/block_inset_fixed.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_inset_fixed.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_inset(
+      Rect::new(left=length(2.0), right=auto(), top=length(4.0), bottom=auto()),
+    ),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node1 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_inset(
+      Rect::new(left=auto(), right=length(6.0), top=auto(), bottom=length(8.0)),
+    ),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_inset(
+      Rect::new(
+        left=length(2.0),
+        right=length(6.0),
+        top=length(4.0),
+        bottom=length(8.0),
+      ),
+    ),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=auto())),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let layout = taffy.layout(node)
+  assert_eq(layout.size.width, 50.0)
+  assert_eq(layout.size.height, 30.0)
+  assert_eq(layout.location.x, 0.0)
+  assert_eq(layout.location.y, 0.0)
+  let c0 = taffy.layout(node0)
+  assert_eq(c0.size.width, 50.0)
+  assert_eq(c0.size.height, 10.0)
+  assert_eq(c0.location.x, 2.0)
+  assert_eq(c0.location.y, 4.0)
+  let c1 = taffy.layout(node1)
+  assert_eq(c1.size.width, 50.0)
+  assert_eq(c1.size.height, 10.0)
+  assert_eq(c1.location.x, -6.0)
+  assert_eq(c1.location.y, 2.0)
+  let c2 = taffy.layout(node2)
+  assert_eq(c2.size.width, 50.0)
+  assert_eq(c2.size.height, 10.0)
+  assert_eq(c2.location.x, 2.0)
+  assert_eq(c2.location.y, 24.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_inset_percentage" {
-  // TODO: port from taffy-reference/tests/generated/block/block_inset_percentage.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_inset_percentage.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_inset(
+      Rect::new(
+        left=percent(0.02),
+        right=auto(),
+        top=percent(0.04),
+        bottom=auto(),
+      ),
+    ),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node1 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_inset(
+      Rect::new(
+        left=auto(),
+        right=percent(0.06),
+        top=auto(),
+        bottom=percent(0.08),
+      ),
+    ),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_inset(
+      Rect::new(
+        left=percent(0.02),
+        right=percent(0.06),
+        top=percent(0.04),
+        bottom=percent(0.08),
+      ),
+    ),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=auto())),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let layout = taffy.layout(node)
+  assert_eq(layout.size.width, 50.0)
+  assert_eq(layout.size.height, 30.0)
+  assert_eq(layout.location.x, 0.0)
+  assert_eq(layout.location.y, 0.0)
+  let c0 = taffy.layout(node0)
+  assert_eq(c0.size.width, 50.0)
+  assert_eq(c0.size.height, 10.0)
+  assert_eq(c0.location.x, 1.0)
+  assert_eq(c0.location.y, 0.0)
+  let c1 = taffy.layout(node1)
+  assert_eq(c1.size.width, 50.0)
+  assert_eq(c1.size.height, 10.0)
+  assert_eq(c1.location.x, -3.0)
+  assert_eq(c1.location.y, 10.0)
+  let c2 = taffy.layout(node2)
+  assert_eq(c2.size.width, 50.0)
+  assert_eq(c2.size.height, 10.0)
+  assert_eq(c2.location.x, 1.0)
+  assert_eq(c2.location.y, 20.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_intrinsic_width" {
-  // TODO: port from taffy-reference/tests/generated/block/block_intrinsic_width.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_intrinsic_width.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default().with_size(
+      Size::new(width=length(50.0), height=length(10.0)),
+    ),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node1 = taffy.new_leaf_with_context(
+    Style::default().with_size(Size::new(width=auto(), height=length(10.0))),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default().with_display(display_block()),
+    [node0, node1],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let layout = taffy.layout(node)
+  assert_eq(layout.size.width, 50.0)
+  assert_eq(layout.size.height, 20.0)
+  assert_eq(layout.location.x, 0.0)
+  assert_eq(layout.location.y, 0.0)
+  let c0 = taffy.layout(node0)
+  assert_eq(c0.size.width, 50.0)
+  assert_eq(c0.size.height, 10.0)
+  assert_eq(c0.location.x, 0.0)
+  assert_eq(c0.location.y, 0.0)
+  let c1 = taffy.layout(node1)
+  assert_eq(c1.size.width, 50.0)
+  assert_eq(c1.size.height, 10.0)
+  assert_eq(c1.location.x, 0.0)
+  assert_eq(c1.location.y, 10.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_item_max_width" {
-  // TODO: port from taffy-reference/tests/generated/block/block_item_max_width.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_item_max_width.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(50.0)))
+    .with_max_size(Size::new(width=length(100.0), height=auto())),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node1 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(50.0)))
+    .with_max_size(Size::new(width=length(300.0), height=auto())),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let layout = taffy.layout(node)
+  assert_eq(layout.size.width, 200.0)
+  assert_eq(layout.size.height, 200.0)
+  assert_eq(layout.location.x, 0.0)
+  assert_eq(layout.location.y, 0.0)
+  let c0 = taffy.layout(node0)
+  assert_eq(c0.size.width, 100.0)
+  assert_eq(c0.size.height, 50.0)
+  assert_eq(c0.location.x, 0.0)
+  assert_eq(c0.location.y, 0.0)
+  let c1 = taffy.layout(node1)
+  assert_eq(c1.size.width, 200.0)
+  assert_eq(c1.size.height, 50.0)
+  assert_eq(c1.location.x, 0.0)
+  assert_eq(c1.location.y, 50.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_item_min_width_overrides_max_width" {
-  // TODO: port from taffy-reference/tests/generated/block/block_item_min_width_overrides_max_width.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_item_min_width_overrides_max_width.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(50.0)))
+    .with_min_size(Size::new(width=length(200.0), height=auto()))
+    .with_max_size(Size::new(width=length(50.0), height=auto())),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let layout = taffy.layout(node)
+  assert_eq(layout.size.width, 100.0)
+  assert_eq(layout.size.height, 100.0)
+  assert_eq(layout.location.x, 0.0)
+  assert_eq(layout.location.y, 0.0)
+  let c0 = taffy.layout(node0)
+  assert_eq(c0.size.width, 200.0)
+  assert_eq(c0.size.height, 50.0)
+  assert_eq(c0.location.x, 0.0)
+  assert_eq(c0.location.y, 0.0)
 }
 
 ///|

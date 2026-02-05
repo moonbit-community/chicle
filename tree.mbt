@@ -3440,7 +3440,7 @@ fn[C] compute_block_layout_with_measure(
         horiz_inset,
       )
   }
-  let final_border_box_height = match specified_height {
+  let mut final_border_box_height = match specified_height {
     Some(_) => border_box_height
     None =>
       max_double(
@@ -3452,6 +3452,233 @@ fn[C] compute_block_layout_with_measure(
         ),
         vert_inset,
       )
+  }
+  // Taffy block layout computes container width first, then performs final in-flow layout with that width.
+  // When this container's width is auto, do a second layout pass so that in-flow children can stretch
+  // (e.g. auto-width block children) and so that absolute children's static y positions are correct.
+  if not(width_definite) {
+    let final_content_width_for_flow = max_double(
+      final_border_box_width - horiz_inset,
+      0.0,
+    )
+    let final_content_height_for_flow = max_double(
+      final_border_box_height - vert_inset,
+      0.0,
+    )
+    let flow_available2 = Size::new(
+      width=AvailDefinite(final_content_width_for_flow),
+      height=match specified_height {
+        Some(_) => AvailDefinite(final_content_height_for_flow)
+        None => AvailMaxContent
+      },
+    )
+    let margin_basis_available2 = Size::new(
+      width=AvailDefinite(final_content_width_for_flow),
+      height=flow_available2.height,
+    )
+    abs_child_ids.clear()
+    abs_child_static_y.clear()
+    flow_cursor_y = 0.0
+    max_flow_child_width = 0.0
+    let content_width_for_flow2 = final_content_width_for_flow
+    for child_id in node.children {
+      let child = match tree.nodes.get(child_id) {
+        Some(c) => c
+        None => raise InvalidNodeId(child_id)
+      }
+      match child.style.display {
+        DisplayNone => compute_hidden_layout(tree, child_id, Point::zero())
+        _ =>
+          match child.style.position {
+            PosAbsolute => {
+              abs_child_ids.push(child_id)
+              abs_child_static_y.push(flow_cursor_y)
+            }
+            PosRelative => {
+              let margin = child.style.margin
+              let margin_left_auto = margin.left is DimAuto
+              let margin_right_auto = margin.right is DimAuto
+              let margin_top_auto = margin.top is DimAuto
+              let margin_bottom_auto = margin.bottom is DimAuto
+              let resolved_margin = resolve_rect_width_basis(
+                margin, margin_basis_available2,
+              )
+              let fixed_margin_left = if margin_left_auto {
+                0.0
+              } else {
+                resolved_margin.left
+              }
+              let fixed_margin_right = if margin_right_auto {
+                0.0
+              } else {
+                resolved_margin.right
+              }
+              let fixed_margin_top = if margin_top_auto {
+                0.0
+              } else {
+                resolved_margin.top
+              }
+              let fixed_margin_bottom = if margin_bottom_auto {
+                0.0
+              } else {
+                resolved_margin.bottom
+              }
+              let child_width_auto = child.style.size.width is DimAuto
+              let aspect_ratio = child.style.aspect_ratio
+              let width_from_aspect = match
+                (aspect_ratio, child.style.size.width) {
+                (Some(ratio), DimAuto) =>
+                  match
+                    resolve_optional_dimension(
+                      child.style.size.height,
+                      flow_available2.height,
+                    ) {
+                    Some(h) if ratio > 0.0 => Some((h * ratio).round())
+                    _ => None
+                  }
+                _ => None
+              }
+              let mut target_width = match width_from_aspect {
+                Some(w) => Some(w)
+                None =>
+                  if child_width_auto {
+                    Some(
+                      max_double(
+                        content_width_for_flow2 -
+                        fixed_margin_left -
+                        fixed_margin_right,
+                        0.0,
+                      ),
+                    )
+                  } else {
+                    None
+                  }
+              }
+              match target_width {
+                Some(w) => {
+                  let mut min_width = resolve_optional_dimension(
+                    child.style.min_size.width,
+                    flow_available2.width,
+                  )
+                  let mut max_width = resolve_optional_dimension(
+                    child.style.max_size.width,
+                    flow_available2.width,
+                  )
+                  match aspect_ratio {
+                    Some(ratio) =>
+                      if ratio > 0.0 {
+                        match
+                          (
+                            min_width,
+                            resolve_optional_dimension(
+                              child.style.min_size.height,
+                              flow_available2.height,
+                            ),
+                          ) {
+                          (None, Some(h)) =>
+                            min_width = Some((h * ratio).round())
+                          _ => ()
+                        }
+                        match
+                          (
+                            max_width,
+                            resolve_optional_dimension(
+                              child.style.max_size.height,
+                              flow_available2.height,
+                            ),
+                          ) {
+                          (None, Some(h)) =>
+                            max_width = Some((h * ratio).round())
+                          _ => ()
+                        }
+                      } else {
+                        ()
+                      }
+                    None => ()
+                  }
+                  let mut clamped = w
+                  match min_width {
+                    Some(m) => clamped = max_double(clamped, m)
+                    None => ()
+                  }
+                  match max_width {
+                    Some(m) => if clamped > m { clamped = m } else { () }
+                    None => ()
+                  }
+                  target_width = Some(clamped)
+                }
+                None => ()
+              }
+              compute_node_layout_with_measure(
+                tree,
+                child_id,
+                Size::new(width=target_width, height=None),
+                flow_available2,
+                Point::new(
+                  x=content_origin.x + fixed_margin_left,
+                  y=content_origin.y + flow_cursor_y + fixed_margin_top,
+                ),
+                measure_function,
+              )
+              let child_size = tree.nodes[child_id].layout.size
+              let remaining = content_width_for_flow2 -
+                fixed_margin_left -
+                fixed_margin_right -
+                child_size.width
+              let mut auto_left = 0.0
+              let mut auto_right = 0.0
+              if margin_left_auto && margin_right_auto {
+                if remaining > 0.0 {
+                  auto_left = remaining / 2.0
+                  auto_right = remaining / 2.0
+                } else {
+                  auto_left = 0.0
+                  auto_right = 0.0
+                }
+              } else if margin_left_auto {
+                auto_left = if remaining > 0.0 { remaining } else { 0.0 }
+              } else if margin_right_auto {
+                auto_right = if remaining > 0.0 { remaining } else { 0.0 }
+              } else {
+                ()
+              }
+              if auto_left != 0.0 {
+                offset_subtree(tree, child_id, auto_left, 0.0)
+              } else {
+                ()
+              }
+              flow_cursor_y = flow_cursor_y +
+                fixed_margin_top +
+                child_size.height +
+                fixed_margin_bottom
+              let child_outer_width = fixed_margin_left +
+                auto_left +
+                child_size.width +
+                fixed_margin_right +
+                auto_right
+              if child_outer_width > max_flow_child_width {
+                max_flow_child_width = child_outer_width
+              } else {
+                ()
+              }
+            }
+          }
+      }
+    }
+    // Update auto height after reflow.
+    final_border_box_height = match specified_height {
+      Some(_) => final_border_box_height
+      None =>
+        max_double(
+          clamp_dimension(
+            max_double(vert_inset + flow_cursor_y, vert_inset),
+            node.style.min_size.height,
+            node.style.max_size.height,
+            available_space.height,
+          ),
+          vert_inset,
+        )
+    }
   }
   tree.nodes[node_id].layout = Layout::{
     location: absolute_origin,

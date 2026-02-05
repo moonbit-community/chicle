@@ -2385,6 +2385,10 @@ fn[C] compute_grid_layout_with_measure(
       continue
     }
     let child_id = node.children[i]
+    let child = match tree.nodes.get(child_id) {
+      Some(c0) => c0
+      None => raise InvalidNodeId(child_id)
+    }
     let c = placed_col[i]
     let col_span = placed_col_span[i]
     let gap_total = col_gap * (col_span - 1).to_double()
@@ -2400,7 +2404,14 @@ fn[C] compute_grid_layout_with_measure(
       false,
     )
     let max_sz = tree.nodes[child_id].layout.size
-    let max_needed = max_double(max_sz.width - gap_total, 0.0)
+    let resolved_margin = resolve_rect_width_basis(
+      child.style.margin,
+      Size::new(width=AvailMaxContent, height=AvailMaxContent),
+    )
+    let max_needed = max_double(
+      max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
+      0.0,
+    )
     let max_share = max_needed / col_span.to_double()
     for j in c..<(c + col_span) {
       if max_share > col_max_contrib[j] {
@@ -2419,7 +2430,10 @@ fn[C] compute_grid_layout_with_measure(
       false,
     )
     let min_col = tree.nodes[child_id].layout.size.width
-    let min_needed = max_double(min_col - gap_total, 0.0)
+    let min_needed = max_double(
+      min_col + resolved_margin.left + resolved_margin.right - gap_total,
+      0.0,
+    )
     let min_share = min_needed / col_span.to_double()
     for j in c..<(c + col_span) {
       if min_share > col_min_contrib[j] {
@@ -2561,6 +2575,10 @@ fn[C] compute_grid_layout_with_measure(
       continue
     }
     let child_id = node.children[i]
+    let child = match tree.nodes.get(child_id) {
+      Some(c0) => c0
+      None => raise InvalidNodeId(child_id)
+    }
     let c = placed_col[i]
     let col_span = placed_col_span[i]
     let r = placed_row[i]
@@ -2585,7 +2603,14 @@ fn[C] compute_grid_layout_with_measure(
       false,
     )
     let max_h = tree.nodes[child_id].layout.size.height
-    let max_needed = max_double(max_h - row_gap_total, 0.0)
+    let resolved_margin = resolve_rect_width_basis(
+      child.style.margin,
+      Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
+    )
+    let max_needed = max_double(
+      max_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
+      0.0,
+    )
     let max_share = max_needed / row_span.to_double()
     for j in r..<(r + row_span) {
       if max_share > row_max_contrib[j] {
@@ -2604,7 +2629,10 @@ fn[C] compute_grid_layout_with_measure(
       false,
     )
     let min_h = tree.nodes[child_id].layout.size.height
-    let min_needed = max_double(min_h - row_gap_total, 0.0)
+    let min_needed = max_double(
+      min_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
+      0.0,
+    )
     let min_share = min_needed / row_span.to_double()
     for j in r..<(r + row_span) {
       if min_share > row_min_contrib[j] {
@@ -2716,6 +2744,10 @@ fn[C] compute_grid_layout_with_measure(
         continue
       }
       let child_id = node.children[i]
+      let child = match tree.nodes.get(child_id) {
+        Some(c0) => c0
+        None => raise InvalidNodeId(child_id)
+      }
       let c = placed_col[i]
       let col_span = placed_col_span[i]
       let gap_total = col_gap * (col_span - 1).to_double()
@@ -2729,7 +2761,14 @@ fn[C] compute_grid_layout_with_measure(
         false,
       )
       let max_sz = tree.nodes[child_id].layout.size
-      let max_needed = max_double(max_sz.width - gap_total, 0.0)
+      let resolved_margin = resolve_rect_width_basis(
+        child.style.margin,
+        Size::new(width=AvailMaxContent, height=AvailMaxContent),
+      )
+      let max_needed = max_double(
+        max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
+        0.0,
+      )
       let max_share = max_needed / col_span.to_double()
       for j in c..<(c + col_span) {
         if max_share > col_max_contrib[j] {
@@ -2746,7 +2785,10 @@ fn[C] compute_grid_layout_with_measure(
         false,
       )
       let min_col = tree.nodes[child_id].layout.size.width
-      let min_needed = max_double(min_col - gap_total, 0.0)
+      let min_needed = max_double(
+        min_col + resolved_margin.left + resolved_margin.right - gap_total,
+        0.0,
+      )
       let min_share = min_needed / col_span.to_double()
       for j in c..<(c + col_span) {
         if min_share > col_min_contrib[j] {
@@ -2767,6 +2809,10 @@ fn[C] compute_grid_layout_with_measure(
         continue
       }
       let child_id = node.children[i]
+      let child = match tree.nodes.get(child_id) {
+        Some(c0) => c0
+        None => raise InvalidNodeId(child_id)
+      }
       let c = placed_col[i]
       let col_span = placed_col_span[i]
       let r = placed_row[i]
@@ -2789,7 +2835,14 @@ fn[C] compute_grid_layout_with_measure(
         false,
       )
       let max_h = tree.nodes[child_id].layout.size.height
-      let max_needed = max_double(max_h - row_gap_total, 0.0)
+      let resolved_margin = resolve_rect_width_basis(
+        child.style.margin,
+        Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
+      )
+      let max_needed = max_double(
+        max_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
+        0.0,
+      )
       let max_share = max_needed / row_span.to_double()
       for j in r..<(r + row_span) {
         if max_share > row_max_contrib[j] {
@@ -2806,7 +2859,10 @@ fn[C] compute_grid_layout_with_measure(
         false,
       )
       let min_h = tree.nodes[child_id].layout.size.height
-      let min_needed = max_double(min_h - row_gap_total, 0.0)
+      let min_needed = max_double(
+        min_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
+        0.0,
+      )
       let min_share = min_needed / row_span.to_double()
       for j in r..<(r + row_span) {
         if min_share > row_min_contrib[j] {
@@ -3078,6 +3134,23 @@ fn[C] compute_grid_layout_with_measure(
           width=AvailDefinite(cell_w),
           height=AvailDefinite(cell_h),
         )
+        // Grid item margins apply inside the cell and contribute to track sizing.
+        let resolved_margin = resolve_rect_width_basis(
+          child.style.margin,
+          child_available,
+        )
+        let available_w_for_item = max_double(
+          cell_w - resolved_margin.left - resolved_margin.right,
+          0.0,
+        )
+        let available_h_for_item = max_double(
+          cell_h - resolved_margin.top - resolved_margin.bottom,
+          0.0,
+        )
+        let item_available = Size::new(
+          width=AvailDefinite(available_w_for_item),
+          height=AvailDefinite(available_h_for_item),
+        )
         let justify = match child.style.justify_self {
           Some(v) => v
           None => default_justify_items
@@ -3089,7 +3162,7 @@ fn[C] compute_grid_layout_with_measure(
         let known_w = match justify {
           ItemsStretch =>
             if child.style.size.width is DimAuto {
-              Some(cell_w)
+              Some(available_w_for_item)
             } else {
               None
             }
@@ -3098,7 +3171,7 @@ fn[C] compute_grid_layout_with_measure(
         let known_h = match align {
           ItemsStretch =>
             if child.style.size.height is DimAuto {
-              Some(cell_h)
+              Some(available_h_for_item)
             } else {
               None
             }
@@ -3110,20 +3183,20 @@ fn[C] compute_grid_layout_with_measure(
           tree,
           child_id,
           Size::new(width=known_w, height=known_h),
-          child_available,
+          item_available,
           Point::zero(),
           measure_function,
           false,
         )
         let intrinsic = tree.nodes[child_id].layout.size
         let offset_x = match justify {
-          ItemsEnd | ItemsFlexEnd => cell_w - intrinsic.width
-          ItemsCenter => (cell_w - intrinsic.width) / 2.0
+          ItemsEnd | ItemsFlexEnd => available_w_for_item - intrinsic.width
+          ItemsCenter => (available_w_for_item - intrinsic.width) / 2.0
           _ => 0.0
         }
         let offset_y = match align {
-          ItemsEnd | ItemsFlexEnd => cell_h - intrinsic.height
-          ItemsCenter => (cell_h - intrinsic.height) / 2.0
+          ItemsEnd | ItemsFlexEnd => available_h_for_item - intrinsic.height
+          ItemsCenter => (available_h_for_item - intrinsic.height) / 2.0
           _ => 0.0
         }
 
@@ -3132,14 +3205,23 @@ fn[C] compute_grid_layout_with_measure(
           tree,
           child_id,
           Size::new(width=known_w, height=known_h),
-          child_available,
-          Point::new(x=base_x + x + offset_x, y=base_y + y + offset_y),
+          item_available,
+          Point::new(
+            x=base_x + x + resolved_margin.left + offset_x,
+            y=base_y + y + resolved_margin.top + offset_y,
+          ),
           measure_function,
           false,
         )
       }
     }
   }
+  let resolved_margin = resolve_rect_width_basis(
+    node.style.margin,
+    available_space,
+  )
+  tree.nodes[node_id].effective_margin_top = resolved_margin.top
+  tree.nodes[node_id].effective_margin_bottom = resolved_margin.bottom
 }
 
 ///|
@@ -3333,6 +3415,10 @@ fn[C] compute_block_layout_with_measure(
     child : Node[C],
     child_size : Size[Double],
   ) -> Bool raise TaffyError {
+    match child.style.display {
+      DisplayBlock => ()
+      _ => return false
+    }
     if child_size.height != 0.0 {
       return false
     } else {
@@ -3396,14 +3482,34 @@ fn[C] compute_block_layout_with_measure(
   let collapse_with_children = not(is_layout_root) &&
     parent_overflow_visible &&
     specified_height is None
+  let first_child_allows_parent_child_collapse = match first_in_flow_child {
+    Some(child_id) => {
+      let child = match tree.nodes.get(child_id) {
+        Some(c) => c
+        None => raise InvalidNodeId(child_id)
+      }
+      child.style.display is DisplayBlock
+    }
+    None => false
+  }
+  let last_child_allows_parent_child_collapse = match last_in_flow_child {
+    Some(child_id) => {
+      let child = match tree.nodes.get(child_id) {
+        Some(c) => c
+        None => raise InvalidNodeId(child_id)
+      }
+      child.style.display is DisplayBlock
+    }
+    None => false
+  }
   let collapse_top_with_child = collapse_with_children &&
     padding.top == 0.0 &&
     border.top == 0.0 &&
-    first_in_flow_child is Some(_)
+    first_child_allows_parent_child_collapse
   let collapse_bottom_with_child = collapse_with_children &&
     padding.bottom == 0.0 &&
     border.bottom == 0.0 &&
-    last_in_flow_child is Some(_)
+    last_child_allows_parent_child_collapse
   let abs_child_ids : Array[NodeId] = []
   let abs_child_static_y : Array[Double] = []
   let mut flow_anchor_border_bottom : Double = 0.0
@@ -4575,6 +4681,14 @@ fn[C] compute_flex_layout_with_measure(
   } else {
     0.0
   }
+  let intrinsic_available_for_children = if is_col {
+    Size::new(width=parent_available_for_children.width, height=AvailMaxContent)
+  } else {
+    Size::new(
+      width=AvailMaxContent,
+      height=parent_available_for_children.height,
+    )
+  }
   for i in 0..<flow_count {
     let child_id = flow_children[i]
     let child = match tree.nodes.get(child_id) {
@@ -4614,7 +4728,7 @@ fn[C] compute_flex_layout_with_measure(
       tree,
       child_id,
       Size::new(width=None, height=None),
-      parent_available_for_children,
+      intrinsic_available_for_children,
       Point::zero(),
       measure_function,
       false,

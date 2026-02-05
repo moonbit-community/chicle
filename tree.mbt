@@ -1,0 +1,3328 @@
+///|
+suberror TaffyError {
+  InvalidNodeId(Int)
+}
+
+///|
+pub type NodeId = Int
+
+///|
+pub struct Layout {
+  location : Point[Double]
+  size : Size[Double]
+}
+
+///|
+pub fn Layout::zero() -> Layout {
+  Layout::{ location: Point::zero(), size: Size::zero() }
+}
+
+///|
+struct Node[C] {
+  mut style : Style
+  children : Array[NodeId]
+  mut parent : NodeId?
+  mut layout : Layout
+  mut context : C?
+}
+
+///|
+pub struct TaffyTree[C] {
+  priv nodes : Array[Node[C]]
+}
+
+///|
+pub fn[C] TaffyTree::new() -> TaffyTree[C] {
+  TaffyTree::{ nodes: [] }
+}
+
+///|
+pub fn[C] TaffyTree::with_capacity(_capacity : Int) -> TaffyTree[C] {
+  // Array capacity is backend-dependent; keep API surface but ignore the hint for now.
+  TaffyTree::new()
+}
+
+///|
+pub fn[C] TaffyTree::new_leaf(self : TaffyTree[C], style : Style) -> NodeId {
+  let id = self.nodes.length()
+  self.nodes.append([
+    Node::{
+      style,
+      children: [],
+      parent: None,
+      layout: Layout::zero(),
+      context: None,
+    },
+  ])
+  id
+}
+
+///|
+pub fn[C] TaffyTree::new_leaf_with_context(
+  self : TaffyTree[C],
+  style : Style,
+  context : C,
+) -> NodeId {
+  let id = self.nodes.length()
+  self.nodes.append([
+    Node::{
+      style,
+      children: [],
+      parent: None,
+      layout: Layout::zero(),
+      context: Some(context),
+    },
+  ])
+  id
+}
+
+///|
+pub fn[C] TaffyTree::new_with_children(
+  self : TaffyTree[C],
+  style : Style,
+  children : Array[NodeId],
+) -> NodeId {
+  let id = self.nodes.length()
+  self.nodes.append([
+    Node::{
+      style,
+      children,
+      parent: None,
+      layout: Layout::zero(),
+      context: None,
+    },
+  ])
+  for child_id in children {
+    self.nodes[child_id].parent = Some(id)
+  }
+  id
+}
+
+///|
+pub fn[C] TaffyTree::set_node_context(
+  self : TaffyTree[C],
+  node : NodeId,
+  context : C,
+) -> Unit raise TaffyError {
+  match self.nodes.get(node) {
+    Some(_) => self.nodes[node].context = Some(context)
+    None => raise InvalidNodeId(node)
+  }
+}
+
+///|
+pub fn[C] TaffyTree::clear_node_context(
+  self : TaffyTree[C],
+  node : NodeId,
+) -> Unit raise TaffyError {
+  match self.nodes.get(node) {
+    Some(_) => self.nodes[node].context = None
+    None => raise InvalidNodeId(node)
+  }
+}
+
+///|
+pub fn[C] TaffyTree::layout(
+  self : TaffyTree[C],
+  node : NodeId,
+) -> Layout raise TaffyError {
+  let node_ref = match self.nodes.get(node) {
+    Some(n) => n
+    None => raise InvalidNodeId(node)
+  }
+  let layout = node_ref.layout
+  match node_ref.parent {
+    None => layout
+    Some(parent_id) => {
+      let parent = match self.nodes.get(parent_id) {
+        Some(p) => p
+        None => raise InvalidNodeId(parent_id)
+      }
+      let parent_layout = parent.layout
+      Layout::{
+        location: Point::new(
+          x=layout.location.x - parent_layout.location.x,
+          y=layout.location.y - parent_layout.location.y,
+        ),
+        size: layout.size,
+      }
+    }
+  }
+}
+
+///|
+pub fn[C] TaffyTree::set_style(
+  self : TaffyTree[C],
+  node : NodeId,
+  style : Style,
+) -> Unit raise TaffyError {
+  match self.nodes.get(node) {
+    Some(_) => self.nodes[node].style = style
+    None => raise InvalidNodeId(node)
+  }
+}
+
+///|
+pub fn[C] TaffyTree::compute_layout(
+  self : TaffyTree[C],
+  root : NodeId,
+  available_space : Size[AvailableSpace],
+) -> Unit raise TaffyError {
+  fn default_measure(
+    _known_dimensions : Size[Double?],
+    _available_space : Size[AvailableSpace],
+    _node_id : NodeId,
+    _context : C?,
+    _style : Style,
+  ) -> Size[Double] {
+    Size::zero()
+  }
+
+  self.compute_layout_with_measure(root, available_space, default_measure)
+}
+
+///|
+pub fn[C] TaffyTree::compute_layout_with_measure(
+  self : TaffyTree[C],
+  root : NodeId,
+  available_space : Size[AvailableSpace],
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ],
+) -> Unit raise TaffyError {
+  compute_node_layout_with_measure(
+    self,
+    root,
+    Size::new(width=None, height=None),
+    available_space,
+    Point::zero(),
+    measure_function,
+  )
+}
+
+///|
+fn resolve_dimension(d : Dimension, available : AvailableSpace) -> Double {
+  match d {
+    DimAuto => 0.0
+    DimLength(v) => v
+    DimPercent(p) =>
+      match available {
+        AvailDefinite(v) => v * p
+        AvailMinContent => 0.0
+        AvailMaxContent => 0.0
+      }
+    DimFr(_) => 0.0
+    DimMinMax(_, max) => resolve_dimension(max, available)
+    DimMinContent => 0.0
+    DimMaxContent => 0.0
+    DimFitContent(_) => 0.0
+    DimRepeat(_, _) => 0.0
+  }
+}
+
+///|
+fn max_double(a : Double, b : Double) -> Double {
+  if a > b {
+    a
+  } else {
+    b
+  }
+}
+
+///|
+fn resolve_optional_dimension(
+  d : Dimension,
+  available : AvailableSpace,
+) -> Double? {
+  match d {
+    DimAuto => None
+    DimLength(v) => Some(v)
+    DimPercent(p) =>
+      match available {
+        AvailDefinite(v) => Some(v * p)
+        _ => None
+      }
+    DimFr(_) => None
+    DimMinMax(_, max) => resolve_optional_dimension(max, available)
+    DimMinContent => None
+    DimMaxContent => None
+    DimFitContent(_) => None
+    DimRepeat(_, _) => None
+  }
+}
+
+///|
+fn clamp_dimension(
+  value : Double,
+  min_size : Dimension,
+  max_size : Dimension,
+  available : AvailableSpace,
+) -> Double {
+  let min_v = resolve_optional_dimension(min_size, available)
+  let max_v = resolve_optional_dimension(max_size, available)
+  let v0 = match min_v {
+    Some(min_v) => max_double(value, min_v)
+    None => value
+  }
+  match max_v {
+    Some(max_v) => if v0 > max_v { max_v } else { v0 }
+    None => v0
+  }
+}
+
+///|
+fn resolve_dimension_width_basis(d : Dimension, basis_width : Double) -> Double {
+  match d {
+    DimAuto => 0.0
+    DimLength(v) => v
+    DimPercent(p) => basis_width * p
+    DimFr(_) => 0.0
+    DimMinMax(_, max) => resolve_dimension_width_basis(max, basis_width)
+    DimMinContent => 0.0
+    DimMaxContent => 0.0
+    DimFitContent(_) => 0.0
+    DimRepeat(_, _) => 0.0
+  }
+}
+
+///|
+fn resolve_rect_width_basis(
+  rect : Rect[Dimension],
+  available : Size[AvailableSpace],
+) -> Rect[Double] {
+  let basis_width = match available.width {
+    AvailDefinite(v) => v
+    _ => 0.0
+  }
+  Rect::new(
+    left=resolve_dimension_width_basis(rect.left, basis_width),
+    right=resolve_dimension_width_basis(rect.right, basis_width),
+    top=resolve_dimension_width_basis(rect.top, basis_width),
+    bottom=resolve_dimension_width_basis(rect.bottom, basis_width),
+  )
+}
+
+///|
+fn abs_double(v : Double) -> Double {
+  if v < 0.0 {
+    -v
+  } else {
+    v
+  }
+}
+
+///|
+fn resolve_track_dimension(d : Dimension, available : Double) -> Double {
+  match d {
+    DimAuto => 0.0
+    DimLength(v) => v
+    DimPercent(p) => available * p
+    DimFr(_) => 0.0
+    DimMinMax(_, max) => resolve_track_dimension(max, available)
+    DimMinContent => 0.0
+    DimMaxContent => 0.0
+    DimFitContent(limit) => resolve_track_dimension(limit, available)
+    DimRepeat(_, _) => 0.0
+  }
+}
+
+///|
+fn is_near_int(v : Double) -> Bool {
+  abs_double(v - v.floor()) < 0.000001
+}
+
+///|
+
+///|
+fn compute_grid_track_sizes_with_contributions(
+  tracks : Array[Dimension],
+  available : Double,
+  gap : Double,
+  min_contrib : Array[Double],
+  max_contrib : Array[Double],
+  expand_to_fill : Bool,
+) -> Array[Double] {
+  let count = tracks.length()
+  let sizes : Array[Double] = Array::make(count, 0.0)
+  let min_sizes : Array[Double] = Array::make(count, 0.0)
+  let fr_weights : Array[Double] = Array::make(count, 0.0)
+  let is_auto : Array[Bool] = Array::make(count, false)
+  let max_limits : Array[Double] = Array::make(count, 0.0)
+  let inf = 1.0e30
+  fn clamp_minmax(v : Double, lo : Double, hi : Double) -> Double {
+    let v = if v < lo { lo } else { v }
+    if v > hi {
+      hi
+    } else {
+      v
+    }
+  }
+
+  fn min_function_value(
+    d : Dimension,
+    available : Double,
+    min_c : Double,
+    max_c : Double,
+  ) -> Double {
+    match d {
+      DimAuto => min_c
+      DimMinContent => min_c
+      DimMaxContent => max_c
+      DimFitContent(limit) => {
+        let lim = resolve_track_dimension(limit, available)
+        let max_limited = if max_c < lim { max_c } else { lim }
+        if max_limited < min_c {
+          min_c
+        } else {
+          max_limited
+        }
+      }
+      DimFr(_) => 0.0
+      DimRepeat(_, _) => 0.0
+      _ => {
+        let v = resolve_track_dimension(d, available)
+        if v > 0.0 {
+          v
+        } else {
+          0.0
+        }
+      }
+    }
+  }
+
+  fn max_function_value_and_limit(
+    d : Dimension,
+    available : Double,
+    min_c : Double,
+    max_c : Double,
+    inf : Double,
+  ) -> (Double, Double, Double) {
+    match d {
+      DimAuto => (max_c, inf, 0.0)
+      DimMinContent => (min_c, inf, 0.0)
+      DimMaxContent => (max_c, inf, 0.0)
+      DimFitContent(limit) => {
+        let lim = resolve_track_dimension(limit, available)
+        let preferred = if max_c < lim { max_c } else { lim }
+        let preferred = if preferred < min_c { min_c } else { preferred }
+        (preferred, preferred, 0.0)
+      }
+      DimFr(w) => (0.0, inf, if w > 0.0 { w } else { 0.0 })
+      DimRepeat(_, _) => (0.0, inf, 0.0)
+      _ => {
+        let v = resolve_track_dimension(d, available)
+        let v = if v > 0.0 { v } else { 0.0 }
+        (v, v, 0.0)
+      }
+    }
+  }
+
+  for i in 0..<count {
+    let min_c = if i < min_contrib.length() { min_contrib[i] } else { 0.0 }
+    let max_c = if i < max_contrib.length() { max_contrib[i] } else { 0.0 }
+    match tracks[i] {
+      DimAuto => {
+        min_sizes[i] = min_c
+        sizes[i] = max_c
+        max_limits[i] = inf
+        is_auto[i] = true
+      }
+      DimMinContent => {
+        min_sizes[i] = min_c
+        sizes[i] = min_c
+        max_limits[i] = inf
+        is_auto[i] = true
+      }
+      DimMaxContent => {
+        min_sizes[i] = max_c
+        sizes[i] = max_c
+        max_limits[i] = inf
+        is_auto[i] = true
+      }
+      DimFitContent(limit) => {
+        let lim = resolve_track_dimension(limit, available)
+        let preferred = if max_c < lim { max_c } else { lim }
+        let preferred = if preferred < min_c { min_c } else { preferred }
+        min_sizes[i] = min_c
+        sizes[i] = preferred
+        max_limits[i] = preferred
+        is_auto[i] = true
+      }
+      DimLength(v) => {
+        sizes[i] = v
+        min_sizes[i] = v
+        max_limits[i] = v
+      }
+      DimPercent(p) => {
+        let v = available * p
+        sizes[i] = v
+        min_sizes[i] = v
+        max_limits[i] = v
+      }
+      DimFr(w) => {
+        fr_weights[i] = if w > 0.0 { w } else { 0.0 }
+        sizes[i] = 0.0
+        min_sizes[i] = 0.0
+        max_limits[i] = inf
+      }
+      DimMinMax(min_d, max_d) => {
+        let min_v = min_function_value(min_d, available, min_c, max_c)
+        let max_r = max_function_value_and_limit(
+          max_d, available, min_c, max_c, inf,
+        )
+        let max_v = max_r.0
+        let max_lim = max_r.1
+        let fr_w = max_r.2
+        min_sizes[i] = min_v
+        if fr_w > 0.0 {
+          fr_weights[i] = fr_w
+          sizes[i] = min_v
+          max_limits[i] = inf
+        } else {
+          let preferred = if max_v < min_v { min_v } else { max_v }
+          sizes[i] = preferred
+          max_limits[i] = if max_lim < min_v { min_v } else { max_lim }
+          is_auto[i] = match max_d {
+            DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
+            _ => false
+          }
+        }
+      }
+      DimRepeat(_, _) => {
+        // Expanded earlier; treat as auto when encountered.
+        min_sizes[i] = min_c
+        sizes[i] = max_c
+        max_limits[i] = inf
+        is_auto[i] = true
+      }
+    }
+  }
+
+  // Shrink tracks down to their min-content contributions if the sum of preferred sizes overflows.
+  let mut used = 0.0
+  for s in sizes {
+    used = used + s
+  }
+  if count > 1 {
+    used = used + gap * (count - 1).to_double()
+  }
+  if used > available {
+    let eps = 0.000001
+    let mut over = used - available
+    let mut shrinkable : Array[Int] = []
+    for i in 0..<count {
+      if sizes[i] > min_sizes[i] + eps {
+        shrinkable.push(i)
+      }
+    }
+    while over > eps && shrinkable.length() > 0 {
+      let per = over / shrinkable.length().to_double()
+      let mut shrunk = 0.0
+      let next : Array[Int] = []
+      for idx in shrinkable {
+        let can = sizes[idx] - min_sizes[idx]
+        let s = if can < per { can } else { per }
+        if s > 0.0 {
+          sizes[idx] = sizes[idx] - s
+          shrunk = shrunk + s
+        }
+        if sizes[idx] > min_sizes[idx] + eps {
+          next.push(idx)
+        }
+      }
+      if shrunk <= 0.0 {
+        break
+      }
+      over = over - shrunk
+      shrinkable = next
+    }
+  }
+
+  // Distribute any remaining free space (only when the grid container has a definite size).
+  used = 0.0
+  for s in sizes {
+    used = used + s
+  }
+  if count > 1 {
+    used = used + gap * (count - 1).to_double()
+  }
+  let free = available - used
+  if expand_to_fill && free > 0.0 {
+    let mut sum_fr = 0.0
+    for w in fr_weights {
+      sum_fr = sum_fr + w
+    }
+    if sum_fr > 0.0 {
+      let denom = if sum_fr < 1.0 { 1.0 } else { sum_fr }
+      let flex_fraction = free / denom
+      let total_fr_space = if sum_fr < 1.0 { free * sum_fr } else { free }
+      if is_near_int(total_fr_space) {
+        let total_int = total_fr_space.floor().to_int()
+        let fr_indices : Array[Int] = []
+        let fr_ints : Array[Int] = []
+        let fr_fracs : Array[Double] = []
+        let mut sum_ints = 0
+        for i in 0..<count {
+          if fr_weights[i] > 0.0 {
+            let raw = flex_fraction * fr_weights[i]
+            let base = raw.floor().to_int()
+            fr_indices.push(i)
+            fr_ints.push(base)
+            fr_fracs.push(raw - base.to_double())
+            sum_ints = sum_ints + base
+          }
+        }
+        let mut remainder = total_int - sum_ints
+        while remainder > 0 {
+          let mut best_j = 0
+          let mut best_frac = -1.0
+          for j in 0..<fr_fracs.length() {
+            let f = fr_fracs[j]
+            if f > best_frac {
+              best_frac = f
+              best_j = j
+            }
+          }
+          fr_ints[best_j] = fr_ints[best_j] + 1
+          fr_fracs[best_j] = -1.0
+          remainder = remainder - 1
+        }
+        for j in 0..<fr_indices.length() {
+          let idx = fr_indices[j]
+          sizes[idx] = sizes[idx] + fr_ints[j].to_double()
+        }
+      } else {
+        for i in 0..<count {
+          if fr_weights[i] > 0.0 {
+            sizes[i] = sizes[i] + flex_fraction * fr_weights[i]
+          }
+        }
+      }
+    } else {
+      // Distribute remaining free space evenly to auto-like tracks, respecting fit-content/minmax caps.
+      let mut remaining = free
+      let mut growable : Array[Int] = []
+      for i in 0..<count {
+        if is_auto[i] && sizes[i] + 0.000001 < max_limits[i] {
+          growable.push(i)
+        }
+      }
+      while remaining > 0.000001 && growable.length() > 0 {
+        let extra = remaining / growable.length().to_double()
+        let mut used_extra = 0.0
+        let next : Array[Int] = []
+        for idx in growable {
+          let cap = max_limits[idx] - sizes[idx]
+          let inc = if cap < extra { cap } else { extra }
+          if inc > 0.0 {
+            sizes[idx] = sizes[idx] + inc
+            used_extra = used_extra + inc
+          }
+          if sizes[idx] + 0.000001 < max_limits[idx] {
+            next.push(idx)
+          }
+        }
+        if used_extra <= 0.0 {
+          break
+        }
+        remaining = remaining - used_extra
+        growable = next
+      }
+    }
+  }
+
+  // Ensure no track is below its min size.
+  for i in 0..<count {
+    sizes[i] = clamp_minmax(sizes[i], min_sizes[i], inf)
+  }
+  sizes
+}
+
+///|
+fn[C] compute_node_layout_with_measure(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  known_dimensions : Size[Double?],
+  available_space : Size[AvailableSpace],
+  absolute_origin : Point[Double],
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ],
+) -> Unit raise TaffyError {
+  let node = match tree.nodes.get(node_id) {
+    Some(n) => n
+    None => raise InvalidNodeId(node_id)
+  }
+  match node.style.display {
+    DisplayNone => compute_hidden_layout(tree, node_id, absolute_origin)
+    DisplayGrid =>
+      compute_grid_layout_with_measure(
+        tree, node_id, known_dimensions, available_space, absolute_origin, measure_function,
+      )
+    DisplayBlock =>
+      if node.children.length() == 0 {
+        compute_leaf_layout_with_measure(
+          tree, node_id, known_dimensions, available_space, absolute_origin, measure_function,
+        )
+      } else {
+        compute_block_layout_with_measure(
+          tree, node_id, known_dimensions, available_space, absolute_origin, measure_function,
+        )
+      }
+    _ =>
+      if node.children.length() == 0 {
+        compute_leaf_layout_with_measure(
+          tree, node_id, known_dimensions, available_space, absolute_origin, measure_function,
+        )
+      } else {
+        compute_flex_layout_with_measure(
+          tree, node_id, known_dimensions, available_space, absolute_origin, measure_function,
+        )
+      }
+  }
+
+  // Position::Relative: apply inset as a final offset without affecting sibling layout.
+  match node.style.position {
+    PosRelative => {
+      let inset = node.style.inset
+      let dx = match
+        resolve_optional_dimension(inset.left, available_space.width) {
+        Some(v) => v
+        None =>
+          match resolve_optional_dimension(inset.right, available_space.width) {
+            Some(v) => -v
+            None => 0.0
+          }
+      }
+      let dy = match
+        resolve_optional_dimension(inset.top, available_space.height) {
+        Some(v) => v
+        None =>
+          match
+            resolve_optional_dimension(inset.bottom, available_space.height) {
+            Some(v) => -v
+            None => 0.0
+          }
+      }
+      if dx != 0.0 || dy != 0.0 {
+        offset_subtree(tree, node_id, dx, dy)
+      }
+    }
+    PosAbsolute => ()
+  }
+}
+
+///|
+fn[C] compute_hidden_layout(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  absolute_origin : Point[Double],
+) -> Unit raise TaffyError {
+  let node = match tree.nodes.get(node_id) {
+    Some(n) => n
+    None => raise InvalidNodeId(node_id)
+  }
+  tree.nodes[node_id].layout = Layout::{
+    location: absolute_origin,
+    size: Size::zero(),
+  }
+  for child_id in node.children {
+    compute_hidden_layout(tree, child_id, absolute_origin)
+  }
+}
+
+///|
+fn[C] offset_subtree(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  dx : Double,
+  dy : Double,
+) -> Unit raise TaffyError {
+  let node = match tree.nodes.get(node_id) {
+    Some(n) => n
+    None => raise InvalidNodeId(node_id)
+  }
+  let layout = node.layout
+  tree.nodes[node_id].layout = Layout::{
+    location: Point::{ x: layout.location.x + dx, y: layout.location.y + dy },
+    size: layout.size,
+  }
+  for child_id in node.children {
+    offset_subtree(tree, child_id, dx, dy)
+  }
+}
+
+///|
+fn[C] compute_leaf_layout_with_measure(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  known_dimensions : Size[Double?],
+  available_space : Size[AvailableSpace],
+  absolute_origin : Point[Double],
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ],
+) -> Unit raise TaffyError {
+  let node = match tree.nodes.get(node_id) {
+    Some(n) => n
+    None => raise InvalidNodeId(node_id)
+  }
+  // CSS compatibility: vertical padding/border percentages are resolved against the width.
+  let resolved_padding = resolve_rect_width_basis(
+    node.style.padding,
+    available_space,
+  )
+  let resolved_border = resolve_rect_width_basis(
+    node.style.border,
+    available_space,
+  )
+  let horiz_inset = resolved_padding.left +
+    resolved_padding.right +
+    resolved_border.left +
+    resolved_border.right
+  let vert_inset = resolved_padding.top +
+    resolved_padding.bottom +
+    resolved_border.top +
+    resolved_border.bottom
+  let specified_width = resolve_optional_dimension(
+    node.style.size.width,
+    available_space.width,
+  )
+  let specified_height = resolve_optional_dimension(
+    node.style.size.height,
+    available_space.height,
+  )
+  let known_width = known_dimensions.width
+  let known_height = known_dimensions.height
+  let measure_known_dimensions = Size::new(
+    width=match known_width {
+      Some(w) => Some(w)
+      None => specified_width
+    },
+    height=match known_height {
+      Some(h) => Some(h)
+      None => specified_height
+    },
+  )
+  let measured = measure_function(
+    measure_known_dimensions,
+    available_space,
+    node_id,
+    node.context,
+    node.style,
+  )
+  let raw_width = match known_width {
+    Some(w) => max_double(w, horiz_inset)
+    None =>
+      match specified_width {
+        Some(w) => max_double(w, horiz_inset)
+        None => max_double(measured.width + horiz_inset, horiz_inset)
+      }
+  }
+  let raw_height = match known_height {
+    Some(h) => max_double(h, vert_inset)
+    None =>
+      match specified_height {
+        Some(h) => max_double(h, vert_inset)
+        None => max_double(measured.height + vert_inset, vert_inset)
+      }
+  }
+  let raw_border_box = Size::new(width=raw_width, height=raw_height)
+  let border_box_size = Size::new(
+    width=clamp_dimension(
+      raw_border_box.width,
+      node.style.min_size.width,
+      node.style.max_size.width,
+      available_space.width,
+    ),
+    height=clamp_dimension(
+      raw_border_box.height,
+      node.style.min_size.height,
+      node.style.max_size.height,
+      available_space.height,
+    ),
+  )
+  tree.nodes[node_id].layout = Layout::{
+    location: absolute_origin,
+    size: border_box_size,
+  }
+}
+
+///|
+fn is_column(direction : FlexDirection) -> Bool {
+  match direction {
+    FlexRow => false
+    FlexRowReverse => false
+    FlexColumn => true
+    FlexColumnReverse => true
+  }
+}
+
+///|
+fn get_main(size : Size[Double], is_col : Bool) -> Double {
+  if is_col {
+    size.height
+  } else {
+    size.width
+  }
+}
+
+///|
+fn get_cross(size : Size[Double], is_col : Bool) -> Double {
+  if is_col {
+    size.width
+  } else {
+    size.height
+  }
+}
+
+///|
+fn make_size_from_main_cross(
+  main : Double,
+  cross : Double,
+  is_col : Bool,
+) -> Size[Double] {
+  if is_col {
+    Size::new(width=cross, height=main)
+  } else {
+    Size::new(width=main, height=cross)
+  }
+}
+
+///|
+fn resolve_gap_main(
+  gap : Size[Dimension],
+  is_col : Bool,
+  available_main : AvailableSpace,
+) -> Double {
+  if is_col {
+    resolve_dimension(gap.height, available_main)
+  } else {
+    resolve_dimension(gap.width, available_main)
+  }
+}
+
+///|
+fn resolve_gap_cross(
+  gap : Size[Dimension],
+  is_col : Bool,
+  available_cross : AvailableSpace,
+) -> Double {
+  if is_col {
+    resolve_dimension(gap.width, available_cross)
+  } else {
+    resolve_dimension(gap.height, available_cross)
+  }
+}
+
+///|
+fn resolve_available_for_percent(
+  is_definite : Bool,
+  value : Double,
+) -> AvailableSpace {
+  if is_definite {
+    AvailDefinite(value)
+  } else {
+    AvailMaxContent
+  }
+}
+
+///|
+fn expand_grid_template_axis(
+  template : Array[Dimension],
+  content_size : Double,
+  gap : Double,
+) -> (Array[Dimension], Int, Bool) {
+  let expanded : Array[Dimension] = []
+  let mut used = 0.0
+  let mut first = true
+  let mut non_auto_fit_count = 0
+  let mut has_auto_fit = false
+  fn push_track(
+    expanded : Array[Dimension],
+    track : Dimension,
+    content_size : Double,
+    gap : Double,
+    used : Double,
+    first : Bool,
+  ) -> (Double, Bool) {
+    let mut u = used
+    if not(first) {
+      u = u + gap
+    }
+    u = u + resolve_track_dimension(track, content_size)
+    expanded.push(track)
+    (u, false)
+  }
+
+  for item in template {
+    match item {
+      DimRepeat(rep, tracks) => {
+        if tracks.length() == 0 {
+          continue
+        }
+        match rep {
+          RepeatCount(n) => {
+            let count = if n > 0 { n } else { 0 }
+            for _i in 0..<count {
+              for t in tracks {
+                let r = push_track(expanded, t, content_size, gap, used, first)
+                used = r.0
+                first = r.1
+                non_auto_fit_count = non_auto_fit_count + 1
+              }
+            }
+          }
+          RepeatAutoFill | RepeatAutoFit => {
+            let is_auto_fit = rep is RepeatAutoFit
+            if is_auto_fit {
+              has_auto_fit = true
+            }
+            let mut reps = 0
+            while true {
+              // Try appending one full track-list.
+              let mut u_try = used
+              let mut first_try = first
+              for t in tracks {
+                if not(first_try) {
+                  u_try = u_try + gap
+                }
+                u_try = u_try + resolve_track_dimension(t, content_size)
+                first_try = false
+              }
+              let fits = u_try <= content_size + 0.000001
+              if reps > 0 && not(fits) {
+                break
+              }
+              // Always append at least once.
+              for t in tracks {
+                let r = push_track(expanded, t, content_size, gap, used, first)
+                used = r.0
+                first = r.1
+                if not(is_auto_fit) {
+                  non_auto_fit_count = non_auto_fit_count + 1
+                }
+              }
+              reps = reps + 1
+              if not(fits) {
+                break
+              }
+            }
+          }
+        }
+      }
+      _ => {
+        let r = push_track(expanded, item, content_size, gap, used, first)
+        used = r.0
+        first = r.1
+        non_auto_fit_count = non_auto_fit_count + 1
+      }
+    }
+  }
+  (expanded, non_auto_fit_count, has_auto_fit)
+}
+
+///|
+fn[C] compute_grid_layout_with_measure(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  known_dimensions : Size[Double?],
+  available_space : Size[AvailableSpace],
+  absolute_origin : Point[Double],
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ],
+) -> Unit raise TaffyError {
+  let node = match tree.nodes.get(node_id) {
+    Some(n) => n
+    None => raise InvalidNodeId(node_id)
+  }
+  fn origin_zero_line(value : Int, explicit_track_count : Int) -> Int? {
+    if value == 0 {
+      None
+    } else if value > 0 {
+      Some(value - 1)
+    } else {
+      // Negative indices count back from the end of the explicit grid.
+      let explicit_line_count = explicit_track_count + 1
+      Some(value + explicit_line_count)
+    }
+  }
+
+  fn merged_placement_start(
+    placement : Line[GridPlacement],
+    legacy_start : Int?,
+  ) -> GridPlacement {
+    match legacy_start {
+      Some(v) => PlaceLine(v)
+      None => placement.start
+    }
+  }
+
+  fn axis_auto_track_list(auto_tracks : Array[Dimension]) -> Array[Dimension] {
+    if auto_tracks.length() == 0 {
+      [DimAuto]
+    } else {
+      auto_tracks
+    }
+  }
+
+  fn negative_auto_track_at(
+    auto_tracks : Array[Dimension],
+    offset_from_explicit : Int,
+  ) -> Dimension {
+    let len = auto_tracks.length()
+    if len == 0 {
+      DimAuto
+    } else {
+      // `offset_from_explicit` is 1-based: 1 means the track adjacent to the explicit grid.
+      let m = offset_from_explicit % len
+      let idx = (len - m) % len
+      auto_tracks[idx]
+    }
+  }
+
+  let padding = resolve_rect_width_basis(node.style.padding, available_space)
+  let border = resolve_rect_width_basis(node.style.border, available_space)
+  let horiz_inset = padding.left + padding.right + border.left + border.right
+  let vert_inset = padding.top + padding.bottom + border.top + border.bottom
+  let style_width = resolve_optional_dimension(
+    node.style.size.width,
+    available_space.width,
+  )
+  let style_height = resolve_optional_dimension(
+    node.style.size.height,
+    available_space.height,
+  )
+  let specified_width = match known_dimensions.width {
+    Some(w) => Some(w)
+    None => style_width
+  }
+  let specified_height = match known_dimensions.height {
+    Some(h) => Some(h)
+    None => style_height
+  }
+
+  // Grid gaps: treat `gap.width` as column gap, and `gap.height` as row gap.
+  let col_gap = resolve_dimension(node.style.gap.width, available_space.width)
+  let row_gap = resolve_dimension(node.style.gap.height, available_space.height)
+
+  // If the container size is definite, resolve track sizing against the content box.
+  // Otherwise fall back to a simplified "fixed only" resolution.
+  let mut content_width = 0.0
+  let mut content_height = 0.0
+  let mut border_box_width = 0.0
+  let mut border_box_height = 0.0
+  match specified_width {
+    Some(w) => {
+      border_box_width = clamp_dimension(
+        max_double(w, horiz_inset),
+        node.style.min_size.width,
+        node.style.max_size.width,
+        available_space.width,
+      )
+      content_width = max_double(border_box_width - horiz_inset, 0.0)
+    }
+    None => ()
+  }
+  match specified_height {
+    Some(h) => {
+      border_box_height = clamp_dimension(
+        max_double(h, vert_inset),
+        node.style.min_size.height,
+        node.style.max_size.height,
+        available_space.height,
+      )
+      content_height = max_double(border_box_height - vert_inset, 0.0)
+    }
+    None => ()
+  }
+
+  // Expand `repeat(...)` in grid templates.
+  let col_expanded = expand_grid_template_axis(
+    node.style.grid_template_columns,
+    content_width,
+    col_gap,
+  )
+  let row_expanded = expand_grid_template_axis(
+    node.style.grid_template_rows,
+    content_height,
+    row_gap,
+  )
+  let mut explicit_col_template = col_expanded.0
+  let mut explicit_row_template = row_expanded.0
+  let mut non_auto_fit_col_count = col_expanded.1
+  let has_auto_fit_cols = col_expanded.2
+  let mut non_auto_fit_row_count = row_expanded.1
+  let has_auto_fit_rows = row_expanded.2
+
+  // If an axis has no explicit tracks, treat it as having a single implicit `auto` track.
+  // This matches upstream behavior for column-only/row-only templates.
+  if explicit_col_template.length() == 0 {
+    explicit_col_template = [DimAuto]
+    non_auto_fit_col_count = 1
+  }
+  if explicit_row_template.length() == 0 {
+    explicit_row_template = [DimAuto]
+    non_auto_fit_row_count = 1
+  }
+  let explicit_col_count = explicit_col_template.length()
+  let explicit_row_count = explicit_row_template.length()
+
+  // Compute implicit track counts required by definite placements (negative/positive implicit tracks).
+  let mut min_col_line = 0
+  let mut max_col_line = 0
+  let mut min_row_line = 0
+  let mut max_row_line = 0
+  for child_id in node.children {
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+    let col_start = merged_placement_start(
+      child.style.grid_column,
+      child.style.grid_column_start,
+    )
+    let row_start = merged_placement_start(
+      child.style.grid_row,
+      child.style.grid_row_start,
+    )
+    match col_start {
+      PlaceLine(v) =>
+        match origin_zero_line(v, explicit_col_count) {
+          Some(oz) => {
+            if oz < min_col_line {
+              min_col_line = oz
+            }
+            let end = oz + 1
+            if end > max_col_line {
+              max_col_line = end
+            }
+          }
+          None => ()
+        }
+      _ => ()
+    }
+    match row_start {
+      PlaceLine(v) =>
+        match origin_zero_line(v, explicit_row_count) {
+          Some(oz) => {
+            if oz < min_row_line {
+              min_row_line = oz
+            }
+            let end = oz + 1
+            if end > max_row_line {
+              max_row_line = end
+            }
+          }
+          None => ()
+        }
+      _ => ()
+    }
+  }
+  let negative_cols = if min_col_line < 0 { -min_col_line } else { 0 }
+  let positive_cols = if max_col_line > explicit_col_count {
+    max_col_line - explicit_col_count
+  } else {
+    0
+  }
+  let negative_rows = if min_row_line < 0 { -min_row_line } else { 0 }
+  let positive_rows = if max_row_line > explicit_row_count {
+    max_row_line - explicit_row_count
+  } else {
+    0
+  }
+
+  // Build an initial implicit grid from templates + auto tracks.
+  let auto_cols = axis_auto_track_list(node.style.grid_auto_columns)
+  let auto_rows = axis_auto_track_list(node.style.grid_auto_rows)
+  let mut col_tracks : Array[Dimension] = []
+  for i in 0..<negative_cols {
+    let offset = negative_cols - i
+    col_tracks.push(negative_auto_track_at(auto_cols, offset))
+  }
+  for t in explicit_col_template {
+    col_tracks.push(t)
+  }
+  for i in 0..<positive_cols {
+    col_tracks.push(auto_cols[i % auto_cols.length()])
+  }
+  let mut row_tracks : Array[Dimension] = []
+  for i in 0..<negative_rows {
+    let offset = negative_rows - i
+    row_tracks.push(negative_auto_track_at(auto_rows, offset))
+  }
+  for t in explicit_row_template {
+    row_tracks.push(t)
+  }
+  for i in 0..<positive_rows {
+    row_tracks.push(auto_rows[i % auto_rows.length()])
+  }
+  fn matrix_make(rows : Int, cols : Int) -> Array[Array[Bool]] {
+    let m : Array[Array[Bool]] = []
+    for _r in 0..<rows {
+      m.push(Array::make(cols, false))
+    }
+    m
+  }
+
+  let placement_count = node.children.length()
+  let placed : Array[Bool] = Array::make(placement_count, false)
+  let placed_row : Array[Int] = Array::make(placement_count, 0)
+  let placed_col : Array[Int] = Array::make(placement_count, 0)
+  let occ = matrix_make(row_tracks.length(), col_tracks.length())
+  fn ensure_cols(
+    occ : Array[Array[Bool]],
+    col_tracks : Array[Dimension],
+    auto_cols : Array[Dimension],
+    negative_cols : Int,
+    explicit_cols : Int,
+    target_col : Int,
+  ) -> Unit {
+    while col_tracks.length() <= target_col {
+      let pos_existing = col_tracks.length() - negative_cols - explicit_cols
+      let dim = auto_cols[pos_existing % auto_cols.length()]
+      col_tracks.push(dim)
+      for r in 0..<occ.length() {
+        occ[r].push(false)
+      }
+    }
+  }
+
+  fn ensure_rows(
+    occ : Array[Array[Bool]],
+    row_tracks : Array[Dimension],
+    auto_rows : Array[Dimension],
+    negative_rows : Int,
+    explicit_rows : Int,
+    target_row : Int,
+  ) -> Unit {
+    while row_tracks.length() <= target_row {
+      let pos_existing = row_tracks.length() - negative_rows - explicit_rows
+      let dim = auto_rows[pos_existing % auto_rows.length()]
+      row_tracks.push(dim)
+      occ.push(Array::make(occ[0].length(), false))
+    }
+  }
+
+  fn mark_placed(
+    placed : Array[Bool],
+    placed_row : Array[Int],
+    placed_col : Array[Int],
+    occ : Array[Array[Bool]],
+    row_tracks : Array[Dimension],
+    col_tracks : Array[Dimension],
+    auto_rows : Array[Dimension],
+    auto_cols : Array[Dimension],
+    negative_rows : Int,
+    negative_cols : Int,
+    explicit_rows : Int,
+    explicit_cols : Int,
+    idx : Int,
+    row : Int,
+    col : Int,
+  ) -> Unit {
+    ensure_rows(occ, row_tracks, auto_rows, negative_rows, explicit_rows, row)
+    ensure_cols(occ, col_tracks, auto_cols, negative_cols, explicit_cols, col)
+    occ[row][col] = true
+    placed[idx] = true
+    placed_row[idx] = row
+    placed_col[idx] = col
+  }
+
+  fn track_index_from_line(
+    value : Int,
+    explicit_track_count : Int,
+    negative_implicit : Int,
+  ) -> Int? {
+    match origin_zero_line(value, explicit_track_count) {
+      Some(oz) => Some(oz + negative_implicit)
+      None => None
+    }
+  }
+
+  // Resolve definite starts into track indices.
+  fn child_definite_start_indexes(
+    child_style : Style,
+    explicit_cols : Int,
+    explicit_rows : Int,
+    negative_cols : Int,
+    negative_rows : Int,
+  ) -> (Int?, Int?) {
+    let col_start = merged_placement_start(
+      child_style.grid_column,
+      child_style.grid_column_start,
+    )
+    let row_start = merged_placement_start(
+      child_style.grid_row,
+      child_style.grid_row_start,
+    )
+    let col = match col_start {
+      PlaceLine(v) => track_index_from_line(v, explicit_cols, negative_cols)
+      _ => None
+    }
+    let row = match row_start {
+      PlaceLine(v) => track_index_from_line(v, explicit_rows, negative_rows)
+      _ => None
+    }
+    (row, col)
+  }
+
+  // Placement algorithm: very small subset of CSS Grid (enough for upstream implicit/auto tracks tests).
+  let primary_is_col = node.style.grid_auto_flow is AutoFlowRow
+
+  // Pass 1: both axes definite.
+  for i in 0..<placement_count {
+    let child_id = node.children[i]
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+    match child.style.display {
+      DisplayNone => ()
+      _ => {
+        let def = child_definite_start_indexes(
+          child.style,
+          explicit_col_count,
+          explicit_row_count,
+          negative_cols,
+          negative_rows,
+        )
+        match (def.0, def.1) {
+          (Some(r), Some(c)) =>
+            mark_placed(
+              placed, placed_row, placed_col, occ, row_tracks, col_tracks, auto_rows,
+              auto_cols, negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+              i, r, c,
+            )
+          _ => ()
+        }
+      }
+    }
+  }
+
+  // Pass 2: definite in secondary axis only.
+  for i in 0..<placement_count {
+    if placed[i] {
+      continue
+    }
+    let child_id = node.children[i]
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+    match child.style.display {
+      DisplayNone => ()
+      _ => {
+        let def = child_definite_start_indexes(
+          child.style,
+          explicit_col_count,
+          explicit_row_count,
+          negative_cols,
+          negative_rows,
+        )
+        if primary_is_col {
+          // Flow rows: primary axis is columns, secondary axis is rows.
+          match (def.0, def.1) {
+            (Some(r), None) => {
+              ensure_rows(
+                occ, row_tracks, auto_rows, negative_rows, explicit_row_count, r,
+              )
+              let mut c = 0
+              let mut found = false
+              while c < col_tracks.length() {
+                if not(occ[r][c]) {
+                  found = true
+                  break
+                }
+                c = c + 1
+              }
+              if not(found) {
+                ensure_cols(
+                  occ,
+                  col_tracks,
+                  auto_cols,
+                  negative_cols,
+                  explicit_col_count,
+                  col_tracks.length(),
+                )
+              }
+              mark_placed(
+                placed, placed_row, placed_col, occ, row_tracks, col_tracks, auto_rows,
+                auto_cols, negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                i, r, c,
+              )
+            }
+            _ => ()
+          }
+        } else {
+          // Flow columns: primary axis is rows, secondary axis is columns.
+          match (def.0, def.1) {
+            (None, Some(c)) => {
+              ensure_cols(
+                occ, col_tracks, auto_cols, negative_cols, explicit_col_count, c,
+              )
+              let mut r = 0
+              let mut found = false
+              while r < row_tracks.length() {
+                if not(occ[r][c]) {
+                  found = true
+                  break
+                }
+                r = r + 1
+              }
+              if not(found) {
+                ensure_rows(
+                  occ,
+                  row_tracks,
+                  auto_rows,
+                  negative_rows,
+                  explicit_row_count,
+                  row_tracks.length(),
+                )
+              }
+              mark_placed(
+                placed, placed_row, placed_col, occ, row_tracks, col_tracks, auto_rows,
+                auto_cols, negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                i, r, c,
+              )
+            }
+            _ => ()
+          }
+        }
+      }
+    }
+  }
+
+  // Pass 3: remaining items (auto-placement in the flow direction).
+  for i in 0..<placement_count {
+    if placed[i] {
+      continue
+    }
+    let child_id = node.children[i]
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+    match child.style.display {
+      DisplayNone => ()
+      _ => {
+        let mut sec = 0
+        while true {
+          if primary_is_col {
+            ensure_rows(
+              occ, row_tracks, auto_rows, negative_rows, explicit_row_count, sec,
+            )
+            let mut prim = 0
+            while prim < col_tracks.length() {
+              if not(occ[sec][prim]) {
+                mark_placed(
+                  placed, placed_row, placed_col, occ, row_tracks, col_tracks, auto_rows,
+                  auto_cols, negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                  i, sec, prim,
+                )
+                sec = -1
+                break
+              }
+              prim = prim + 1
+            }
+            if sec == -1 {
+              break
+            }
+          } else {
+            ensure_cols(
+              occ, col_tracks, auto_cols, negative_cols, explicit_col_count, sec,
+            )
+            let mut prim = 0
+            while prim < row_tracks.length() {
+              if not(occ[prim][sec]) {
+                mark_placed(
+                  placed, placed_row, placed_col, occ, row_tracks, col_tracks, auto_rows,
+                  auto_cols, negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                  i, prim, sec,
+                )
+                sec = -1
+                break
+              }
+              prim = prim + 1
+            }
+            if sec == -1 {
+              break
+            }
+          }
+          sec = sec + 1
+        }
+      }
+    }
+  }
+  let mut col_count = col_tracks.length()
+  let mut row_count = row_tracks.length()
+
+  // Compute min-content and max-content contributions for each track (span=1 only).
+  let col_min_contrib : Array[Double] = Array::make(col_count, 0.0)
+  let col_max_contrib : Array[Double] = Array::make(col_count, 0.0)
+  let row_min_contrib : Array[Double] = Array::make(row_count, 0.0)
+  let row_max_contrib : Array[Double] = Array::make(row_count, 0.0)
+  for i in 0..<placement_count {
+    if not(placed[i]) {
+      continue
+    }
+    let child_id = node.children[i]
+    let c = placed_col[i]
+
+    // Max-content contribution in the column axis
+    compute_node_layout_with_measure(
+      tree,
+      child_id,
+      Size::new(width=None, height=None),
+      Size::new(width=AvailMaxContent, height=AvailMaxContent),
+      Point::zero(),
+      measure_function,
+    )
+    let max_sz = tree.nodes[child_id].layout.size
+    if max_sz.width > col_max_contrib[c] {
+      col_max_contrib[c] = max_sz.width
+    }
+
+    // Min-content contribution in the column axis
+    compute_node_layout_with_measure(
+      tree,
+      child_id,
+      Size::new(width=None, height=None),
+      Size::new(width=AvailMinContent, height=AvailMaxContent),
+      Point::zero(),
+      measure_function,
+    )
+    let min_col = tree.nodes[child_id].layout.size.width
+    if min_col > col_min_contrib[c] {
+      col_min_contrib[c] = min_col
+    }
+  }
+  fn track_basis_fit_content(
+    min_c : Double,
+    max_c : Double,
+    limit : Dimension,
+    available : Double,
+  ) -> Double {
+    match limit {
+      DimPercent(_) => max_c
+      _ => {
+        let lim = resolve_track_dimension(limit, available)
+        let preferred = if max_c < lim { max_c } else { lim }
+        if preferred < min_c {
+          min_c
+        } else {
+          preferred
+        }
+      }
+    }
+  }
+
+  fn axis_min_content_basis(
+    tracks : Array[Dimension],
+    min_contrib : Array[Double],
+    max_contrib : Array[Double],
+    gap : Double,
+  ) -> Double {
+    let mut total = 0.0
+    for i in 0..<tracks.length() {
+      let min_c = min_contrib[i]
+      let max_c = max_contrib[i]
+      total = total +
+        (match tracks[i] {
+          DimLength(v) => v
+          DimAuto => min_c
+          DimMinContent => min_c
+          DimMaxContent => max_c
+          DimFitContent(limit) =>
+            track_basis_fit_content(min_c, max_c, limit, 0.0)
+          DimMinMax(min_d, _max_d) =>
+            // Conservative: use the min sizing function where possible.
+            match min_d {
+              DimAuto | DimMinContent => min_c
+              DimMaxContent => max_c
+              _ => resolve_track_dimension(min_d, 0.0)
+            }
+          _ => 0.0
+        })
+    }
+    if tracks.length() > 1 {
+      total = total + gap * (tracks.length() - 1).to_double()
+    }
+    total
+  }
+
+  fn axis_max_content_basis(
+    tracks : Array[Dimension],
+    min_contrib : Array[Double],
+    max_contrib : Array[Double],
+    gap : Double,
+  ) -> Double {
+    let mut total = 0.0
+    for i in 0..<tracks.length() {
+      let min_c = min_contrib[i]
+      let max_c = max_contrib[i]
+      total = total +
+        (match tracks[i] {
+          DimLength(v) => v
+          DimAuto => max_c
+          DimMinContent => min_c
+          DimMaxContent => max_c
+          DimFitContent(limit) =>
+            track_basis_fit_content(min_c, max_c, limit, 0.0)
+          DimMinMax(_min_d, max_d) =>
+            match max_d {
+              DimAuto | DimMaxContent => max_c
+              DimMinContent => min_c
+              DimFitContent(limit) =>
+                track_basis_fit_content(min_c, max_c, limit, 0.0)
+              _ => resolve_track_dimension(max_d, 0.0)
+            }
+          _ => 0.0
+        })
+    }
+    if tracks.length() > 1 {
+      total = total + gap * (tracks.length() - 1).to_double()
+    }
+    total
+  }
+
+  fn available_inset_or_basis(
+    available : AvailableSpace,
+    inset : Double,
+    min_basis : Double,
+    max_basis : Double,
+  ) -> Double {
+    match available {
+      AvailDefinite(v) => max_double(v - inset, 0.0)
+      AvailMinContent => min_basis
+      AvailMaxContent => max_basis
+    }
+  }
+
+  let col_min_basis = axis_min_content_basis(
+    col_tracks, col_min_contrib, col_max_contrib, col_gap,
+  )
+  let col_max_basis = axis_max_content_basis(
+    col_tracks, col_min_contrib, col_max_contrib, col_gap,
+  )
+  let col_available = match specified_width {
+    Some(_) => content_width
+    None =>
+      available_inset_or_basis(
+        available_space.width,
+        horiz_inset,
+        col_min_basis,
+        col_max_basis,
+      )
+  }
+  let mut col_sizes : Array[Double] = compute_grid_track_sizes_with_contributions(
+    col_tracks,
+    col_available,
+    col_gap,
+    col_min_contrib,
+    col_max_contrib,
+    specified_width is Some(_),
+  )
+
+  // Compute row contributions with the resolved column widths as a constraint.
+  for i in 0..<placement_count {
+    if not(placed[i]) {
+      continue
+    }
+    let child_id = node.children[i]
+    let c = placed_col[i]
+    let r = placed_row[i]
+    let col_w = col_sizes[c]
+
+    // Max-content contribution in the row axis under the column width constraint.
+    compute_node_layout_with_measure(
+      tree,
+      child_id,
+      Size::new(width=Some(col_w), height=None),
+      Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
+      Point::zero(),
+      measure_function,
+    )
+    let max_h = tree.nodes[child_id].layout.size.height
+    if max_h > row_max_contrib[r] {
+      row_max_contrib[r] = max_h
+    }
+
+    // Min-content contribution in the row axis under the column width constraint.
+    compute_node_layout_with_measure(
+      tree,
+      child_id,
+      Size::new(width=Some(col_w), height=None),
+      Size::new(width=AvailDefinite(col_w), height=AvailMinContent),
+      Point::zero(),
+      measure_function,
+    )
+    let min_h = tree.nodes[child_id].layout.size.height
+    if min_h > row_min_contrib[r] {
+      row_min_contrib[r] = min_h
+    }
+  }
+  let row_min_basis = axis_min_content_basis(
+    row_tracks, row_min_contrib, row_max_contrib, row_gap,
+  )
+  let row_max_basis = axis_max_content_basis(
+    row_tracks, row_min_contrib, row_max_contrib, row_gap,
+  )
+  let row_available = match specified_height {
+    Some(_) => content_height
+    None =>
+      available_inset_or_basis(
+        available_space.height,
+        vert_inset,
+        row_min_basis,
+        row_max_basis,
+      )
+  }
+  let mut row_sizes : Array[Double] = compute_grid_track_sizes_with_contributions(
+    row_tracks,
+    row_available,
+    row_gap,
+    row_min_contrib,
+    row_max_contrib,
+    specified_height is Some(_),
+  )
+  let mut used_cols = 0.0
+  for w in col_sizes {
+    used_cols = used_cols + w
+  }
+  if col_count > 1 {
+    used_cols = used_cols + col_gap * (col_count - 1).to_double()
+  }
+  let mut used_rows = 0.0
+  for h in row_sizes {
+    used_rows = used_rows + h
+  }
+  if row_count > 1 {
+    used_rows = used_rows + row_gap * (row_count - 1).to_double()
+  }
+
+  // Container sizing (border-box). If width/height are not specified, size to tracks.
+  if specified_width is None {
+    let intrinsic_cols = match available_space.width {
+      AvailMaxContent => col_max_basis
+      AvailMinContent => col_min_basis
+      AvailDefinite(_) => used_cols
+    }
+    border_box_width = clamp_dimension(
+      max_double(intrinsic_cols + horiz_inset, horiz_inset),
+      node.style.min_size.width,
+      node.style.max_size.width,
+      available_space.width,
+    )
+    content_width = max_double(border_box_width - horiz_inset, 0.0)
+  }
+  if specified_height is None {
+    let intrinsic_rows = match available_space.height {
+      AvailMaxContent => row_max_basis
+      AvailMinContent => row_min_basis
+      AvailDefinite(_) => used_rows
+    }
+    border_box_height = clamp_dimension(
+      max_double(intrinsic_rows + vert_inset, vert_inset),
+      node.style.min_size.height,
+      node.style.max_size.height,
+      available_space.height,
+    )
+    content_height = max_double(border_box_height - vert_inset, 0.0)
+  }
+  tree.nodes[node_id].layout = Layout::{
+    location: absolute_origin,
+    size: Size::new(width=border_box_width, height=border_box_height),
+  }
+
+  // Track alignment within the container's content box.
+  let align_content = match node.style.align_content {
+    Some(v) => v
+    None => AlignStart
+  }
+  let justify_content = match node.style.justify_content {
+    Some(v) => v
+    None => AlignStart
+  }
+
+  // `repeat(auto-fit, ...)` collapses empty tracks.
+  if has_auto_fit_cols || has_auto_fit_rows {
+    let mut max_row_used = 0
+    let mut max_col_used = 0
+    for i in 0..<placement_count {
+      if not(placed[i]) {
+        continue
+      }
+      let row = placed_row[i]
+      let col = placed_col[i]
+      if row > max_row_used {
+        max_row_used = row
+      }
+      if col > max_col_used {
+        max_col_used = col
+      }
+    }
+    if has_auto_fit_cols {
+      let needed = max_col_used + 1
+      let keep = if needed > non_auto_fit_col_count {
+        needed
+      } else {
+        non_auto_fit_col_count
+      }
+      if keep > 0 && keep < col_count {
+        col_count = keep
+        let truncated : Array[Double] = Array::make(col_count, 0.0)
+        for i in 0..<col_count {
+          truncated[i] = col_sizes[i]
+        }
+        col_sizes = truncated
+        let truncated_tracks : Array[Dimension] = Array::make(
+          col_count,
+          DimAuto,
+        )
+        for i in 0..<col_count {
+          truncated_tracks[i] = col_tracks[i]
+        }
+        col_tracks = truncated_tracks
+        used_cols = 0.0
+        for w in col_sizes {
+          used_cols = used_cols + w
+        }
+        if col_count > 1 {
+          used_cols = used_cols + col_gap * (col_count - 1).to_double()
+        }
+      }
+    }
+    if has_auto_fit_rows {
+      let needed = max_row_used + 1
+      let keep = if needed > non_auto_fit_row_count {
+        needed
+      } else {
+        non_auto_fit_row_count
+      }
+      if keep > 0 && keep < row_count {
+        row_count = keep
+        let truncated : Array[Double] = Array::make(row_count, 0.0)
+        for i in 0..<row_count {
+          truncated[i] = row_sizes[i]
+        }
+        row_sizes = truncated
+        let truncated_tracks : Array[Dimension] = Array::make(
+          row_count,
+          DimAuto,
+        )
+        for i in 0..<row_count {
+          truncated_tracks[i] = row_tracks[i]
+        }
+        row_tracks = truncated_tracks
+        used_rows = 0.0
+        for h in row_sizes {
+          used_rows = used_rows + h
+        }
+        if row_count > 1 {
+          used_rows = used_rows + row_gap * (row_count - 1).to_double()
+        }
+      }
+    }
+  }
+  let leftover_x = content_width - used_cols
+  let leftover_y = content_height - used_rows
+  let mut start_x = 0.0
+  let mut col_gap_effective = col_gap
+  match justify_content {
+    AlignCenter => start_x = leftover_x / 2.0
+    AlignFlexEnd | AlignEnd => start_x = leftover_x
+    AlignFlexStart | AlignStart => ()
+    AlignSpaceBetween =>
+      if col_count > 1 {
+        col_gap_effective = col_gap_effective +
+          leftover_x / (col_count - 1).to_double()
+      }
+    AlignSpaceAround =>
+      if col_count > 0 {
+        let extra = leftover_x / col_count.to_double()
+        col_gap_effective = col_gap_effective + extra
+        start_x = extra / 2.0
+      }
+    AlignSpaceEvenly =>
+      if col_count > 0 {
+        let spaces = (col_count + 1).to_double()
+        let extra = leftover_x / spaces
+        if leftover_x > 0.0 && is_near_int(leftover_x) {
+          let start_extra = extra.floor()
+          let gap_extra = if extra > start_extra {
+            start_extra + 1.0
+          } else {
+            start_extra
+          }
+          col_gap_effective = col_gap_effective + gap_extra
+          start_x = start_extra
+        } else {
+          col_gap_effective = col_gap_effective + extra
+          start_x = extra
+        }
+      }
+    AlignStretch =>
+      if col_count > 0 {
+        let extra = leftover_x / col_count.to_double()
+        for i in 0..<col_count {
+          let v = col_sizes[i] + extra
+          col_sizes[i] = if v > 0.0 { v } else { 0.0 }
+        }
+      }
+  }
+  let mut start_y = 0.0
+  let mut row_gap_effective = row_gap
+  match align_content {
+    AlignCenter => start_y = leftover_y / 2.0
+    AlignFlexEnd | AlignEnd => start_y = leftover_y
+    AlignFlexStart | AlignStart => ()
+    AlignSpaceBetween =>
+      if row_count > 1 {
+        row_gap_effective = row_gap_effective +
+          leftover_y / (row_count - 1).to_double()
+      }
+    AlignSpaceAround =>
+      if row_count > 0 {
+        let extra = leftover_y / row_count.to_double()
+        row_gap_effective = row_gap_effective + extra
+        start_y = extra / 2.0
+      }
+    AlignSpaceEvenly =>
+      if row_count > 0 {
+        let spaces = (row_count + 1).to_double()
+        let extra = leftover_y / spaces
+        if leftover_y > 0.0 && is_near_int(leftover_y) {
+          let start_extra = extra.floor()
+          let gap_extra = if extra > start_extra {
+            start_extra + 1.0
+          } else {
+            start_extra
+          }
+          row_gap_effective = row_gap_effective + gap_extra
+          start_y = start_extra
+        } else {
+          row_gap_effective = row_gap_effective + extra
+          start_y = extra
+        }
+      }
+    AlignStretch =>
+      if row_count > 0 {
+        let extra = leftover_y / row_count.to_double()
+        for i in 0..<row_count {
+          let v = row_sizes[i] + extra
+          row_sizes[i] = if v > 0.0 { v } else { 0.0 }
+        }
+      }
+  }
+  let base_x = absolute_origin.x + border.left + padding.left
+  let base_y = absolute_origin.y + border.top + padding.top
+  let default_align_items = match node.style.align_items {
+    Some(v) => v
+    None => ItemsStretch
+  }
+  let default_justify_items = match node.style.justify_items {
+    Some(v) => v
+    None => ItemsStretch
+  }
+  for i in 0..<placement_count {
+    let child_id = node.children[i]
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+    match child.style.display {
+      DisplayNone => compute_hidden_layout(tree, child_id, Point::zero())
+      _ => {
+        let row = placed_row[i]
+        let col = placed_col[i]
+        if row >= row_count || col >= col_count {
+          continue
+        }
+        let mut x = start_x
+        for c in 0..<col {
+          x = x + col_sizes[c] + col_gap_effective
+        }
+        let mut y = start_y
+        for r in 0..<row {
+          y = y + row_sizes[r] + row_gap_effective
+        }
+        let cell_w = col_sizes[col]
+        let cell_h = row_sizes[row]
+        let child_available = Size::new(
+          width=AvailDefinite(cell_w),
+          height=AvailDefinite(cell_h),
+        )
+        let justify = match child.style.justify_self {
+          Some(v) => v
+          None => default_justify_items
+        }
+        let align = match child.style.align_self {
+          Some(v) => v
+          None => default_align_items
+        }
+        let known_w = match justify {
+          ItemsStretch =>
+            if child.style.size.width is DimAuto {
+              Some(cell_w)
+            } else {
+              None
+            }
+          _ => None
+        }
+        let known_h = match align {
+          ItemsStretch =>
+            if child.style.size.height is DimAuto {
+              Some(cell_h)
+            } else {
+              None
+            }
+          _ => None
+        }
+
+        // First pass: compute the item's intrinsic size within the cell constraints.
+        compute_node_layout_with_measure(
+          tree,
+          child_id,
+          Size::new(width=known_w, height=known_h),
+          child_available,
+          Point::zero(),
+          measure_function,
+        )
+        let intrinsic = tree.nodes[child_id].layout.size
+        let offset_x = match justify {
+          ItemsEnd | ItemsFlexEnd => cell_w - intrinsic.width
+          ItemsCenter => (cell_w - intrinsic.width) / 2.0
+          _ => 0.0
+        }
+        let offset_y = match align {
+          ItemsEnd | ItemsFlexEnd => cell_h - intrinsic.height
+          ItemsCenter => (cell_h - intrinsic.height) / 2.0
+          _ => 0.0
+        }
+
+        // Second pass: position the item within the cell.
+        compute_node_layout_with_measure(
+          tree,
+          child_id,
+          Size::new(width=known_w, height=known_h),
+          child_available,
+          Point::new(x=base_x + x + offset_x, y=base_y + y + offset_y),
+          measure_function,
+        )
+      }
+    }
+  }
+}
+
+///|
+fn[C] compute_block_layout_with_measure(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  known_dimensions : Size[Double?],
+  available_space : Size[AvailableSpace],
+  absolute_origin : Point[Double],
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ],
+) -> Unit raise TaffyError {
+  let node = match tree.nodes.get(node_id) {
+    Some(n) => n
+    None => raise InvalidNodeId(node_id)
+  }
+  let padding = resolve_rect_width_basis(node.style.padding, available_space)
+  let border = resolve_rect_width_basis(node.style.border, available_space)
+  let horiz_inset = padding.left + padding.right + border.left + border.right
+  let vert_inset = padding.top + padding.bottom + border.top + border.bottom
+  let style_width = resolve_optional_dimension(
+    node.style.size.width,
+    available_space.width,
+  )
+  let style_height = resolve_optional_dimension(
+    node.style.size.height,
+    available_space.height,
+  )
+  let specified_width = match known_dimensions.width {
+    Some(w) => Some(w)
+    None => style_width
+  }
+  let specified_height = match known_dimensions.height {
+    Some(h) => Some(h)
+    None => style_height
+  }
+
+  // Minimal block sizing: border-box.
+  let raw_width = match specified_width {
+    Some(w) => max_double(w, horiz_inset)
+    None => horiz_inset
+  }
+  let raw_height = match specified_height {
+    Some(h) => max_double(h, vert_inset)
+    None => vert_inset
+  }
+  let border_box_width = clamp_dimension(
+    raw_width,
+    node.style.min_size.width,
+    node.style.max_size.width,
+    available_space.width,
+  )
+  let border_box_height = clamp_dimension(
+    raw_height,
+    node.style.min_size.height,
+    node.style.max_size.height,
+    available_space.height,
+  )
+  tree.nodes[node_id].layout = Layout::{
+    location: absolute_origin,
+    size: Size::new(width=border_box_width, height=border_box_height),
+  }
+
+  // Containing block for absolute positioning: padding box (border box minus border).
+  let padding_box_width = max_double(
+    border_box_width - border.left - border.right,
+    0.0,
+  )
+  let padding_box_height = max_double(
+    border_box_height - border.top - border.bottom,
+    0.0,
+  )
+  let padding_origin = Point::new(
+    x=absolute_origin.x + border.left,
+    y=absolute_origin.y + border.top,
+  )
+  let content_origin = Point::new(
+    x=padding_origin.x + padding.left,
+    y=padding_origin.y + padding.top,
+  )
+  let content_width = max_double(border_box_width - horiz_inset, 0.0)
+  let content_height = max_double(border_box_height - vert_inset, 0.0)
+  let abs_available = Size::new(
+    width=AvailDefinite(padding_box_width),
+    height=AvailDefinite(padding_box_height),
+  )
+  let flow_available = Size::new(
+    width=AvailDefinite(content_width),
+    height=AvailDefinite(content_height),
+  )
+  let mut cursor_y = 0.0
+  for child_id in node.children {
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+    match child.style.display {
+      DisplayNone => compute_hidden_layout(tree, child_id, Point::zero())
+      _ =>
+        match child.style.position {
+          PosAbsolute => {
+            // First pass: determine intrinsic size under the containing block constraints.
+            compute_node_layout_with_measure(
+              tree,
+              child_id,
+              Size::new(width=None, height=None),
+              abs_available,
+              Point::zero(),
+              measure_function,
+            )
+            let intrinsic = tree.nodes[child_id].layout.size
+            let resolved_margin = resolve_rect_width_basis(
+              child.style.margin,
+              abs_available,
+            )
+            let inset = child.style.inset
+            let left = resolve_optional_dimension(
+              inset.left,
+              abs_available.width,
+            )
+            let right = resolve_optional_dimension(
+              inset.right,
+              abs_available.width,
+            )
+            let top = resolve_optional_dimension(
+              inset.top,
+              abs_available.height,
+            )
+            let bottom = resolve_optional_dimension(
+              inset.bottom,
+              abs_available.height,
+            )
+            let x_in_padding = match left {
+              Some(v) => v + resolved_margin.left
+              None =>
+                match right {
+                  Some(v) =>
+                    padding_box_width -
+                    v -
+                    resolved_margin.right -
+                    intrinsic.width
+                  None => resolved_margin.left
+                }
+            }
+            let y_in_padding = match top {
+              Some(v) => v + resolved_margin.top
+              None =>
+                match bottom {
+                  Some(v) =>
+                    padding_box_height -
+                    v -
+                    resolved_margin.bottom -
+                    intrinsic.height
+                  None => resolved_margin.top
+                }
+            }
+            compute_node_layout_with_measure(
+              tree,
+              child_id,
+              Size::new(
+                width=Some(intrinsic.width),
+                height=Some(intrinsic.height),
+              ),
+              abs_available,
+              Point::new(
+                x=padding_origin.x + x_in_padding,
+                y=padding_origin.y + y_in_padding,
+              ),
+              measure_function,
+            )
+          }
+          PosRelative => {
+            // Minimal normal flow: stack children vertically.
+            compute_node_layout_with_measure(
+              tree,
+              child_id,
+              Size::new(width=None, height=None),
+              flow_available,
+              Point::new(x=content_origin.x, y=content_origin.y + cursor_y),
+              measure_function,
+            )
+            cursor_y = cursor_y + tree.nodes[child_id].layout.size.height
+          }
+        }
+    }
+  }
+}
+
+///|
+fn[C] baseline_offset_y(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+) -> Double raise TaffyError {
+  let node = match tree.nodes.get(node_id) {
+    Some(n) => n
+    None => raise InvalidNodeId(node_id)
+  }
+  let node_layout = node.layout
+  if node.children.length() == 0 {
+    node_layout.size.height
+  } else {
+    for child_id in node.children {
+      let child = match tree.nodes.get(child_id) {
+        Some(c) => c
+        None => raise InvalidNodeId(child_id)
+      }
+      match child.style.display {
+        DisplayNone => ()
+        _ =>
+          match child.style.position {
+            PosAbsolute => ()
+            PosRelative => {
+              let child_layout = child.layout
+              return child_layout.location.y -
+                node_layout.location.y +
+                baseline_offset_y(tree, child_id)
+            }
+          }
+      }
+    }
+    node_layout.size.height
+  }
+}
+
+///|
+fn[C] compute_flex_layout_with_measure(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  known_dimensions : Size[Double?],
+  available_space : Size[AvailableSpace],
+  absolute_origin : Point[Double],
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ],
+) -> Unit raise TaffyError {
+  let node = match tree.nodes.get(node_id) {
+    Some(n) => n
+    None => raise InvalidNodeId(node_id)
+  }
+  let padding = resolve_rect_width_basis(node.style.padding, available_space)
+  let border = resolve_rect_width_basis(node.style.border, available_space)
+  let horiz_inset = padding.left + padding.right + border.left + border.right
+  let vert_inset = padding.top + padding.bottom + border.top + border.bottom
+  let is_col = is_column(node.style.flex_direction)
+  let style_width = resolve_optional_dimension(
+    node.style.size.width,
+    available_space.width,
+  )
+  let style_height = resolve_optional_dimension(
+    node.style.size.height,
+    available_space.height,
+  )
+  let specified_width = match known_dimensions.width {
+    Some(w) => Some(w)
+    None => style_width
+  }
+  let specified_height = match known_dimensions.height {
+    Some(h) => Some(h)
+    None => style_height
+  }
+  let width_def_for_percent = known_dimensions.width is Some(_) ||
+    style_width is Some(_)
+  let height_def_for_percent = known_dimensions.height is Some(_) ||
+    style_height is Some(_)
+  let tentative_border_box_width = match specified_width {
+    Some(w) => max_double(w, horiz_inset)
+    None => horiz_inset
+  }
+  let tentative_border_box_height = match specified_height {
+    Some(h) => max_double(h, vert_inset)
+    None => vert_inset
+  }
+  let tentative_content_width = max_double(
+    tentative_border_box_width - horiz_inset,
+    0.0,
+  )
+  let tentative_content_height = max_double(
+    tentative_border_box_height - vert_inset,
+    0.0,
+  )
+  let parent_available_for_children = Size::new(
+    width=resolve_available_for_percent(
+      width_def_for_percent, tentative_content_width,
+    ),
+    height=resolve_available_for_percent(
+      height_def_for_percent, tentative_content_height,
+    ),
+  )
+  let flow_children : Array[NodeId] = []
+  let abs_children : Array[NodeId] = []
+  let hidden_children : Array[NodeId] = []
+  for child_id in node.children {
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+    match child.style.display {
+      DisplayNone => hidden_children.push(child_id)
+      _ =>
+        match child.style.position {
+          PosAbsolute => abs_children.push(child_id)
+          PosRelative => flow_children.push(child_id)
+        }
+    }
+  }
+  let flow_count = flow_children.length()
+  let default_align_items = match node.style.align_items {
+    Some(v) => v
+    None => ItemsStretch
+  }
+  let base_sizes : Array[Size[Double]] = Array::make(flow_count, Size::zero())
+  let cross_is_auto : Array[Bool] = Array::make(flow_count, true)
+  let flex_grow : Array[Double] = Array::make(flow_count, 0.0)
+  let flex_shrink : Array[Double] = Array::make(flow_count, 1.0)
+  let margin_main_start : Array[Double] = Array::make(flow_count, 0.0)
+  let margin_main_end : Array[Double] = Array::make(flow_count, 0.0)
+  let margin_cross_start : Array[Double] = Array::make(flow_count, 0.0)
+  let margin_cross_end : Array[Double] = Array::make(flow_count, 0.0)
+  let align_for_flow : Array[AlignItems] = Array::make(
+    flow_count, default_align_items,
+  )
+  let baseline_offsets : Array[Double] = Array::make(flow_count, 0.0)
+  let mut total_base_main = 0.0
+  let mut total_base_margin_main = 0.0
+  let mut max_cross = 0.0
+  let main_available_pre = if is_col {
+    parent_available_for_children.height
+  } else {
+    parent_available_for_children.width
+  }
+  let cross_available_pre = if is_col {
+    parent_available_for_children.width
+  } else {
+    parent_available_for_children.height
+  }
+  let gap_main_pre = resolve_gap_main(
+    node.style.gap,
+    is_col,
+    main_available_pre,
+  )
+  let gap_cross_pre = resolve_gap_cross(
+    node.style.gap,
+    is_col,
+    cross_available_pre,
+  )
+  let total_gap_main_pre = if flow_count > 1 {
+    gap_main_pre * (flow_count - 1).to_double()
+  } else {
+    0.0
+  }
+  let total_gap_cross_pre = if flow_count > 1 {
+    gap_cross_pre * (flow_count - 1).to_double()
+  } else {
+    0.0
+  }
+  for i in 0..<flow_count {
+    let child_id = flow_children[i]
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+    let align = match child.style.align_self {
+      Some(v) => v
+      None => default_align_items
+    }
+    align_for_flow[i] = align
+    let resolved_margin = resolve_rect_width_basis(
+      child.style.margin,
+      parent_available_for_children,
+    )
+    let main_margin_start = if is_col {
+      resolved_margin.top
+    } else {
+      resolved_margin.left
+    }
+    let main_margin_end = if is_col {
+      resolved_margin.bottom
+    } else {
+      resolved_margin.right
+    }
+    let cross_margin_start = if is_col {
+      resolved_margin.left
+    } else {
+      resolved_margin.top
+    }
+    let cross_margin_end = if is_col {
+      resolved_margin.right
+    } else {
+      resolved_margin.bottom
+    }
+    compute_node_layout_with_measure(
+      tree,
+      child_id,
+      Size::new(width=None, height=None),
+      parent_available_for_children,
+      Point::zero(),
+      measure_function,
+    )
+    let child_layout = tree.layout(child_id)
+    let main_axis_available = main_available_pre
+    let cross_axis_available = cross_available_pre
+    let basis = resolve_optional_dimension(
+      child.style.flex_basis,
+      main_axis_available,
+    )
+    let main_from_size = if is_col {
+      resolve_optional_dimension(child.style.size.height, main_axis_available)
+    } else {
+      resolve_optional_dimension(child.style.size.width, main_axis_available)
+    }
+    let main = match basis {
+      Some(v) => v
+      None =>
+        match main_from_size {
+          Some(v) => v
+          None =>
+            if is_col {
+              child_layout.size.height
+            } else {
+              child_layout.size.width
+            }
+        }
+    }
+    let cross_from_size = if is_col {
+      resolve_optional_dimension(child.style.size.width, cross_axis_available)
+    } else {
+      resolve_optional_dimension(child.style.size.height, cross_axis_available)
+    }
+    let cross = match cross_from_size {
+      Some(v) => v
+      None =>
+        if is_col {
+          child_layout.size.width
+        } else {
+          child_layout.size.height
+        }
+    }
+    base_sizes[i] = make_size_from_main_cross(main, cross, is_col)
+    cross_is_auto[i] = match cross_from_size {
+      Some(_) => false
+      None => true
+    }
+    flex_grow[i] = child.style.flex_grow
+    flex_shrink[i] = child.style.flex_shrink
+    margin_main_start[i] = main_margin_start
+    margin_main_end[i] = main_margin_end
+    margin_cross_start[i] = cross_margin_start
+    margin_cross_end[i] = cross_margin_end
+    total_base_main = total_base_main + main
+    total_base_margin_main = total_base_margin_main +
+      main_margin_start +
+      main_margin_end
+    max_cross = max_double(
+      max_cross,
+      cross + cross_margin_start + cross_margin_end,
+    )
+    if !is_col {
+      match align {
+        ItemsBaseline => baseline_offsets[i] = baseline_offset_y(tree, child_id)
+        _ => ()
+      }
+    }
+  }
+  if !is_col {
+    let mut baseline_before_max = 0.0
+    let mut baseline_after_max = 0.0
+    for i in 0..<flow_count {
+      match align_for_flow[i] {
+        ItemsBaseline => {
+          let cross = get_cross(base_sizes[i], is_col)
+          let baseline = baseline_offsets[i]
+          let after_inner = cross - baseline
+          let after_inner = if after_inner > 0.0 { after_inner } else { 0.0 }
+          let before = margin_cross_start[i] + baseline
+          let after = margin_cross_end[i] + after_inner
+          baseline_before_max = max_double(baseline_before_max, before)
+          baseline_after_max = max_double(baseline_after_max, after)
+        }
+        _ => ()
+      }
+    }
+    max_cross = max_double(max_cross, baseline_before_max + baseline_after_max)
+  }
+  let total_base_outer_main = total_base_main + total_base_margin_main
+
+  // Container sizing (border-box)
+  let raw_width = match specified_width {
+    Some(w) => max_double(w, horiz_inset)
+    None =>
+      if is_col {
+        max_double(max_cross + total_gap_cross_pre + horiz_inset, horiz_inset)
+      } else {
+        max_double(
+          total_base_outer_main + total_gap_main_pre + horiz_inset,
+          horiz_inset,
+        )
+      }
+  }
+  let raw_height = match specified_height {
+    Some(h) => max_double(h, vert_inset)
+    None =>
+      if is_col {
+        max_double(
+          total_base_outer_main + total_gap_main_pre + vert_inset,
+          vert_inset,
+        )
+      } else {
+        max_double(max_cross + total_gap_cross_pre + vert_inset, vert_inset)
+      }
+  }
+  let mut border_box_width = clamp_dimension(
+    raw_width,
+    node.style.min_size.width,
+    node.style.max_size.width,
+    available_space.width,
+  )
+  let mut border_box_height = clamp_dimension(
+    raw_height,
+    node.style.min_size.height,
+    node.style.max_size.height,
+    available_space.height,
+  )
+  tree.nodes[node_id].layout = Layout::{
+    location: absolute_origin,
+    size: Size::new(width=border_box_width, height=border_box_height),
+  }
+  let mut content_width = max_double(border_box_width - horiz_inset, 0.0)
+  let mut content_height = max_double(border_box_height - vert_inset, 0.0)
+
+  // Resolve gaps again now that the container's content size is known
+  let main_available_final = if is_col {
+    resolve_available_for_percent(height_def_for_percent, content_height)
+  } else {
+    resolve_available_for_percent(width_def_for_percent, content_width)
+  }
+  let cross_available_final = if is_col {
+    resolve_available_for_percent(width_def_for_percent, content_width)
+  } else {
+    resolve_available_for_percent(height_def_for_percent, content_height)
+  }
+  let gap_main = resolve_gap_main(node.style.gap, is_col, main_available_final)
+  let gap_cross = resolve_gap_cross(
+    node.style.gap,
+    is_col,
+    cross_available_final,
+  )
+  let justify = match node.style.justify_content {
+    Some(j) => j
+    None => AlignFlexStart
+  }
+  let is_reverse = match node.style.flex_direction {
+    FlexRowReverse | FlexColumnReverse => true
+    _ => false
+  }
+  let base_x = absolute_origin.x + border.left + padding.left
+  let base_y = absolute_origin.y + border.top + padding.top
+  let mut container_main = if is_col { content_height } else { content_width }
+  let mut container_cross = if is_col { content_width } else { content_height }
+  let is_wrap = match node.style.flex_wrap {
+    FlexNoWrap => false
+    _ => true
+  }
+  let main_is_definite = if is_col {
+    specified_height is Some(_)
+  } else {
+    specified_width is Some(_)
+  }
+  let cross_is_auto_container = if is_col {
+    specified_width is None
+  } else {
+    specified_height is None
+  }
+  if is_wrap && main_is_definite && flow_count > 0 {
+    // Build flex lines (single pass, simplified).
+    let lines : Array[Array[Int]] = []
+    let line_crosses : Array[Double] = []
+    let line_baseline_befores : Array[Double] = []
+    let mut current_line : Array[Int] = []
+    let mut current_outer_main = 0.0
+    let mut current_cross = 0.0
+    let mut current_baseline_before = 0.0
+    let mut current_baseline_after = 0.0
+    for i in 0..<flow_count {
+      let main = get_main(base_sizes[i], is_col)
+      let cross = get_cross(base_sizes[i], is_col)
+      let outer_main = margin_main_start[i] + main + margin_main_end[i]
+      let outer_cross = margin_cross_start[i] + cross + margin_cross_end[i]
+      let mut item_before = 0.0
+      let mut item_after = 0.0
+      if !is_col {
+        match align_for_flow[i] {
+          ItemsBaseline => {
+            let baseline = baseline_offsets[i]
+            let after_inner = cross - baseline
+            let after_inner = if after_inner > 0.0 { after_inner } else { 0.0 }
+            item_before = margin_cross_start[i] + baseline
+            item_after = margin_cross_end[i] + after_inner
+          }
+          _ => ()
+        }
+      }
+      if current_line.length() == 0 {
+        current_line.push(i)
+        current_outer_main = outer_main
+        current_cross = outer_cross
+        current_baseline_before = item_before
+        current_baseline_after = item_after
+        current_cross = max_double(
+          current_cross,
+          current_baseline_before + current_baseline_after,
+        )
+      } else {
+        let tentative = current_outer_main + gap_main + outer_main
+        if tentative > container_main {
+          lines.push(current_line)
+          line_crosses.push(current_cross)
+          line_baseline_befores.push(current_baseline_before)
+          current_line = []
+          current_line.push(i)
+          current_outer_main = outer_main
+          current_cross = outer_cross
+          current_baseline_before = item_before
+          current_baseline_after = item_after
+          current_cross = max_double(
+            current_cross,
+            current_baseline_before + current_baseline_after,
+          )
+        } else {
+          current_line.push(i)
+          current_outer_main = tentative
+          current_cross = max_double(current_cross, outer_cross)
+          current_baseline_before = max_double(
+            current_baseline_before, item_before,
+          )
+          current_baseline_after = max_double(
+            current_baseline_after, item_after,
+          )
+          current_cross = max_double(
+            current_cross,
+            current_baseline_before + current_baseline_after,
+          )
+        }
+      }
+    }
+    if current_line.length() > 0 {
+      lines.push(current_line)
+      line_crosses.push(current_cross)
+      line_baseline_befores.push(current_baseline_before)
+    }
+    let line_count = lines.length()
+    let mut total_lines_cross = 0.0
+    for c in line_crosses {
+      total_lines_cross = total_lines_cross + c
+    }
+    let total_cross_gaps = if line_count > 1 {
+      gap_cross * (line_count - 1).to_double()
+    } else {
+      0.0
+    }
+    total_lines_cross = total_lines_cross + total_cross_gaps
+
+    // If the container's cross size is auto, compute it from wrapped line sizes.
+    if cross_is_auto_container {
+      if is_col {
+        border_box_width = clamp_dimension(
+          max_double(total_lines_cross + horiz_inset, horiz_inset),
+          node.style.min_size.width,
+          node.style.max_size.width,
+          available_space.width,
+        )
+        content_width = max_double(border_box_width - horiz_inset, 0.0)
+      } else {
+        border_box_height = clamp_dimension(
+          max_double(total_lines_cross + vert_inset, vert_inset),
+          node.style.min_size.height,
+          node.style.max_size.height,
+          available_space.height,
+        )
+        content_height = max_double(border_box_height - vert_inset, 0.0)
+      }
+      tree.nodes[node_id].layout = Layout::{
+        location: absolute_origin,
+        size: Size::new(width=border_box_width, height=border_box_height),
+      }
+      container_main = if is_col { content_height } else { content_width }
+      container_cross = if is_col { content_width } else { content_height }
+    }
+    let align_content = match node.style.align_content {
+      Some(v) => v
+      None => AlignStretch
+    }
+    let leftover_cross = container_cross - total_lines_cross
+    let leftover_cross = if leftover_cross > 0.0 { leftover_cross } else { 0.0 }
+    let extra_per_line = match align_content {
+      AlignStretch =>
+        if line_count > 0 {
+          leftover_cross / line_count.to_double()
+        } else {
+          0.0
+        }
+      _ => 0.0
+    }
+    let mut start_cross = 0.0
+    let mut extra_gap_cross = 0.0
+    match align_content {
+      AlignStretch => ()
+      AlignCenter => start_cross = leftover_cross / 2.0
+      AlignFlexEnd | AlignEnd => start_cross = leftover_cross
+      AlignSpaceBetween =>
+        if line_count > 1 {
+          extra_gap_cross = leftover_cross / (line_count - 1).to_double()
+        }
+      AlignSpaceAround =>
+        if line_count > 0 {
+          extra_gap_cross = leftover_cross / line_count.to_double()
+          start_cross = extra_gap_cross / 2.0
+        }
+      AlignSpaceEvenly =>
+        if line_count > 0 {
+          extra_gap_cross = leftover_cross / (line_count + 1).to_double()
+          start_cross = extra_gap_cross
+        }
+      _ => ()
+    }
+    let line_cross_sizes : Array[Double] = Array::make(line_count, 0.0)
+    for li in 0..<line_count {
+      line_cross_sizes[li] = line_crosses[li] + extra_per_line
+    }
+    let line_offsets : Array[Double] = Array::make(line_count, 0.0)
+    let mut cross_cursor = start_cross
+    for li in 0..<line_count {
+      line_offsets[li] = cross_cursor
+      cross_cursor = cross_cursor +
+        line_cross_sizes[li] +
+        gap_cross +
+        extra_gap_cross
+    }
+    let child_available_for_final = Size::new(
+      width=resolve_available_for_percent(width_def_for_percent, content_width),
+      height=resolve_available_for_percent(
+        height_def_for_percent, content_height,
+      ),
+    )
+    for li in 0..<line_count {
+      let indices = lines[li]
+      let count = indices.length()
+      let line_cross = line_cross_sizes[li]
+      let line_offset = line_offsets[li]
+      let baseline_before_max = line_baseline_befores[li]
+      let mut line_used = 0.0
+      for idx in indices {
+        let main = get_main(base_sizes[idx], is_col)
+        line_used = line_used +
+          margin_main_start[idx] +
+          main +
+          margin_main_end[idx]
+      }
+      if count > 1 {
+        line_used = line_used + gap_main * (count - 1).to_double()
+      }
+      let line_leftover = container_main - line_used
+      let line_leftover = if line_leftover > 0.0 { line_leftover } else { 0.0 }
+      let mut extra_between = 0.0
+      let start_main = match justify {
+        AlignCenter => line_leftover / 2.0
+        AlignFlexEnd | AlignEnd => line_leftover
+        AlignSpaceBetween =>
+          if count > 1 {
+            extra_between = line_leftover / (count - 1).to_double()
+            0.0
+          } else {
+            0.0
+          }
+        AlignSpaceAround =>
+          if count > 0 {
+            extra_between = line_leftover / count.to_double()
+            extra_between / 2.0
+          } else {
+            0.0
+          }
+        AlignSpaceEvenly =>
+          if count > 0 {
+            extra_between = line_leftover / (count + 1).to_double()
+            extra_between
+          } else {
+            0.0
+          }
+        _ => 0.0
+      }
+      let actual_gap_main = gap_main + extra_between
+      let mut main_cursor = if is_reverse {
+        container_main - start_main
+      } else {
+        start_main
+      }
+      for idx in indices {
+        let child_id = flow_children[idx]
+        let child = match tree.nodes.get(child_id) {
+          Some(c) => c
+          None => raise InvalidNodeId(child_id)
+        }
+        let main_size = get_main(base_sizes[idx], is_col)
+        let align = match child.style.align_self {
+          Some(v) => v
+          None =>
+            match node.style.align_items {
+              Some(v) => v
+              None => ItemsStretch
+            }
+        }
+        let intrinsic_cross = get_cross(base_sizes[idx], is_col)
+        let available_cross_for_item = max_double(
+          line_cross - margin_cross_start[idx] - margin_cross_end[idx],
+          0.0,
+        )
+        let cross_size = match align {
+          ItemsStretch =>
+            if cross_is_auto[idx] {
+              available_cross_for_item
+            } else {
+              intrinsic_cross
+            }
+          _ => intrinsic_cross
+        }
+        let cross_pos_in_available = match align {
+          ItemsBaseline =>
+            if !is_col {
+              baseline_before_max -
+              margin_cross_start[idx] -
+              baseline_offsets[idx]
+            } else {
+              0.0
+            }
+          ItemsEnd | ItemsFlexEnd => available_cross_for_item - cross_size
+          ItemsCenter => (available_cross_for_item - cross_size) / 2.0
+          _ => 0.0
+        }
+        let cross_offset = line_offset +
+          margin_cross_start[idx] +
+          cross_pos_in_available
+        let main_pos = if is_reverse {
+          main_cursor = main_cursor - margin_main_end[idx] - main_size
+          let pos = main_cursor + margin_main_start[idx]
+          main_cursor = main_cursor - margin_main_start[idx] - actual_gap_main
+          pos
+        } else {
+          let pos = main_cursor + margin_main_start[idx]
+          main_cursor = main_cursor +
+            margin_main_start[idx] +
+            main_size +
+            margin_main_end[idx] +
+            actual_gap_main
+          pos
+        }
+        let child_size = make_size_from_main_cross(
+          main_size, cross_size, is_col,
+        )
+        let child_origin = if is_col {
+          Point::new(x=base_x + cross_offset, y=base_y + main_pos)
+        } else {
+          Point::new(x=base_x + main_pos, y=base_y + cross_offset)
+        }
+        compute_node_layout_with_measure(
+          tree,
+          child_id,
+          Size::new(
+            width=Some(child_size.width),
+            height=Some(child_size.height),
+          ),
+          child_available_for_final,
+          child_origin,
+          measure_function,
+        )
+      }
+    }
+  } else {
+    // Single-line flex layout
+    let total_gap_main = if flow_count > 1 {
+      gap_main * (flow_count - 1).to_double()
+    } else {
+      0.0
+    }
+
+    // Flex grow/shrink (single-line, simplified)
+    let final_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
+    for i in 0..<flow_count {
+      final_main_sizes[i] = get_main(base_sizes[i], is_col)
+    }
+    let free_space = container_main -
+      total_base_main -
+      total_base_margin_main -
+      total_gap_main
+    if free_space > 0.0 {
+      let mut total_grow = 0.0
+      for i in 0..<flow_count {
+        total_grow = total_grow + flex_grow[i]
+      }
+      if total_grow > 0.0 {
+        for i in 0..<flow_count {
+          let grow = flex_grow[i]
+          if grow > 0.0 {
+            final_main_sizes[i] = final_main_sizes[i] +
+              free_space * (grow / total_grow)
+          }
+        }
+      }
+    } else if free_space < 0.0 {
+      let mut total_shrink_scaled = 0.0
+      for i in 0..<flow_count {
+        let shrink = flex_shrink[i]
+        let base_main = get_main(base_sizes[i], is_col)
+        let scaled = shrink * base_main
+        total_shrink_scaled = total_shrink_scaled + scaled
+      }
+      if total_shrink_scaled > 0.0 {
+        for i in 0..<flow_count {
+          let shrink = flex_shrink[i]
+          let base_main = get_main(base_sizes[i], is_col)
+          let scaled = shrink * base_main
+          if scaled > 0.0 {
+            final_main_sizes[i] = final_main_sizes[i] +
+              free_space * (scaled / total_shrink_scaled)
+          }
+        }
+      }
+    }
+
+    // Justify content (single-line)
+    let mut used_main = 0.0
+    for i in 0..<flow_count {
+      used_main = used_main +
+        final_main_sizes[i] +
+        margin_main_start[i] +
+        margin_main_end[i]
+    }
+    let leftover = container_main - used_main - total_gap_main
+    let leftover = if leftover > 0.0 { leftover } else { 0.0 }
+    let mut extra_between = 0.0
+    let start_main = match justify {
+      AlignCenter => leftover / 2.0
+      AlignFlexEnd | AlignEnd => leftover
+      AlignSpaceBetween =>
+        if flow_count > 1 {
+          extra_between = leftover / (flow_count - 1).to_double()
+          0.0
+        } else {
+          0.0
+        }
+      AlignSpaceAround =>
+        if flow_count > 0 {
+          extra_between = leftover / flow_count.to_double()
+          extra_between / 2.0
+        } else {
+          0.0
+        }
+      AlignSpaceEvenly =>
+        if flow_count > 0 {
+          extra_between = leftover / (flow_count + 1).to_double()
+          extra_between
+        } else {
+          0.0
+        }
+      _ => 0.0
+    }
+    let actual_gap_main = gap_main + extra_between
+    let child_available_for_final = Size::new(
+      width=resolve_available_for_percent(width_def_for_percent, content_width),
+      height=resolve_available_for_percent(
+        height_def_for_percent, content_height,
+      ),
+    )
+    let mut baseline_before_max = 0.0
+    if !is_col {
+      let mut baseline_after_max = 0.0
+      for i in 0..<flow_count {
+        match align_for_flow[i] {
+          ItemsBaseline => {
+            let cross = get_cross(base_sizes[i], is_col)
+            let baseline = baseline_offsets[i]
+            let after_inner = cross - baseline
+            let after_inner = if after_inner > 0.0 { after_inner } else { 0.0 }
+            let before = margin_cross_start[i] + baseline
+            let after = margin_cross_end[i] + after_inner
+            baseline_before_max = max_double(baseline_before_max, before)
+            baseline_after_max = max_double(baseline_after_max, after)
+          }
+          _ => ()
+        }
+      }
+    }
+    let mut cursor = if is_reverse {
+      container_main - start_main
+    } else {
+      start_main
+    }
+    for i in 0..<flow_count {
+      let child_id = flow_children[i]
+      let child = match tree.nodes.get(child_id) {
+        Some(c) => c
+        None => raise InvalidNodeId(child_id)
+      }
+      let main_size = final_main_sizes[i]
+      let align = match child.style.align_self {
+        Some(v) => v
+        None =>
+          match node.style.align_items {
+            Some(v) => v
+            None => ItemsStretch
+          }
+      }
+      let intrinsic_cross = get_cross(base_sizes[i], is_col)
+      let available_cross_for_item = max_double(
+        container_cross - margin_cross_start[i] - margin_cross_end[i],
+        0.0,
+      )
+      let cross_size = match align {
+        ItemsStretch =>
+          if cross_is_auto[i] {
+            available_cross_for_item
+          } else {
+            intrinsic_cross
+          }
+        _ => intrinsic_cross
+      }
+      let cross_pos_in_available = match align {
+        ItemsBaseline =>
+          if !is_col {
+            baseline_before_max - margin_cross_start[i] - baseline_offsets[i]
+          } else {
+            0.0
+          }
+        ItemsEnd | ItemsFlexEnd => available_cross_for_item - cross_size
+        ItemsCenter => (available_cross_for_item - cross_size) / 2.0
+        _ => 0.0
+      }
+      let cross_offset = margin_cross_start[i] + cross_pos_in_available
+      let main_pos = if is_reverse {
+        cursor = cursor - margin_main_end[i] - main_size
+        let pos = cursor + margin_main_start[i]
+        cursor = cursor - margin_main_start[i] - actual_gap_main
+        pos
+      } else {
+        let pos = cursor + margin_main_start[i]
+        cursor = cursor +
+          margin_main_start[i] +
+          main_size +
+          margin_main_end[i] +
+          actual_gap_main
+        pos
+      }
+      let child_size = make_size_from_main_cross(main_size, cross_size, is_col)
+      let child_origin = if is_col {
+        Point::new(x=base_x + cross_offset, y=base_y + main_pos)
+      } else {
+        Point::new(x=base_x + main_pos, y=base_y + cross_offset)
+      }
+      compute_node_layout_with_measure(
+        tree,
+        child_id,
+        Size::new(width=Some(child_size.width), height=Some(child_size.height)),
+        child_available_for_final,
+        child_origin,
+        measure_function,
+      )
+    }
+  }
+
+  // Absolute positioned children: compute after container size is known, and do not affect flow layout.
+  let abs_available = Size::new(
+    width=AvailDefinite(content_width),
+    height=AvailDefinite(content_height),
+  )
+  for child_id in abs_children {
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+
+    // First pass: determine intrinsic size under the containing block constraints.
+    compute_node_layout_with_measure(
+      tree,
+      child_id,
+      Size::new(width=None, height=None),
+      abs_available,
+      Point::zero(),
+      measure_function,
+    )
+    let intrinsic = tree.layout(child_id).size
+    let resolved_margin = resolve_rect_width_basis(
+      child.style.margin,
+      abs_available,
+    )
+    let main_margin_start = if is_col {
+      resolved_margin.top
+    } else {
+      resolved_margin.left
+    }
+    let main_margin_end = if is_col {
+      resolved_margin.bottom
+    } else {
+      resolved_margin.right
+    }
+    let cross_margin_start = if is_col {
+      resolved_margin.left
+    } else {
+      resolved_margin.top
+    }
+    let cross_margin_end = if is_col {
+      resolved_margin.right
+    } else {
+      resolved_margin.bottom
+    }
+    let align = match child.style.align_self {
+      Some(v) => v
+      None =>
+        match node.style.align_items {
+          Some(v) => v
+          None => ItemsStretch
+        }
+    }
+    let cross_axis_is_auto = if is_col {
+      child.style.size.width is DimAuto
+    } else {
+      child.style.size.height is DimAuto
+    }
+    let intrinsic_cross = if is_col {
+      intrinsic.width
+    } else {
+      intrinsic.height
+    }
+    let intrinsic_main = if is_col { intrinsic.height } else { intrinsic.width }
+    let available_cross_for_item = max_double(
+      container_cross - cross_margin_start - cross_margin_end,
+      0.0,
+    )
+    let cross_size = match align {
+      ItemsStretch =>
+        if cross_axis_is_auto {
+          available_cross_for_item
+        } else {
+          intrinsic_cross
+        }
+      _ => intrinsic_cross
+    }
+    let cross_pos_in_available = match align {
+      ItemsEnd | ItemsFlexEnd => available_cross_for_item - cross_size
+      ItemsCenter => (available_cross_for_item - cross_size) / 2.0
+      _ => 0.0
+    }
+    let static_cross = cross_margin_start + cross_pos_in_available
+    let outer_main = main_margin_start + intrinsic_main + main_margin_end
+    let leftover_main = container_main - outer_main
+    let leftover_main = if leftover_main > 0.0 { leftover_main } else { 0.0 }
+    let static_start_main = match justify {
+      AlignCenter => leftover_main / 2.0
+      AlignFlexEnd | AlignEnd => leftover_main
+      _ => 0.0
+    }
+    let static_main = static_start_main + main_margin_start
+    let final_size = make_size_from_main_cross(
+      intrinsic_main, cross_size, is_col,
+    )
+    let inset = child.style.inset
+    let left = resolve_optional_dimension(inset.left, abs_available.width)
+    let right = resolve_optional_dimension(inset.right, abs_available.width)
+    let top = resolve_optional_dimension(inset.top, abs_available.height)
+    let bottom = resolve_optional_dimension(inset.bottom, abs_available.height)
+    let x_in_content = match left {
+      Some(v) => v + resolved_margin.left
+      None =>
+        match right {
+          Some(v) =>
+            content_width - v - resolved_margin.right - final_size.width
+          None => if is_col { static_cross } else { static_main }
+        }
+    }
+    let y_in_content = match top {
+      Some(v) => v + resolved_margin.top
+      None =>
+        match bottom {
+          Some(v) =>
+            content_height - v - resolved_margin.bottom - final_size.height
+          None => if is_col { static_main } else { static_cross }
+        }
+    }
+    let child_origin = Point::new(
+      x=base_x + x_in_content,
+      y=base_y + y_in_content,
+    )
+    compute_node_layout_with_measure(
+      tree,
+      child_id,
+      Size::new(width=Some(final_size.width), height=Some(final_size.height)),
+      abs_available,
+      child_origin,
+      measure_function,
+    )
+  }
+
+  // Ensure `display: none` children get laid out (to zero) as well.
+  for child_id in hidden_children {
+    compute_node_layout_with_measure(
+      tree,
+      child_id,
+      Size::new(width=None, height=None),
+      abs_available,
+      Point::new(x=base_x, y=base_y),
+      measure_function,
+    )
+  }
+}

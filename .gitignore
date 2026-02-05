@@ -1,0 +1,8 @@
+.DS_Store
+.beads/
+_build/
+target/
+target
+.mooncakes/
+.moonagent/
+taffy-reference/

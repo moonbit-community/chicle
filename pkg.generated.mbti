@@ -199,10 +199,10 @@ pub enum FlexWrap {
 }
 
 pub enum GridAutoFlow {
-  AutoFlowRow
-  AutoFlowColumn
-  AutoFlowRowDense
-  AutoFlowColumnDense
+  Row
+  Column
+  RowDense
+  ColumnDense
 }
 
 pub enum GridPlacement {

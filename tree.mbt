@@ -808,6 +808,14 @@ fn[C] compute_leaf_layout_with_measure(
   )
   let known_width = known_dimensions.width
   let known_height = known_dimensions.height
+  let width_auto = match (known_width, node.style.size.width) {
+    (None, DimAuto) => true
+    _ => false
+  }
+  let height_auto = match (known_height, node.style.size.height) {
+    (None, DimAuto) => true
+    _ => false
+  }
 
   // aspect-ratio: if exactly one axis has a definite size, compute the other from the ratio.
   match node.style.aspect_ratio {
@@ -863,7 +871,7 @@ fn[C] compute_leaf_layout_with_measure(
       }
   }
   let raw_border_box = Size::new(width=raw_width, height=raw_height)
-  let border_box_size = Size::new(
+  let mut border_box_size = Size::new(
     width=clamp_dimension(
       raw_border_box.width,
       node.style.min_size.width,
@@ -877,6 +885,149 @@ fn[C] compute_leaf_layout_with_measure(
       available_space.height,
     ),
   )
+  // aspect-ratio + min/max constraints:
+  // min/max may define the used size even when `size` is auto (including "fill to max" cases).
+  match node.style.aspect_ratio {
+    Some(ratio) =>
+      if ratio > 0.0 && (width_auto || height_auto) {
+        let resolved_min_width = resolve_optional_dimension(
+          node.style.min_size.width,
+          available_space.width,
+        )
+        let resolved_min_height = resolve_optional_dimension(
+          node.style.min_size.height,
+          available_space.height,
+        )
+        let resolved_max_width = resolve_optional_dimension(
+          node.style.max_size.width,
+          available_space.width,
+        )
+        let resolved_max_height = resolve_optional_dimension(
+          node.style.max_size.height,
+          available_space.height,
+        )
+        if width_auto && not(height_auto) {
+          // Height is definite (possibly after clamping); derive width from it.
+          let candidate = max_double(
+            (border_box_size.height * ratio).round(),
+            horiz_inset,
+          )
+          border_box_size = Size::new(
+            width=clamp_dimension(
+              candidate,
+              node.style.min_size.width,
+              node.style.max_size.width,
+              available_space.width,
+            ),
+            height=border_box_size.height,
+          )
+        } else if height_auto && not(width_auto) {
+          // Width is definite (possibly after clamping); derive height from it.
+          let candidate = max_double(
+            (border_box_size.width / ratio).round(),
+            vert_inset,
+          )
+          border_box_size = Size::new(
+            width=border_box_size.width,
+            height=clamp_dimension(
+              candidate,
+              node.style.min_size.height,
+              node.style.max_size.height,
+              available_space.height,
+            ),
+          )
+        } else if width_auto && height_auto {
+          // Both axes auto: prefer max constraints, then min constraints, to pick a base axis.
+          match (resolved_max_width, resolved_max_height) {
+            (None, Some(mh)) => {
+              let base_h = max_double(mh, vert_inset)
+              let derived_w = max_double((base_h * ratio).round(), horiz_inset)
+              border_box_size = Size::new(
+                width=clamp_dimension(
+                  derived_w,
+                  node.style.min_size.width,
+                  node.style.max_size.width,
+                  available_space.width,
+                ),
+                height=clamp_dimension(
+                  base_h,
+                  node.style.min_size.height,
+                  node.style.max_size.height,
+                  available_space.height,
+                ),
+              )
+            }
+            (Some(mw), None) => {
+              let base_w = max_double(mw, horiz_inset)
+              let derived_h = max_double((base_w / ratio).round(), vert_inset)
+              border_box_size = Size::new(
+                width=clamp_dimension(
+                  base_w,
+                  node.style.min_size.width,
+                  node.style.max_size.width,
+                  available_space.width,
+                ),
+                height=clamp_dimension(
+                  derived_h,
+                  node.style.min_size.height,
+                  node.style.max_size.height,
+                  available_space.height,
+                ),
+              )
+            }
+            _ =>
+              match (resolved_min_width, resolved_min_height) {
+                (None, Some(mh)) => {
+                  let base_h = max_double(mh, vert_inset)
+                  let derived_w = max_double(
+                    (base_h * ratio).round(),
+                    horiz_inset,
+                  )
+                  border_box_size = Size::new(
+                    width=clamp_dimension(
+                      derived_w,
+                      node.style.min_size.width,
+                      node.style.max_size.width,
+                      available_space.width,
+                    ),
+                    height=clamp_dimension(
+                      base_h,
+                      node.style.min_size.height,
+                      node.style.max_size.height,
+                      available_space.height,
+                    ),
+                  )
+                }
+                (Some(mw), None) => {
+                  let base_w = max_double(mw, horiz_inset)
+                  let derived_h = max_double(
+                    (base_w / ratio).round(),
+                    vert_inset,
+                  )
+                  border_box_size = Size::new(
+                    width=clamp_dimension(
+                      base_w,
+                      node.style.min_size.width,
+                      node.style.max_size.width,
+                      available_space.width,
+                    ),
+                    height=clamp_dimension(
+                      derived_h,
+                      node.style.min_size.height,
+                      node.style.max_size.height,
+                      available_space.height,
+                    ),
+                  )
+                }
+                _ => ()
+              }
+          }
+        } else {
+          ()
+        }
+      }
+    None => ()
+  }
   tree.nodes[node_id].layout = Layout::{
     location: absolute_origin,
     size: border_box_size,
@@ -1507,11 +1658,11 @@ fn[C] compute_grid_layout_with_measure(
 
   // Placement algorithm: very small subset of CSS Grid (enough for upstream implicit/auto tracks tests).
   let primary_is_col = match node.style.grid_auto_flow {
-    AutoFlowRow | AutoFlowRowDense => true
-    AutoFlowColumn | AutoFlowColumnDense => false
+    Row | RowDense => true
+    Column | ColumnDense => false
   }
   let dense = match node.style.grid_auto_flow {
-    AutoFlowRowDense | AutoFlowColumnDense => true
+    RowDense | ColumnDense => true
     _ => false
   }
 
@@ -2790,6 +2941,16 @@ fn[C] compute_block_layout_with_measure(
               child.style.size.height,
               abs_available.height,
             )
+            let width_was_auto = match used_width {
+              Some(_) => false
+              None => true
+            }
+            let height_was_auto = match used_height {
+              Some(_) => false
+              None => true
+            }
+            let mut width_from_inset = false
+            let mut height_from_inset = false
             // If size is auto and both insets are definite, the size is determined by the inset constraints.
             match used_width {
               Some(_) => ()
@@ -2827,6 +2988,30 @@ fn[C] compute_block_layout_with_measure(
                   _ => ()
                 }
             }
+            match (used_width, used_height) {
+              (Some(_), _) =>
+                if width_was_auto {
+                  match (left, right) {
+                    (Some(_), Some(_)) => width_from_inset = true
+                    _ => ()
+                  }
+                } else {
+                  ()
+                }
+              _ => ()
+            }
+            match (used_width, used_height) {
+              (_, Some(_)) =>
+                if height_was_auto {
+                  match (top, bottom) {
+                    (Some(_), Some(_)) => height_from_inset = true
+                    _ => ()
+                  }
+                } else {
+                  ()
+                }
+              _ => ()
+            }
             // Apply aspect ratio when only one axis is known.
             match child.style.aspect_ratio {
               Some(ratio) =>
@@ -2834,6 +3019,15 @@ fn[C] compute_block_layout_with_measure(
                   match (used_width, used_height) {
                     (Some(w), None) => used_height = Some((w / ratio).round())
                     (None, Some(h)) => used_width = Some((h * ratio).round())
+                    (Some(w), Some(_h)) =>
+                      if width_was_auto &&
+                        height_was_auto &&
+                        width_from_inset &&
+                        height_from_inset {
+                        used_height = Some((w / ratio).round())
+                      } else {
+                        ()
+                      }
                     _ => ()
                   }
                 }

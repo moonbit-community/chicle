@@ -28,10 +28,10 @@ pub enum GridTrackRepetition {
 
 ///|
 pub enum GridAutoFlow {
-  AutoFlowRow
-  AutoFlowColumn
-  AutoFlowRowDense
-  AutoFlowColumnDense
+  Row
+  Column
+  RowDense
+  ColumnDense
 }
 
 ///|
@@ -210,7 +210,7 @@ pub fn Style::default() -> Style {
     grid_template_columns: [],
     grid_auto_rows: [],
     grid_auto_columns: [],
-    grid_auto_flow: AutoFlowRow,
+    grid_auto_flow: Row,
     grid_row: Line::new(start=PlaceAuto, end=PlaceAuto),
     grid_column: Line::new(start=PlaceAuto, end=PlaceAuto),
     grid_row_start: None,

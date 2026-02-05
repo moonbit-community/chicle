@@ -77,22 +77,22 @@ pub fn repeat(
 
 ///|
 pub fn grid_auto_flow_row() -> GridAutoFlow {
-  AutoFlowRow
+  Row
 }
 
 ///|
 pub fn grid_auto_flow_column() -> GridAutoFlow {
-  AutoFlowColumn
+  Column
 }
 
 ///|
 pub fn grid_auto_flow_row_dense() -> GridAutoFlow {
-  AutoFlowRowDense
+  RowDense
 }
 
 ///|
 pub fn grid_auto_flow_column_dense() -> GridAutoFlow {
-  AutoFlowColumnDense
+  ColumnDense
 }
 
 ///|

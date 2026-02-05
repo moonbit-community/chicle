@@ -86,6 +86,16 @@ pub fn grid_auto_flow_column() -> GridAutoFlow {
 }
 
 ///|
+pub fn grid_auto_flow_row_dense() -> GridAutoFlow {
+  AutoFlowRowDense
+}
+
+///|
+pub fn grid_auto_flow_column_dense() -> GridAutoFlow {
+  AutoFlowColumnDense
+}
+
+///|
 pub fn place_auto() -> GridPlacement {
   PlaceAuto
 }

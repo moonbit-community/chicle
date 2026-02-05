@@ -1461,7 +1461,14 @@ fn[C] compute_grid_layout_with_measure(
   }
 
   // Placement algorithm: very small subset of CSS Grid (enough for upstream implicit/auto tracks tests).
-  let primary_is_col = node.style.grid_auto_flow is AutoFlowRow
+  let primary_is_col = match node.style.grid_auto_flow {
+    AutoFlowRow | AutoFlowRowDense => true
+    AutoFlowColumn | AutoFlowColumnDense => false
+  }
+  let dense = match node.style.grid_auto_flow {
+    AutoFlowRowDense | AutoFlowColumnDense => true
+    _ => false
+  }
 
   // Pass 1: both axes definite.
   for i in 0..<placement_count {
@@ -1611,6 +1618,10 @@ fn[C] compute_grid_layout_with_measure(
   }
 
   // Pass 3: remaining items (auto-placement in the flow direction).
+  // Dense: restart the scan for each item, filling earlier holes.
+  // Sparse: resume placement from the last cursor position.
+  let mut cursor_sec = 0
+  let mut cursor_prim = 0
   for i in 0..<placement_count {
     if placed[i] {
       continue
@@ -1632,7 +1643,7 @@ fn[C] compute_grid_layout_with_measure(
         )
         let row_span = def.1
         let col_span = def.3
-        let mut sec = 0
+        let mut sec = if dense { 0 } else { cursor_sec }
         while true {
           if primary_is_col {
             // Auto-flow rows: scan row-by-row
@@ -1640,6 +1651,9 @@ fn[C] compute_grid_layout_with_measure(
             match fixed_col {
               Some(c0) =>
                 while true {
+                  if not(dense) && sec == cursor_sec && c0 < cursor_prim {
+                    sec = sec + 1
+                  }
                   ensure_rows(
                     occ,
                     row_tracks,
@@ -1663,6 +1677,14 @@ fn[C] compute_grid_layout_with_measure(
                       negative_cols, explicit_row_count, explicit_col_count, i, sec,
                       c0, row_span, col_span,
                     )
+                    if not(dense) {
+                      cursor_sec = sec
+                      cursor_prim = c0 + col_span
+                      if cursor_prim >= col_tracks.length() {
+                        cursor_sec = cursor_sec + 1
+                        cursor_prim = 0
+                      }
+                    }
                     sec = -1
                     break
                   }
@@ -1686,7 +1708,11 @@ fn[C] compute_grid_layout_with_measure(
                     explicit_row_count,
                     sec + row_span - 1,
                   )
-                  let mut prim = 0
+                  let mut prim = if dense || sec != cursor_sec {
+                    0
+                  } else {
+                    cursor_prim
+                  }
                   let max_prim = col_tracks.length() - col_span + 1
                   let mut found = false
                   while prim < max_prim {
@@ -1697,6 +1723,14 @@ fn[C] compute_grid_layout_with_measure(
                         negative_cols, explicit_row_count, explicit_col_count, i,
                         sec, prim, row_span, col_span,
                       )
+                      if not(dense) {
+                        cursor_sec = sec
+                        cursor_prim = prim + col_span
+                        if cursor_prim >= col_tracks.length() {
+                          cursor_sec = cursor_sec + 1
+                          cursor_prim = 0
+                        }
+                      }
                       found = true
                       break
                     }
@@ -1719,6 +1753,9 @@ fn[C] compute_grid_layout_with_measure(
             match fixed_row {
               Some(r0) =>
                 while true {
+                  if not(dense) && sec == cursor_sec && r0 < cursor_prim {
+                    sec = sec + 1
+                  }
                   ensure_cols(
                     occ,
                     col_tracks,
@@ -1742,6 +1779,14 @@ fn[C] compute_grid_layout_with_measure(
                       negative_cols, explicit_row_count, explicit_col_count, i, r0,
                       sec, row_span, col_span,
                     )
+                    if not(dense) {
+                      cursor_sec = sec
+                      cursor_prim = r0 + row_span
+                      if cursor_prim >= row_tracks.length() {
+                        cursor_sec = cursor_sec + 1
+                        cursor_prim = 0
+                      }
+                    }
                     sec = -1
                     break
                   }
@@ -1765,7 +1810,11 @@ fn[C] compute_grid_layout_with_measure(
                     explicit_col_count,
                     sec + col_span - 1,
                   )
-                  let mut prim = 0
+                  let mut prim = if dense || sec != cursor_sec {
+                    0
+                  } else {
+                    cursor_prim
+                  }
                   let max_prim = row_tracks.length() - row_span + 1
                   let mut found = false
                   while prim < max_prim {
@@ -1776,6 +1825,14 @@ fn[C] compute_grid_layout_with_measure(
                         negative_cols, explicit_row_count, explicit_col_count, i,
                         prim, sec, row_span, col_span,
                       )
+                      if not(dense) {
+                        cursor_sec = sec
+                        cursor_prim = prim + row_span
+                        if cursor_prim >= row_tracks.length() {
+                          cursor_sec = cursor_sec + 1
+                          cursor_prim = 0
+                        }
+                      }
                       found = true
                       break
                     }

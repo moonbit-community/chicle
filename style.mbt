@@ -30,6 +30,8 @@ pub enum GridTrackRepetition {
 pub enum GridAutoFlow {
   AutoFlowRow
   AutoFlowColumn
+  AutoFlowRowDense
+  AutoFlowColumnDense
 }
 
 ///|

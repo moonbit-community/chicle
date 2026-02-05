@@ -55,10 +55,37 @@ test "upstream/generated/block/block_absolute_aspect_ratio_fill_height" {
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_aspect_ratio_fill_height_from_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_aspect_ratio_fill_height_from_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_aspect_ratio_fill_height_from_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let child = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=percent(0.1),
+        right=percent(0.1),
+        top=percent(0.05),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [child],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 400.0)
+  assert_eq(root_layout.size.height, 300.0)
+  let c = taffy.layout(child)
+  assert_eq(c.size.width, 320.0)
+  assert_eq(c.size.height, 107.0)
+  assert_eq(c.location.x, 40.0)
+  assert_eq(c.location.y, 15.0)
 }
 
 ///|

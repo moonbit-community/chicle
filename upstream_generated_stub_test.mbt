@@ -20,10 +20,38 @@ test "upstream/generated/block/block_absolute_aspect_ratio_aspect_ratio_override
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_aspect_ratio_fill_height" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_aspect_ratio_fill_height.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_aspect_ratio_fill_height.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let child = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_size(Size::new(width=percent(0.5), height=auto()))
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=percent(0.05),
+        right=auto(),
+        top=percent(0.05),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [child],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 400.0)
+  assert_eq(root_layout.size.height, 300.0)
+  let c = taffy.layout(child)
+  assert_eq(c.size.width, 200.0)
+  assert_eq(c.size.height, 67.0)
+  assert_eq(c.location.x, 20.0)
+  assert_eq(c.location.y, 15.0)
 }
 
 ///|
@@ -62,10 +90,40 @@ test "upstream/generated/block/block_absolute_aspect_ratio_fill_min_width" {
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_aspect_ratio_fill_width" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_aspect_ratio_fill_width.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_aspect_ratio_fill_width.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let child = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_size(Size::new(width=auto(), height=percent(0.2)))
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=percent(0.05),
+        right=auto(),
+        top=percent(0.05),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [child],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 400.0)
+  assert_eq(root_layout.size.height, 300.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(child)
+  assert_eq(c.size.width, 180.0)
+  assert_eq(c.size.height, 60.0)
+  assert_eq(c.location.x, 20.0)
+  assert_eq(c.location.y, 15.0)
 }
 
 ///|

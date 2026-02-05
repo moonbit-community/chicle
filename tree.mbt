@@ -798,16 +798,37 @@ fn[C] compute_leaf_layout_with_measure(
     resolved_padding.bottom +
     resolved_border.top +
     resolved_border.bottom
-  let specified_width = resolve_optional_dimension(
+  let mut specified_width = resolve_optional_dimension(
     node.style.size.width,
     available_space.width,
   )
-  let specified_height = resolve_optional_dimension(
+  let mut specified_height = resolve_optional_dimension(
     node.style.size.height,
     available_space.height,
   )
   let known_width = known_dimensions.width
   let known_height = known_dimensions.height
+
+  // aspect-ratio: if exactly one axis has a definite size, compute the other from the ratio.
+  match node.style.aspect_ratio {
+    Some(ratio) =>
+      if ratio > 0.0 {
+        let base_width = match known_width {
+          Some(w) => Some(w)
+          None => specified_width
+        }
+        let base_height = match known_height {
+          Some(h) => Some(h)
+          None => specified_height
+        }
+        match (base_width, base_height) {
+          (Some(w), None) => specified_height = Some((w / ratio).round())
+          (None, Some(h)) => specified_width = Some((h * ratio).round())
+          _ => ()
+        }
+      }
+    None => ()
+  }
   let measure_known_dimensions = Size::new(
     width=match known_width {
       Some(w) => Some(w)

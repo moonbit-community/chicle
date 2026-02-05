@@ -8976,80 +8976,383 @@ test "upstream/generated/blockgrid/mod" {
 }
 
 ///|
-#skip
 test "upstream/generated/flex/absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset" {
-  // TODO: port from taffy-reference/tests/generated/flex/absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=percent(0.05),
+        right=percent(0.05),
+        top=percent(0.05),
+        bottom=percent(0.05),
+      ),
+    ),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 400.0)
+  assert_eq(l_node.size.height, 300.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 360.0)
+  assert_eq(l0.size.height, 120.0)
+  assert_eq(l0.location.x, 20.0)
+  assert_eq(l0.location.y, 15.0)
 }
 
 ///|
-#skip
 test "upstream/generated/flex/absolute_aspect_ratio_fill_height" {
-  // TODO: port from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_height.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_height.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_size(Size::new(width=percent(0.5), height=auto()))
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=percent(0.05),
+        right=auto(),
+        top=percent(0.05),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 400.0)
+  assert_eq(l_node.size.height, 300.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 200.0)
+  assert_eq(l0.size.height, 67.0)
+  assert_eq(l0.location.x, 20.0)
+  assert_eq(l0.location.y, 15.0)
 }
 
 ///|
-#skip
 test "upstream/generated/flex/absolute_aspect_ratio_fill_height_from_inset" {
-  // TODO: port from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_height_from_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_height_from_inset.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=percent(0.1),
+        right=percent(0.1),
+        top=percent(0.05),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 400.0)
+  assert_eq(l_node.size.height, 300.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 320.0)
+  assert_eq(l0.size.height, 107.0)
+  assert_eq(l0.location.x, 40.0)
+  assert_eq(l0.location.y, 15.0)
 }
 
 ///|
-#skip
 test "upstream/generated/flex/absolute_aspect_ratio_fill_max_height" {
-  // TODO: port from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_max_height.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_max_height.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_position(position_absolute())
+    .with_max_size(Size::new(width=length(50.0), height=auto()))
+    .with_aspect_ratio(3.0),
+    TextMeasure::{
+      text_content: "HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH",
+      writing_mode: Horizontal,
+    },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 400.0)
+  assert_eq(l_node.size.height, 300.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 50.0)
+  assert_eq(l0.size.height, 17.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/flex/absolute_aspect_ratio_fill_max_width" {
-  // TODO: port from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_max_width.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_max_width.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_position(position_absolute())
+    .with_max_size(Size::new(width=auto(), height=length(50.0)))
+    .with_aspect_ratio(0.5),
+    TextMeasure::{
+      text_content: "HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH",
+      writing_mode: Horizontal,
+    },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 400.0)
+  assert_eq(l_node.size.height, 300.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 25.0)
+  assert_eq(l0.size.height, 50.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/flex/absolute_aspect_ratio_fill_min_height" {
-  // TODO: port from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_min_height.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_min_height.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_min_size(Size::new(width=length(50.0), height=auto()))
+    .with_aspect_ratio(3.0),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 400.0)
+  assert_eq(l_node.size.height, 300.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 50.0)
+  assert_eq(l0.size.height, 17.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/flex/absolute_aspect_ratio_fill_min_width" {
-  // TODO: port from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_min_width.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_min_width.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_min_size(Size::new(width=auto(), height=length(50.0)))
+    .with_aspect_ratio(0.5),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 400.0)
+  assert_eq(l_node.size.height, 300.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 25.0)
+  assert_eq(l0.size.height, 50.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/flex/absolute_aspect_ratio_fill_width" {
-  // TODO: port from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_width.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_width.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_size(Size::new(width=auto(), height=percent(0.2)))
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=percent(0.05),
+        right=auto(),
+        top=percent(0.05),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 400.0)
+  assert_eq(l_node.size.height, 300.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 180.0)
+  assert_eq(l0.size.height, 60.0)
+  assert_eq(l0.location.x, 20.0)
+  assert_eq(l0.location.y, 15.0)
 }
 
 ///|
-#skip
 test "upstream/generated/flex/absolute_aspect_ratio_fill_width_from_inset" {
-  // TODO: port from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_width_from_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/absolute_aspect_ratio_fill_width_from_inset.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=auto(),
+        right=auto(),
+        top=percent(0.3),
+        bottom=percent(0.5),
+      ),
+    ),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 400.0)
+  assert_eq(l_node.size.height, 300.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 180.0)
+  assert_eq(l0.size.height, 60.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 90.0)
 }
 
 ///|
-#skip
 test "upstream/generated/flex/absolute_aspect_ratio_height_overrides_inset" {
-  // TODO: port from taffy-reference/tests/generated/flex/absolute_aspect_ratio_height_overrides_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/absolute_aspect_ratio_height_overrides_inset.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_size(Size::new(width=auto(), height=percent(0.1)))
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=auto(),
+        right=auto(),
+        top=percent(0.3),
+        bottom=percent(0.5),
+      ),
+    ),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 400.0)
+  assert_eq(l_node.size.height, 300.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 90.0)
+  assert_eq(l0.size.height, 30.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 90.0)
 }
 
 ///|
-#skip
 test "upstream/generated/flex/absolute_aspect_ratio_width_overrides_inset" {
-  // TODO: port from taffy-reference/tests/generated/flex/absolute_aspect_ratio_width_overrides_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/absolute_aspect_ratio_width_overrides_inset.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_size(Size::new(width=percent(0.4), height=auto()))
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=percent(0.1),
+        right=percent(0.1),
+        top=percent(0.05),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 400.0)
+  assert_eq(l_node.size.height, 300.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 160.0)
+  assert_eq(l0.size.height, 53.0)
+  assert_eq(l0.location.x, 40.0)
+  assert_eq(l0.location.y, 15.0)
 }
 
 ///|

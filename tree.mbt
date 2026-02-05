@@ -5556,90 +5556,357 @@ fn[C] compute_flex_layout_with_measure(
   }
 
   // Absolute positioned children: compute after container size is known, and do not affect flow layout.
+  // Follow the same sizing rules as the block layout absolute-positioning pass:
+  // inset constraints can determine auto sizes, and aspect-ratio participates in sizing.
+  let padding_origin = Point::new(
+    x=absolute_origin.x + border.left,
+    y=absolute_origin.y + border.top,
+  )
+  let padding_box_width = max_double(
+    border_box_width - border.left - border.right,
+    0.0,
+  )
+  let padding_box_height = max_double(
+    border_box_height - border.top - border.bottom,
+    0.0,
+  )
   let abs_available = Size::new(
-    width=AvailDefinite(content_width),
-    height=AvailDefinite(content_height),
+    width=AvailDefinite(padding_box_width),
+    height=AvailDefinite(padding_box_height),
   )
   for child_id in abs_children {
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
       None => raise InvalidNodeId(child_id)
     }
+    let margin = child.style.margin
+    // CSS compatibility: margin percentages are resolved against the width.
+    let margin_left_auto = margin.left is DimAuto
+    let margin_right_auto = margin.right is DimAuto
+    let margin_top_auto = margin.top is DimAuto
+    let margin_bottom_auto = margin.bottom is DimAuto
+    let margin_left_fixed = resolve_dimension_width_basis(
+      margin.left,
+      padding_box_width,
+    )
+    let margin_right_fixed = resolve_dimension_width_basis(
+      margin.right,
+      padding_box_width,
+    )
+    let margin_top_fixed = resolve_dimension_width_basis(
+      margin.top,
+      padding_box_width,
+    )
+    let margin_bottom_fixed = resolve_dimension_width_basis(
+      margin.bottom,
+      padding_box_width,
+    )
+    let inset = child.style.inset
+    let left = resolve_optional_dimension(inset.left, abs_available.width)
+    let right = resolve_optional_dimension(inset.right, abs_available.width)
+    let top = resolve_optional_dimension(inset.top, abs_available.height)
+    let bottom = resolve_optional_dimension(inset.bottom, abs_available.height)
 
-    // First pass: determine intrinsic size under the containing block constraints.
+    // Compute the used size for absolutely positioned items.
+    let mut used_width = resolve_optional_dimension(
+      child.style.size.width,
+      abs_available.width,
+    )
+    let mut used_height = resolve_optional_dimension(
+      child.style.size.height,
+      abs_available.height,
+    )
+    let width_was_auto = used_width is None
+    let height_was_auto = used_height is None
+    let mut width_from_inset = false
+    let mut height_from_inset = false
+    // If size is auto and both insets are definite, the size is determined by the inset constraints.
+    match used_width {
+      Some(_) => ()
+      None =>
+        match (left, right) {
+          (Some(l), Some(r)) =>
+            used_width = Some(
+              max_double(
+                padding_box_width -
+                l -
+                r -
+                margin_left_fixed -
+                margin_right_fixed,
+                0.0,
+              ),
+            )
+          _ => ()
+        }
+    }
+    match used_height {
+      Some(_) => ()
+      None =>
+        match (top, bottom) {
+          (Some(t), Some(b)) =>
+            used_height = Some(
+              max_double(
+                padding_box_height -
+                t -
+                b -
+                margin_top_fixed -
+                margin_bottom_fixed,
+                0.0,
+              ),
+            )
+          _ => ()
+        }
+    }
+    match (used_width, used_height) {
+      (Some(_), _) =>
+        if width_was_auto {
+          match (left, right) {
+            (Some(_), Some(_)) => width_from_inset = true
+            _ => ()
+          }
+        } else {
+          ()
+        }
+      _ => ()
+    }
+    match (used_width, used_height) {
+      (_, Some(_)) =>
+        if height_was_auto {
+          match (top, bottom) {
+            (Some(_), Some(_)) => height_from_inset = true
+            _ => ()
+          }
+        } else {
+          ()
+        }
+      _ => ()
+    }
+    // Apply aspect ratio when only one axis is known.
+    match child.style.aspect_ratio {
+      Some(ratio) =>
+        if ratio > 0.0 {
+          match (used_width, used_height) {
+            (Some(w), None) => used_height = Some((w / ratio).round())
+            (None, Some(h)) => used_width = Some((h * ratio).round())
+            (Some(w), Some(_h)) =>
+              if width_was_auto &&
+                height_was_auto &&
+                width_from_inset &&
+                height_from_inset {
+                used_height = Some((w / ratio).round())
+              } else {
+                ()
+              }
+            _ => ()
+          }
+        }
+      None => ()
+    }
+
+    // Apply aspect ratio to min/max constraints (taffy 0.5 behavior).
+    let mut min_width = resolve_optional_dimension(
+      child.style.min_size.width,
+      abs_available.width,
+    )
+    let mut min_height = resolve_optional_dimension(
+      child.style.min_size.height,
+      abs_available.height,
+    )
+    let mut max_width = resolve_optional_dimension(
+      child.style.max_size.width,
+      abs_available.width,
+    )
+    let mut max_height = resolve_optional_dimension(
+      child.style.max_size.height,
+      abs_available.height,
+    )
+    match child.style.aspect_ratio {
+      Some(ratio) =>
+        if ratio > 0.0 {
+          match (min_width, min_height) {
+            (None, Some(h)) => min_width = Some((h * ratio).round())
+            (Some(w), None) => min_height = Some((w / ratio).round())
+            _ => ()
+          }
+          match (max_width, max_height) {
+            (None, Some(h)) => max_width = Some((h * ratio).round())
+            (Some(w), None) => max_height = Some((w / ratio).round())
+            _ => ()
+          }
+        } else {
+          ()
+        }
+      None => ()
+    }
+
+    // First pass: determine intrinsic size under the containing block constraints, if needed.
+    let intrinsic = match (used_width, used_height) {
+      (Some(w), Some(h)) => Size::new(width=w, height=h)
+      _ => {
+        compute_node_layout_with_measure(
+          tree,
+          child_id,
+          Size::new(width=None, height=None),
+          abs_available,
+          Point::zero(),
+          measure_function,
+          false,
+        )
+        tree.nodes[child_id].layout.size
+      }
+    }
+    let final_width = match used_width {
+      Some(w) => w
+      None => intrinsic.width
+    }
+    let final_height = match used_height {
+      Some(h) => h
+      None => intrinsic.height
+    }
+    let mut clamped_final_width = final_width
+    let mut clamped_final_height = final_height
+    match min_width {
+      Some(m) => clamped_final_width = max_double(clamped_final_width, m)
+      None => ()
+    }
+    match max_width {
+      Some(m) =>
+        if clamped_final_width > m {
+          clamped_final_width = m
+        } else {
+          ()
+        }
+      None => ()
+    }
+    match min_height {
+      Some(m) => clamped_final_height = max_double(clamped_final_height, m)
+      None => ()
+    }
+    match max_height {
+      Some(m) =>
+        if clamped_final_height > m {
+          clamped_final_height = m
+        } else {
+          ()
+        }
+      None => ()
+    }
+
+    // Second pass: compute final size (may be clamped by min/max).
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=None, height=None),
+      Size::new(
+        width=Some(clamped_final_width),
+        height=Some(clamped_final_height),
+      ),
       abs_available,
       Point::zero(),
       measure_function,
       false,
     )
-    let intrinsic = tree.layout(child_id).size
-    let resolved_margin = resolve_rect_width_basis(
-      child.style.margin,
-      abs_available,
-    )
-    let main_margin_start = if is_col {
-      resolved_margin.top
+    let final_size = tree.nodes[child_id].layout.size
+    let mut final_margin_left = if margin_left_auto {
+      0.0
     } else {
-      resolved_margin.left
+      margin_left_fixed
+    }
+    let mut final_margin_right = if margin_right_auto {
+      0.0
+    } else {
+      margin_right_fixed
+    }
+    let mut final_margin_top = if margin_top_auto {
+      0.0
+    } else {
+      margin_top_fixed
+    }
+    let mut final_margin_bottom = if margin_bottom_auto {
+      0.0
+    } else {
+      margin_bottom_fixed
+    }
+
+    // Absolute auto margins: distribute remaining space when both inset sides are definite.
+    match (left, right) {
+      (Some(l), Some(r)) => {
+        let fixed = (if margin_left_auto { 0.0 } else { final_margin_left }) +
+          (if margin_right_auto { 0.0 } else { final_margin_right })
+        let remaining = padding_box_width - l - r - final_size.width - fixed
+        let auto_count = (if margin_left_auto { 1 } else { 0 }) +
+          (if margin_right_auto { 1 } else { 0 })
+        match auto_count {
+          2 =>
+            if remaining >= 0.0 {
+              final_margin_left = remaining / 2.0
+              final_margin_right = remaining / 2.0
+            } else {
+              final_margin_left = 0.0
+              final_margin_right = 0.0
+            }
+          1 =>
+            if margin_left_auto {
+              final_margin_left = remaining
+            } else {
+              final_margin_right = remaining
+            }
+          _ => ()
+        }
+      }
+      _ => ()
+    }
+    match (top, bottom) {
+      (Some(t), Some(b)) => {
+        let fixed = (if margin_top_auto { 0.0 } else { final_margin_top }) +
+          (if margin_bottom_auto { 0.0 } else { final_margin_bottom })
+        let remaining = padding_box_height - t - b - final_size.height - fixed
+        let auto_count = (if margin_top_auto { 1 } else { 0 }) +
+          (if margin_bottom_auto { 1 } else { 0 })
+        match auto_count {
+          2 =>
+            if remaining >= 0.0 {
+              final_margin_top = remaining / 2.0
+              final_margin_bottom = remaining / 2.0
+            } else {
+              final_margin_top = 0.0
+              final_margin_bottom = 0.0
+            }
+          1 =>
+            if margin_top_auto {
+              final_margin_top = remaining
+            } else {
+              final_margin_bottom = remaining
+            }
+          _ => ()
+        }
+      }
+      _ => ()
+    }
+
+    // Static position fallback when no inset is specified on an axis.
+    let main_margin_start = if is_col {
+      final_margin_top
+    } else {
+      final_margin_left
     }
     let main_margin_end = if is_col {
-      resolved_margin.bottom
+      final_margin_bottom
     } else {
-      resolved_margin.right
+      final_margin_right
     }
     let cross_margin_start = if is_col {
-      resolved_margin.left
+      final_margin_left
     } else {
-      resolved_margin.top
+      final_margin_top
     }
     let cross_margin_end = if is_col {
-      resolved_margin.right
+      final_margin_right
     } else {
-      resolved_margin.bottom
+      final_margin_bottom
     }
-    let align = match child.style.align_self {
-      Some(v) => v
-      None =>
-        match node.style.align_items {
-          Some(v) => v
-          None => ItemsStretch
-        }
-    }
-    let cross_axis_is_auto = if is_col {
-      child.style.size.width is DimAuto
-    } else {
-      child.style.size.height is DimAuto
-    }
-    let intrinsic_cross = if is_col {
-      intrinsic.width
-    } else {
-      intrinsic.height
-    }
-    let intrinsic_main = if is_col { intrinsic.height } else { intrinsic.width }
-    let available_cross_for_item = max_double(
-      container_cross - cross_margin_start - cross_margin_end,
-      0.0,
-    )
-    let cross_size = match align {
-      ItemsStretch =>
-        if cross_axis_is_auto {
-          available_cross_for_item
-        } else {
-          intrinsic_cross
-        }
-      _ => intrinsic_cross
-    }
-    let cross_pos_in_available = match align {
-      ItemsEnd | ItemsFlexEnd => available_cross_for_item - cross_size
-      ItemsCenter => (available_cross_for_item - cross_size) / 2.0
-      _ => 0.0
-    }
-    let static_cross = cross_margin_start + cross_pos_in_available
-    let outer_main = main_margin_start + intrinsic_main + main_margin_end
+    let main_size = if is_col { final_size.height } else { final_size.width }
+    let cross_size = if is_col { final_size.width } else { final_size.height }
+    let outer_main = main_margin_start + main_size + main_margin_end
     let leftover_main = container_main - outer_main
     let leftover_main = if leftover_main > 0.0 { leftover_main } else { 0.0 }
     let static_start_main = match justify {
@@ -5648,42 +5915,53 @@ fn[C] compute_flex_layout_with_measure(
       _ => 0.0
     }
     let static_main = static_start_main + main_margin_start
-    let final_size = make_size_from_main_cross(
-      intrinsic_main, cross_size, is_col,
+    let align = match child.style.align_self {
+      Some(v) => v
+      None =>
+        match node.style.align_items {
+          Some(v) => v
+          None => ItemsStretch
+        }
+    }
+    let available_cross_for_item = max_double(
+      container_cross - cross_margin_start - cross_margin_end,
+      0.0,
     )
-    let inset = child.style.inset
-    let left = resolve_optional_dimension(inset.left, abs_available.width)
-    let right = resolve_optional_dimension(inset.right, abs_available.width)
-    let top = resolve_optional_dimension(inset.top, abs_available.height)
-    let bottom = resolve_optional_dimension(inset.bottom, abs_available.height)
-    let x_in_content = match left {
-      Some(v) => v + resolved_margin.left
+    let cross_pos_in_available = match align {
+      ItemsEnd | ItemsFlexEnd => available_cross_for_item - cross_size
+      ItemsCenter => (available_cross_for_item - cross_size) / 2.0
+      _ => 0.0
+    }
+    let static_cross = cross_margin_start + cross_pos_in_available
+    let x_in_padding = match left {
+      Some(v) => v + final_margin_left
       None =>
         match right {
           Some(v) =>
-            content_width - v - resolved_margin.right - final_size.width
-          None => if is_col { static_cross } else { static_main }
+            padding_box_width - v - final_margin_right - final_size.width
+          None =>
+            padding.left + (if is_col { static_cross } else { static_main })
         }
     }
-    let y_in_content = match top {
-      Some(v) => v + resolved_margin.top
+    let y_in_padding = match top {
+      Some(v) => v + final_margin_top
       None =>
         match bottom {
           Some(v) =>
-            content_height - v - resolved_margin.bottom - final_size.height
-          None => if is_col { static_main } else { static_cross }
+            padding_box_height - v - final_margin_bottom - final_size.height
+          None =>
+            padding.top + (if is_col { static_main } else { static_cross })
         }
     }
-    let child_origin = Point::new(
-      x=base_x + x_in_content,
-      y=base_y + y_in_content,
-    )
     compute_node_layout_with_measure(
       tree,
       child_id,
       Size::new(width=Some(final_size.width), height=Some(final_size.height)),
       abs_available,
-      child_origin,
+      Point::new(
+        x=padding_origin.x + x_in_padding,
+        y=padding_origin.y + y_in_padding,
+      ),
       measure_function,
       false,
     )

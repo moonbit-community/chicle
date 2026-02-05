@@ -15,6 +15,8 @@
 ///|
 suberror TaffyError {
   InvalidNodeId(Int)
+  CycleDetected(parent~ : Int, child~ : Int)
+  ChildNotFound(parent~ : Int, child~ : Int)
 }
 
 ///|
@@ -38,6 +40,8 @@ struct Node[C] {
   mut parent : NodeId?
   mut layout : Layout
   mut context : C?
+  mut alive : Bool
+  mut dirty : Bool
 }
 
 ///|
@@ -66,6 +70,8 @@ pub fn[C] TaffyTree::new_leaf(self : TaffyTree[C], style : Style) -> NodeId {
       parent: None,
       layout: Layout::zero(),
       context: None,
+      alive: true,
+      dirty: true,
     },
   ])
   id
@@ -85,6 +91,8 @@ pub fn[C] TaffyTree::new_leaf_with_context(
       parent: None,
       layout: Layout::zero(),
       context: Some(context),
+      alive: true,
+      dirty: true,
     },
   ])
   id
@@ -104,12 +112,316 @@ pub fn[C] TaffyTree::new_with_children(
       parent: None,
       layout: Layout::zero(),
       context: None,
+      alive: true,
+      dirty: true,
     },
   ])
   for child_id in children {
-    self.nodes[child_id].parent = Some(id)
+    match self.nodes.get(child_id) {
+      Some(_) => {
+        if not(self.nodes[child_id].alive) {
+          continue
+        }
+        match self.nodes[child_id].parent {
+          Some(old_parent) =>
+            if old_parent != id {
+              let old_children = self.nodes[old_parent].children
+              match old_children.search_by(fn(x) { x == child_id }) {
+                Some(idx) => ignore(old_children.remove(idx))
+                None => ()
+              }
+            } else {
+              ()
+            }
+          None => ()
+        }
+        self.nodes[child_id].parent = Some(id)
+      }
+      None => ()
+    }
   }
   id
+}
+
+///|
+pub fn[C] TaffyTree::add_child(
+  self : TaffyTree[C],
+  parent : NodeId,
+  child : NodeId,
+) -> Unit raise TaffyError {
+  match self.nodes.get(parent) {
+    Some(_) => ()
+    None => raise InvalidNodeId(parent)
+  }
+  match self.nodes.get(child) {
+    Some(_) => ()
+    None => raise InvalidNodeId(child)
+  }
+  if not(self.nodes[parent].alive) {
+    raise InvalidNodeId(parent)
+  }
+  if not(self.nodes[child].alive) {
+    raise InvalidNodeId(child)
+  }
+  if parent == child {
+    raise CycleDetected(parent~, child~)
+  }
+  // Reject cycles: `child` cannot be an ancestor of `parent`.
+  let mut cur = self.nodes[parent].parent
+  while true {
+    match cur {
+      None => break
+      Some(p) =>
+        if p == child {
+          raise CycleDetected(parent~, child~)
+        } else {
+          cur = self.nodes[p].parent
+        }
+    }
+  }
+  // Detach child from its old parent, if any.
+  match self.nodes[child].parent {
+    Some(old_parent) =>
+      if old_parent != parent {
+        let old_children = self.nodes[old_parent].children
+        match old_children.search_by(fn(x) { x == child }) {
+          Some(idx) => ignore(old_children.remove(idx))
+          None => ()
+        }
+      } else {
+        ()
+      }
+    None => ()
+  }
+  self.nodes[child].parent = Some(parent)
+  self.nodes[parent].children.push(child)
+  self.mark_dirty(parent)
+}
+
+///|
+pub fn[C] TaffyTree::set_children(
+  self : TaffyTree[C],
+  parent : NodeId,
+  children : Array[NodeId],
+) -> Unit raise TaffyError {
+  match self.nodes.get(parent) {
+    Some(_) => ()
+    None => raise InvalidNodeId(parent)
+  }
+  if not(self.nodes[parent].alive) {
+    raise InvalidNodeId(parent)
+  }
+  // Validate nodes and reject cycles.
+  for child_id in children {
+    match self.nodes.get(child_id) {
+      Some(_) => ()
+      None => raise InvalidNodeId(child_id)
+    }
+    if not(self.nodes[child_id].alive) {
+      raise InvalidNodeId(child_id)
+    }
+    if child_id == parent {
+      raise CycleDetected(parent~, child=child_id)
+    }
+    let mut cur = Some(parent)
+    while true {
+      match cur {
+        None => break
+        Some(p) =>
+          if p == child_id {
+            raise CycleDetected(parent~, child=child_id)
+          } else {
+            cur = self.nodes[p].parent
+          }
+      }
+    }
+  }
+  // Detach current children.
+  let old_children = self.nodes[parent].children
+  for child_id in old_children {
+    self.nodes[child_id].parent = None
+  }
+  old_children.clear()
+  // Attach new children (detaching from any previous parents).
+  for child_id in children {
+    match self.nodes[child_id].parent {
+      Some(old_parent) =>
+        if old_parent != parent {
+          let old_siblings = self.nodes[old_parent].children
+          match old_siblings.search_by(fn(x) { x == child_id }) {
+            Some(idx) => ignore(old_siblings.remove(idx))
+            None => ()
+          }
+        } else {
+          ()
+        }
+      None => ()
+    }
+    self.nodes[child_id].parent = Some(parent)
+    old_children.push(child_id)
+  }
+  self.mark_dirty(parent)
+}
+
+///|
+pub fn[C] TaffyTree::remove_child(
+  self : TaffyTree[C],
+  parent : NodeId,
+  child : NodeId,
+) -> NodeId raise TaffyError {
+  match self.nodes.get(parent) {
+    Some(_) => ()
+    None => raise InvalidNodeId(parent)
+  }
+  match self.nodes.get(child) {
+    Some(_) => ()
+    None => raise InvalidNodeId(child)
+  }
+  if not(self.nodes[parent].alive) {
+    raise InvalidNodeId(parent)
+  }
+  if not(self.nodes[child].alive) {
+    raise InvalidNodeId(child)
+  }
+  let siblings = self.nodes[parent].children
+  match siblings.search_by(fn(x) { x == child }) {
+    Some(idx) => {
+      ignore(siblings.remove(idx))
+      self.nodes[child].parent = None
+      self.mark_dirty(parent)
+      child
+    }
+    None => raise ChildNotFound(parent~, child~)
+  }
+}
+
+///|
+pub fn[C] TaffyTree::mark_dirty(
+  self : TaffyTree[C],
+  node : NodeId,
+) -> Unit raise TaffyError {
+  match self.nodes.get(node) {
+    Some(_) => ()
+    None => raise InvalidNodeId(node)
+  }
+  if not(self.nodes[node].alive) {
+    raise InvalidNodeId(node)
+  }
+  let mut cur : NodeId? = Some(node)
+  while true {
+    match cur {
+      None => break
+      Some(id) => {
+        self.nodes[id].dirty = true
+        cur = self.nodes[id].parent
+      }
+    }
+  }
+}
+
+///|
+pub fn[C] TaffyTree::dirty(
+  self : TaffyTree[C],
+  node : NodeId,
+) -> Bool raise TaffyError {
+  match self.nodes.get(node) {
+    Some(_) =>
+      if self.nodes[node].alive {
+        self.nodes[node].dirty
+      } else {
+        raise InvalidNodeId(node)
+      }
+    None => raise InvalidNodeId(node)
+  }
+}
+
+///|
+pub fn[C] TaffyTree::remove(
+  self : TaffyTree[C],
+  node : NodeId,
+) -> Unit raise TaffyError {
+  match self.nodes.get(node) {
+    Some(_) => ()
+    None => raise InvalidNodeId(node)
+  }
+  if not(self.nodes[node].alive) {
+    raise InvalidNodeId(node)
+  }
+  // Detach from parent.
+  let old_parent = self.nodes[node].parent
+  match old_parent {
+    Some(parent_id) => {
+      let siblings = self.nodes[parent_id].children
+      match siblings.search_by(fn(x) { x == node }) {
+        Some(idx) => ignore(siblings.remove(idx))
+        None => ()
+      }
+      self.nodes[node].parent = None
+    }
+    None => ()
+  }
+  // Orphan children.
+  let kids = self.nodes[node].children
+  for child_id in kids {
+    self.nodes[child_id].parent = None
+  }
+  kids.clear()
+  self.nodes[node].alive = false
+  match old_parent {
+    Some(p) => self.mark_dirty(p)
+    None => ()
+  }
+}
+
+///|
+pub fn[C] TaffyTree::remove_subtree(
+  self : TaffyTree[C],
+  node : NodeId,
+) -> Unit raise TaffyError {
+  match self.nodes.get(node) {
+    Some(_) => ()
+    None => raise InvalidNodeId(node)
+  }
+  if not(self.nodes[node].alive) {
+    raise InvalidNodeId(node)
+  }
+  // Detach root of subtree from its parent.
+  let old_parent = self.nodes[node].parent
+  match old_parent {
+    Some(parent_id) => {
+      let siblings = self.nodes[parent_id].children
+      match siblings.search_by(fn(x) { x == node }) {
+        Some(idx) => ignore(siblings.remove(idx))
+        None => ()
+      }
+      self.nodes[node].parent = None
+    }
+    None => ()
+  }
+  let stack : Array[NodeId] = [node]
+  while true {
+    match stack.pop() {
+      None => break
+      Some(cur) => {
+        if not(self.nodes[cur].alive) {
+          continue
+        }
+        let kids = self.nodes[cur].children
+        for child_id in kids {
+          stack.push(child_id)
+        }
+        kids.clear()
+        self.nodes[cur].parent = None
+        self.nodes[cur].context = None
+        self.nodes[cur].layout = Layout::zero()
+        self.nodes[cur].alive = false
+      }
+    }
+  }
+  match old_parent {
+    Some(p) => self.mark_dirty(p)
+    None => ()
+  }
 }
 
 ///|
@@ -119,7 +431,13 @@ pub fn[C] TaffyTree::set_node_context(
   context : C,
 ) -> Unit raise TaffyError {
   match self.nodes.get(node) {
-    Some(_) => self.nodes[node].context = Some(context)
+    Some(_) =>
+      if self.nodes[node].alive {
+        self.nodes[node].context = Some(context)
+        self.mark_dirty(node)
+      } else {
+        raise InvalidNodeId(node)
+      }
     None => raise InvalidNodeId(node)
   }
 }
@@ -130,7 +448,13 @@ pub fn[C] TaffyTree::clear_node_context(
   node : NodeId,
 ) -> Unit raise TaffyError {
   match self.nodes.get(node) {
-    Some(_) => self.nodes[node].context = None
+    Some(_) =>
+      if self.nodes[node].alive {
+        self.nodes[node].context = None
+        self.mark_dirty(node)
+      } else {
+        raise InvalidNodeId(node)
+      }
     None => raise InvalidNodeId(node)
   }
 }
@@ -144,6 +468,9 @@ pub fn[C] TaffyTree::layout(
     Some(n) => n
     None => raise InvalidNodeId(node)
   }
+  if not(node_ref.alive) {
+    raise InvalidNodeId(node)
+  }
   let layout = node_ref.layout
   match node_ref.parent {
     None => layout
@@ -151,6 +478,9 @@ pub fn[C] TaffyTree::layout(
       let parent = match self.nodes.get(parent_id) {
         Some(p) => p
         None => raise InvalidNodeId(parent_id)
+      }
+      if not(parent.alive) {
+        raise InvalidNodeId(parent_id)
       }
       let parent_layout = parent.layout
       Layout::{
@@ -171,7 +501,13 @@ pub fn[C] TaffyTree::set_style(
   style : Style,
 ) -> Unit raise TaffyError {
   match self.nodes.get(node) {
-    Some(_) => self.nodes[node].style = style
+    Some(_) =>
+      if self.nodes[node].alive {
+        self.nodes[node].style = style
+        self.mark_dirty(node)
+      } else {
+        raise InvalidNodeId(node)
+      }
     None => raise InvalidNodeId(node)
   }
 }
@@ -204,6 +540,15 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
     Double,
   ],
 ) -> Unit raise TaffyError {
+  match self.nodes.get(root) {
+    Some(_) =>
+      if not(self.nodes[root].alive) {
+        raise InvalidNodeId(root)
+      } else {
+        ()
+      }
+    None => raise InvalidNodeId(root)
+  }
   compute_node_layout_with_measure(
     self,
     root,
@@ -212,6 +557,21 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
     Point::zero(),
     measure_function,
   )
+  let stack : Array[NodeId] = [root]
+  while true {
+    match stack.pop() {
+      None => break
+      Some(cur) => {
+        if not(self.nodes[cur].alive) {
+          continue
+        }
+        self.nodes[cur].dirty = false
+        for child_id in self.nodes[cur].children {
+          stack.push(child_id)
+        }
+      }
+    }
+  }
 }
 
 ///|

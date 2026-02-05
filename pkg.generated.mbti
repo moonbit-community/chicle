@@ -333,6 +333,7 @@ pub fn Style::with_min_size(Self, Size[Dimension]) -> Self
 pub fn Style::with_overflow(Self, Point[Overflow]) -> Self
 pub fn Style::with_padding(Self, Rect[Dimension]) -> Self
 pub fn Style::with_position(Self, Position) -> Self
+pub fn Style::with_scrollbar_width(Self, Double) -> Self
 pub fn Style::with_size(Self, Size[Dimension]) -> Self
 
 pub struct TaffyTree[C] {

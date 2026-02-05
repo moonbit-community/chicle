@@ -257,6 +257,14 @@ pub fn Style::with_overflow(self : Style, overflow : Point[Overflow]) -> Style {
 }
 
 ///|
+pub fn Style::with_scrollbar_width(
+  self : Style,
+  scrollbar_width : Double,
+) -> Style {
+  { ..self, scrollbar_width, }
+}
+
+///|
 pub fn Style::with_inset(self : Style, inset : Rect[Dimension]) -> Style {
   { ..self, inset, }
 }

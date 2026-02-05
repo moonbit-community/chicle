@@ -40,6 +40,8 @@ struct Node[C] {
   mut parent : NodeId?
   mut layout : Layout
   mut context : C?
+  mut effective_margin_top : Double
+  mut effective_margin_bottom : Double
   mut alive : Bool
   mut dirty : Bool
 }
@@ -70,6 +72,8 @@ pub fn[C] TaffyTree::new_leaf(self : TaffyTree[C], style : Style) -> NodeId {
       parent: None,
       layout: Layout::zero(),
       context: None,
+      effective_margin_top: 0.0,
+      effective_margin_bottom: 0.0,
       alive: true,
       dirty: true,
     },
@@ -91,6 +95,8 @@ pub fn[C] TaffyTree::new_leaf_with_context(
       parent: None,
       layout: Layout::zero(),
       context: Some(context),
+      effective_margin_top: 0.0,
+      effective_margin_bottom: 0.0,
       alive: true,
       dirty: true,
     },
@@ -112,6 +118,8 @@ pub fn[C] TaffyTree::new_with_children(
       parent: None,
       layout: Layout::zero(),
       context: None,
+      effective_margin_top: 0.0,
+      effective_margin_bottom: 0.0,
       alive: true,
       dirty: true,
     },
@@ -556,6 +564,7 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
     available_space,
     Point::zero(),
     measure_function,
+    true,
   )
   let stack : Array[NodeId] = [root]
   while true {
@@ -1040,6 +1049,7 @@ fn[C] compute_node_layout_with_measure(
   measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
     Double,
   ],
+  is_layout_root : Bool,
 ) -> Unit raise TaffyError {
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
@@ -1059,6 +1069,7 @@ fn[C] compute_node_layout_with_measure(
       } else {
         compute_block_layout_with_measure(
           tree, node_id, known_dimensions, available_space, absolute_origin, measure_function,
+          is_layout_root,
         )
       }
     _ =>
@@ -1118,6 +1129,8 @@ fn[C] compute_hidden_layout(
     location: absolute_origin,
     size: Size::zero(),
   }
+  tree.nodes[node_id].effective_margin_top = 0.0
+  tree.nodes[node_id].effective_margin_bottom = 0.0
   for child_id in node.children {
     compute_hidden_layout(tree, child_id, absolute_origin)
   }
@@ -1316,6 +1329,12 @@ fn[C] compute_leaf_layout_with_measure(
     location: absolute_origin,
     size: border_box_size,
   }
+  let resolved_margin = resolve_rect_width_basis(
+    node.style.margin,
+    available_space,
+  )
+  tree.nodes[node_id].effective_margin_top = resolved_margin.top
+  tree.nodes[node_id].effective_margin_bottom = resolved_margin.bottom
 }
 
 ///|
@@ -1602,8 +1621,27 @@ fn[C] compute_grid_layout_with_measure(
 
   let padding = resolve_rect_width_basis(node.style.padding, available_space)
   let border = resolve_rect_width_basis(node.style.border, available_space)
-  let horiz_inset = padding.left + padding.right + border.left + border.right
-  let vert_inset = padding.top + padding.bottom + border.top + border.bottom
+  let scrollbar_w = node.style.scrollbar_width
+  let scrollbar_x = match node.style.overflow.x {
+    OverflowScroll => scrollbar_w
+    _ => 0.0
+  }
+  let scrollbar_y = match node.style.overflow.y {
+    OverflowScroll => scrollbar_w
+    _ => 0.0
+  }
+  // Overflow::Scroll reserves scrollbar space inside the border box.
+  // Horizontal scrollbar consumes cross (vertical) space; vertical scrollbar consumes main (horizontal) space.
+  let horiz_inset = padding.left +
+    padding.right +
+    border.left +
+    border.right +
+    scrollbar_y
+  let vert_inset = padding.top +
+    padding.bottom +
+    border.top +
+    border.bottom +
+    scrollbar_x
   let style_width = resolve_optional_dimension(
     node.style.size.width,
     available_space.width,
@@ -2359,6 +2397,7 @@ fn[C] compute_grid_layout_with_measure(
       Size::new(width=AvailMaxContent, height=AvailMaxContent),
       Point::zero(),
       measure_function,
+      false,
     )
     let max_sz = tree.nodes[child_id].layout.size
     let max_needed = max_double(max_sz.width - gap_total, 0.0)
@@ -2377,6 +2416,7 @@ fn[C] compute_grid_layout_with_measure(
       Size::new(width=AvailMinContent, height=AvailMaxContent),
       Point::zero(),
       measure_function,
+      false,
     )
     let min_col = tree.nodes[child_id].layout.size.width
     let min_needed = max_double(min_col - gap_total, 0.0)
@@ -2542,6 +2582,7 @@ fn[C] compute_grid_layout_with_measure(
       Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
       Point::zero(),
       measure_function,
+      false,
     )
     let max_h = tree.nodes[child_id].layout.size.height
     let max_needed = max_double(max_h - row_gap_total, 0.0)
@@ -2560,6 +2601,7 @@ fn[C] compute_grid_layout_with_measure(
       Size::new(width=AvailDefinite(col_w), height=AvailMinContent),
       Point::zero(),
       measure_function,
+      false,
     )
     let min_h = tree.nodes[child_id].layout.size.height
     let min_needed = max_double(min_h - row_gap_total, 0.0)
@@ -2684,6 +2726,7 @@ fn[C] compute_grid_layout_with_measure(
         Size::new(width=AvailMaxContent, height=AvailMaxContent),
         Point::zero(),
         measure_function,
+        false,
       )
       let max_sz = tree.nodes[child_id].layout.size
       let max_needed = max_double(max_sz.width - gap_total, 0.0)
@@ -2700,6 +2743,7 @@ fn[C] compute_grid_layout_with_measure(
         Size::new(width=AvailMinContent, height=AvailMaxContent),
         Point::zero(),
         measure_function,
+        false,
       )
       let min_col = tree.nodes[child_id].layout.size.width
       let min_needed = max_double(min_col - gap_total, 0.0)
@@ -2742,6 +2786,7 @@ fn[C] compute_grid_layout_with_measure(
         Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
         Point::zero(),
         measure_function,
+        false,
       )
       let max_h = tree.nodes[child_id].layout.size.height
       let max_needed = max_double(max_h - row_gap_total, 0.0)
@@ -2758,6 +2803,7 @@ fn[C] compute_grid_layout_with_measure(
         Size::new(width=AvailDefinite(col_w), height=AvailMinContent),
         Point::zero(),
         measure_function,
+        false,
       )
       let min_h = tree.nodes[child_id].layout.size.height
       let min_needed = max_double(min_h - row_gap_total, 0.0)
@@ -3067,6 +3113,7 @@ fn[C] compute_grid_layout_with_measure(
           child_available,
           Point::zero(),
           measure_function,
+          false,
         )
         let intrinsic = tree.nodes[child_id].layout.size
         let offset_x = match justify {
@@ -3088,6 +3135,7 @@ fn[C] compute_grid_layout_with_measure(
           child_available,
           Point::new(x=base_x + x + offset_x, y=base_y + y + offset_y),
           measure_function,
+          false,
         )
       }
     }
@@ -3104,6 +3152,7 @@ fn[C] compute_block_layout_with_measure(
   measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
     Double,
   ],
+  is_layout_root : Bool,
 ) -> Unit raise TaffyError {
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
@@ -3111,8 +3160,27 @@ fn[C] compute_block_layout_with_measure(
   }
   let padding = resolve_rect_width_basis(node.style.padding, available_space)
   let border = resolve_rect_width_basis(node.style.border, available_space)
-  let horiz_inset = padding.left + padding.right + border.left + border.right
-  let vert_inset = padding.top + padding.bottom + border.top + border.bottom
+  let scrollbar_w = node.style.scrollbar_width
+  let scrollbar_x = match node.style.overflow.x {
+    OverflowScroll => scrollbar_w
+    _ => 0.0
+  }
+  let scrollbar_y = match node.style.overflow.y {
+    OverflowScroll => scrollbar_w
+    _ => 0.0
+  }
+  // Overflow::Scroll reserves scrollbar space inside the border box.
+  // Horizontal scrollbar consumes cross (vertical) space; vertical scrollbar consumes main (horizontal) space.
+  let horiz_inset = padding.left +
+    padding.right +
+    border.left +
+    border.right +
+    scrollbar_y
+  let vert_inset = padding.top +
+    padding.bottom +
+    border.top +
+    border.bottom +
+    scrollbar_x
   let style_width = resolve_optional_dimension(
     node.style.size.width,
     available_space.width,
@@ -3292,6 +3360,50 @@ fn[C] compute_block_layout_with_measure(
     true
   }
 
+  let resolved_own_margin = resolve_rect_width_basis(
+    node.style.margin,
+    available_space,
+  )
+  let own_margin_top = resolved_own_margin.top
+  let own_margin_bottom = resolved_own_margin.bottom
+  let parent_overflow_visible = match
+    (node.style.overflow.x, node.style.overflow.y) {
+    (OverflowVisible, OverflowVisible) => true
+    _ => false
+  }
+  let mut first_in_flow_child : NodeId? = None
+  let mut last_in_flow_child : NodeId? = None
+  for child_id in node.children {
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+    match child.style.display {
+      DisplayNone => ()
+      _ =>
+        match child.style.position {
+          PosRelative => {
+            match first_in_flow_child {
+              None => first_in_flow_child = Some(child_id)
+              Some(_) => ()
+            }
+            last_in_flow_child = Some(child_id)
+          }
+          PosAbsolute => ()
+        }
+    }
+  }
+  let collapse_with_children = not(is_layout_root) &&
+    parent_overflow_visible &&
+    specified_height is None
+  let collapse_top_with_child = collapse_with_children &&
+    padding.top == 0.0 &&
+    border.top == 0.0 &&
+    first_in_flow_child is Some(_)
+  let collapse_bottom_with_child = collapse_with_children &&
+    padding.bottom == 0.0 &&
+    border.bottom == 0.0 &&
+    last_in_flow_child is Some(_)
   let abs_child_ids : Array[NodeId] = []
   let abs_child_static_y : Array[Double] = []
   let mut flow_anchor_border_bottom : Double = 0.0
@@ -3305,6 +3417,7 @@ fn[C] compute_block_layout_with_measure(
     AvailDefinite(v) => v
     _ => 0.0
   }
+  let mut is_first_in_flow = true
   for child_id in node.children {
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
@@ -3336,10 +3449,6 @@ fn[C] compute_block_layout_with_measure(
               DimAuto => true
               _ => false
             }
-            let margin_bottom_auto = match margin.bottom {
-              DimAuto => true
-              _ => false
-            }
             let resolved_margin = resolve_rect_width_basis(
               margin, margin_basis_available,
             )
@@ -3357,11 +3466,6 @@ fn[C] compute_block_layout_with_measure(
               0.0
             } else {
               resolved_margin.top
-            }
-            let fixed_margin_bottom = if margin_bottom_auto {
-              0.0
-            } else {
-              resolved_margin.bottom
             }
             let child_width_auto = match child.style.size.width {
               DimAuto => true
@@ -3450,22 +3554,50 @@ fn[C] compute_block_layout_with_measure(
               }
               None => ()
             }
-            let used_before = collapse_state_value(
-              collapse_state_add(flow_margin_collapse, fixed_margin_top),
+            let is_last_in_flow = match last_in_flow_child {
+              Some(v) => v == child_id
+              None => false
+            }
+            let top_used_base = if collapse_top_with_child && is_first_in_flow {
+              0.0
+            } else {
+              fixed_margin_top
+            }
+            let used_before_base = collapse_state_value(
+              collapse_state_add(flow_margin_collapse, top_used_base),
             )
-            let child_y_rel_static = flow_anchor_border_bottom + used_before
+            let mut child_y_rel_static = flow_anchor_border_bottom +
+              used_before_base
             compute_node_layout_with_measure(
               tree,
               child_id,
               Size::new(width=target_width, height=None),
-              flow_available,
+              margin_basis_available,
               Point::new(
                 x=content_origin.x + fixed_margin_left,
                 y=content_origin.y + child_y_rel_static,
               ),
               measure_function,
+              false,
             )
             let child_size = tree.nodes[child_id].layout.size
+            let effective_top = tree.nodes[child_id].effective_margin_top
+            let top_used_effective = if collapse_top_with_child &&
+              is_first_in_flow {
+              0.0
+            } else {
+              effective_top
+            }
+            let used_before_effective = collapse_state_value(
+              collapse_state_add(flow_margin_collapse, top_used_effective),
+            )
+            let delta_y = used_before_effective - used_before_base
+            if delta_y != 0.0 {
+              offset_subtree(tree, child_id, 0.0, delta_y)
+              child_y_rel_static = child_y_rel_static + delta_y
+            } else {
+              ()
+            }
             let remaining = if content_width_definite {
               content_width_for_flow -
               fixed_margin_left -
@@ -3500,16 +3632,24 @@ fn[C] compute_block_layout_with_measure(
             } else {
               ()
             }
+            let effective_bottom_raw = tree.nodes[child_id].effective_margin_bottom
+            let bottom_used_effective = if collapse_bottom_with_child &&
+              is_last_in_flow {
+              0.0
+            } else {
+              effective_bottom_raw
+            }
             let through = can_collapse_through_child(tree, child, child_size)
             if through {
               flow_margin_collapse = collapse_state_add(
-                collapse_state_add(flow_margin_collapse, fixed_margin_top),
-                fixed_margin_bottom,
+                collapse_state_add(flow_margin_collapse, top_used_effective),
+                bottom_used_effective,
               )
             } else {
               flow_anchor_border_bottom = child_y_rel_static + child_size.height
-              flow_margin_collapse = collapse_state_from(fixed_margin_bottom)
+              flow_margin_collapse = collapse_state_from(bottom_used_effective)
             }
+            is_first_in_flow = false
             let child_outer_width = fixed_margin_left +
               auto_left +
               child_size.width +
@@ -3544,7 +3684,12 @@ fn[C] compute_block_layout_with_measure(
     None =>
       max_double(
         clamp_dimension(
-          max_double(vert_inset + flow_anchor_border_bottom, vert_inset),
+          max_double(
+            vert_inset +
+            flow_anchor_border_bottom +
+            collapse_state_value(flow_margin_collapse),
+            vert_inset,
+          ),
           node.style.min_size.height,
           node.style.max_size.height,
           available_space.height,
@@ -3581,6 +3726,7 @@ fn[C] compute_block_layout_with_measure(
     flow_margin_collapse = (0.0, 0.0)
     max_flow_child_width = 0.0
     let content_width_for_flow2 = final_content_width_for_flow
+    let mut is_first_in_flow2 = true
     for child_id in node.children {
       let child = match tree.nodes.get(child_id) {
         Some(c) => c
@@ -3602,7 +3748,6 @@ fn[C] compute_block_layout_with_measure(
               let margin_left_auto = margin.left is DimAuto
               let margin_right_auto = margin.right is DimAuto
               let margin_top_auto = margin.top is DimAuto
-              let margin_bottom_auto = margin.bottom is DimAuto
               let resolved_margin = resolve_rect_width_basis(
                 margin, margin_basis_available2,
               )
@@ -3620,11 +3765,6 @@ fn[C] compute_block_layout_with_measure(
                 0.0
               } else {
                 resolved_margin.top
-              }
-              let fixed_margin_bottom = if margin_bottom_auto {
-                0.0
-              } else {
-                resolved_margin.bottom
               }
               let child_width_auto = child.style.size.width is DimAuto
               let aspect_ratio = child.style.aspect_ratio
@@ -3712,10 +3852,21 @@ fn[C] compute_block_layout_with_measure(
                 }
                 None => ()
               }
-              let used_before = collapse_state_value(
-                collapse_state_add(flow_margin_collapse, fixed_margin_top),
+              let is_last_in_flow = match last_in_flow_child {
+                Some(v) => v == child_id
+                None => false
+              }
+              let top_used_base = if collapse_top_with_child &&
+                is_first_in_flow2 {
+                0.0
+              } else {
+                fixed_margin_top
+              }
+              let used_before_base = collapse_state_value(
+                collapse_state_add(flow_margin_collapse, top_used_base),
               )
-              let child_y_rel_static = flow_anchor_border_bottom + used_before
+              let mut child_y_rel_static = flow_anchor_border_bottom +
+                used_before_base
               compute_node_layout_with_measure(
                 tree,
                 child_id,
@@ -3726,8 +3877,26 @@ fn[C] compute_block_layout_with_measure(
                   y=content_origin.y + child_y_rel_static,
                 ),
                 measure_function,
+                false,
               )
               let child_size = tree.nodes[child_id].layout.size
+              let effective_top = tree.nodes[child_id].effective_margin_top
+              let top_used_effective = if collapse_top_with_child &&
+                is_first_in_flow2 {
+                0.0
+              } else {
+                effective_top
+              }
+              let used_before_effective = collapse_state_value(
+                collapse_state_add(flow_margin_collapse, top_used_effective),
+              )
+              let delta_y = used_before_effective - used_before_base
+              if delta_y != 0.0 {
+                offset_subtree(tree, child_id, 0.0, delta_y)
+                child_y_rel_static = child_y_rel_static + delta_y
+              } else {
+                ()
+              }
               let remaining = content_width_for_flow2 -
                 fixed_margin_left -
                 fixed_margin_right -
@@ -3754,17 +3923,27 @@ fn[C] compute_block_layout_with_measure(
               } else {
                 ()
               }
+              let effective_bottom_raw = tree.nodes[child_id].effective_margin_bottom
+              let bottom_used_effective = if collapse_bottom_with_child &&
+                is_last_in_flow {
+                0.0
+              } else {
+                effective_bottom_raw
+              }
               let through = can_collapse_through_child(tree, child, child_size)
               if through {
                 flow_margin_collapse = collapse_state_add(
-                  collapse_state_add(flow_margin_collapse, fixed_margin_top),
-                  fixed_margin_bottom,
+                  collapse_state_add(flow_margin_collapse, top_used_effective),
+                  bottom_used_effective,
                 )
               } else {
                 flow_anchor_border_bottom = child_y_rel_static +
                   child_size.height
-                flow_margin_collapse = collapse_state_from(fixed_margin_bottom)
+                flow_margin_collapse = collapse_state_from(
+                  bottom_used_effective,
+                )
               }
+              is_first_in_flow2 = false
               let child_outer_width = fixed_margin_left +
                 auto_left +
                 child_size.width +
@@ -3785,7 +3964,12 @@ fn[C] compute_block_layout_with_measure(
       None =>
         max_double(
           clamp_dimension(
-            max_double(vert_inset + flow_anchor_border_bottom, vert_inset),
+            max_double(
+              vert_inset +
+              flow_anchor_border_bottom +
+              collapse_state_value(flow_margin_collapse),
+              vert_inset,
+            ),
             node.style.min_size.height,
             node.style.max_size.height,
             available_space.height,
@@ -4011,6 +4195,7 @@ fn[C] compute_block_layout_with_measure(
           abs_available,
           Point::zero(),
           measure_function,
+          false,
         )
         tree.nodes[child_id].layout.size
       }
@@ -4063,6 +4248,7 @@ fn[C] compute_block_layout_with_measure(
       abs_available,
       Point::zero(),
       measure_function,
+      false,
     )
     let final_size = tree.nodes[child_id].layout.size
     let mut final_margin_left = if margin_left_auto {
@@ -4180,8 +4366,39 @@ fn[C] compute_block_layout_with_measure(
         y=padding_origin.y + y_in_padding,
       ),
       measure_function,
+      false,
     )
   }
+  let effective_margin_top = if collapse_top_with_child {
+    let first_id = match first_in_flow_child {
+      Some(v) => v
+      None => node_id
+    }
+    collapse_state_value(
+      collapse_state_add(
+        collapse_state_add((0.0, 0.0), own_margin_top),
+        tree.nodes[first_id].effective_margin_top,
+      ),
+    )
+  } else {
+    own_margin_top
+  }
+  let effective_margin_bottom = if collapse_bottom_with_child {
+    let last_id = match last_in_flow_child {
+      Some(v) => v
+      None => node_id
+    }
+    collapse_state_value(
+      collapse_state_add(
+        collapse_state_add((0.0, 0.0), own_margin_bottom),
+        tree.nodes[last_id].effective_margin_bottom,
+      ),
+    )
+  } else {
+    own_margin_bottom
+  }
+  tree.nodes[node_id].effective_margin_top = effective_margin_top
+  tree.nodes[node_id].effective_margin_bottom = effective_margin_bottom
 }
 
 ///|
@@ -4400,6 +4617,7 @@ fn[C] compute_flex_layout_with_measure(
       parent_available_for_children,
       Point::zero(),
       measure_function,
+      false,
     )
     let child_layout = tree.layout(child_id)
     let main_axis_available = main_available_pre
@@ -4531,6 +4749,7 @@ fn[C] compute_flex_layout_with_measure(
           min_content_space,
           Point::zero(),
           measure_function,
+          false,
         )
         let min_layout = tree.layout(child_id)
         let min_content_main = if is_col {
@@ -4981,6 +5200,7 @@ fn[C] compute_flex_layout_with_measure(
           child_available_for_final,
           child_origin,
           measure_function,
+          false,
         )
       }
     }
@@ -5216,6 +5436,7 @@ fn[C] compute_flex_layout_with_measure(
         child_available_for_final,
         child_origin,
         measure_function,
+        false,
       )
     }
   }
@@ -5239,6 +5460,7 @@ fn[C] compute_flex_layout_with_measure(
       abs_available,
       Point::zero(),
       measure_function,
+      false,
     )
     let intrinsic = tree.layout(child_id).size
     let resolved_margin = resolve_rect_width_basis(
@@ -5349,6 +5571,7 @@ fn[C] compute_flex_layout_with_measure(
       abs_available,
       child_origin,
       measure_function,
+      false,
     )
   }
 
@@ -5361,6 +5584,13 @@ fn[C] compute_flex_layout_with_measure(
       abs_available,
       Point::new(x=base_x, y=base_y),
       measure_function,
+      false,
     )
   }
+  let resolved_margin = resolve_rect_width_basis(
+    node.style.margin,
+    available_space,
+  )
+  tree.nodes[node_id].effective_margin_top = resolved_margin.top
+  tree.nodes[node_id].effective_margin_bottom = resolved_margin.bottom
 }

@@ -1849,17 +1849,87 @@ test "upstream/generated/block/block_absolute_margin_auto_top_without_inset" {
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_bottom_left_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_bottom_left_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_bottom_left_with_inset.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(10.0), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(10.0),
+        right=length(0.0),
+        top=length(0.0),
+        bottom=length(10.0),
+      ),
+    )
+    .with_inset(
+      Rect::new(
+        left=length(20.0),
+        right=length(10.0),
+        top=length(10.0),
+        bottom=length(20.0),
+      ),
+    ),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let layout = taffy.layout(node)
+  assert_eq(layout.size.width, 100.0)
+  assert_eq(layout.size.height, 100.0)
+  assert_eq(layout.location.x, 0.0)
+  assert_eq(layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 10.0)
+  assert_eq(c.size.height, 10.0)
+  assert_eq(c.location.x, 30.0)
+  assert_eq(c.location.y, 10.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_bottom_left_without_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_bottom_left_without_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_bottom_left_without_inset.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(10.0), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(10.0),
+        right=length(0.0),
+        top=length(0.0),
+        bottom=length(10.0),
+      ),
+    ),
+    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let layout = taffy.layout(node)
+  assert_eq(layout.size.width, 100.0)
+  assert_eq(layout.size.height, 100.0)
+  assert_eq(layout.location.x, 0.0)
+  assert_eq(layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 10.0)
+  assert_eq(c.size.height, 10.0)
+  assert_eq(c.location.x, 10.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|

@@ -15553,45 +15553,378 @@ test "upstream/generated/grid/mod" {
 }
 
 ///|
-#skip
 test "upstream/generated/gridflex/gridflex_column_integration" {
-  // TODO: port from taffy-reference/tests/generated/gridflex/gridflex_column_integration.rs
-  ()
+  // Ported from taffy-reference/tests/generated/gridflex/gridflex_column_integration.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node00 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH",
+    writing_mode: Horizontal,
+  })
+  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH",
+    writing_mode: Horizontal,
+  })
+  let node02 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH",
+    writing_mode: Horizontal,
+  })
+  let node03 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH",
+    writing_mode: Horizontal,
+  })
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([fr(1.0), fr(1.0)])
+    .with_grid_template_columns([fr(1.0), fr(1.0)]),
+    [node00, node01, node02, node03],
+  )
+  let node = taffy.new_with_children(
+    Style::default().with_flex_direction(flex_direction_column()),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 40.0)
+  assert_eq(l_node.size.height, 20.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 40.0)
+  assert_eq(l0.size.height, 20.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l00 = taffy.layout(node00)
+  assert_eq(l00.size.width, 20.0)
+  assert_eq(l00.size.height, 10.0)
+  assert_eq(l00.location.x, 0.0)
+  assert_eq(l00.location.y, 0.0)
+  let l01 = taffy.layout(node01)
+  assert_eq(l01.size.width, 20.0)
+  assert_eq(l01.size.height, 10.0)
+  assert_eq(l01.location.x, 20.0)
+  assert_eq(l01.location.y, 0.0)
+  let l02 = taffy.layout(node02)
+  assert_eq(l02.size.width, 20.0)
+  assert_eq(l02.size.height, 10.0)
+  assert_eq(l02.location.x, 0.0)
+  assert_eq(l02.location.y, 10.0)
+  let l03 = taffy.layout(node03)
+  assert_eq(l03.size.width, 20.0)
+  assert_eq(l03.size.height, 10.0)
+  assert_eq(l03.location.x, 20.0)
+  assert_eq(l03.location.y, 10.0)
 }
 
 ///|
-#skip
 test "upstream/generated/gridflex/gridflex_kitchen_sink" {
-  // TODO: port from taffy-reference/tests/generated/gridflex/gridflex_kitchen_sink.rs
-  ()
+  // Ported from taffy-reference/tests/generated/gridflex/gridflex_kitchen_sink.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node000 = taffy.new_leaf(
+    Style::default().with_size(Size::new(width=length(20.0), height=auto())),
+  )
+  let node00100 = taffy.new_leaf(
+    Style::default().with_size(Size::new(width=length(20.0), height=auto())),
+  )
+  let node00101 = taffy.new_leaf(Style::default())
+  let node00102 = taffy.new_leaf(Style::default())
+  let node00103 = taffy.new_leaf(Style::default())
+  let node0010 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([percent(0.3), percent(0.1)])
+    .with_grid_template_columns([auto(), percent(0.1)]),
+    [node00100, node00101, node00102, node00103],
+  )
+  let node001 = taffy.new_with_children(
+    Style::default()
+    .with_flex_grow(1.0)
+    .with_size(Size::new(width=length(50.0), height=auto())),
+    [node0010],
+  )
+  let node00 = taffy.new_with_children(Style::default(), [node000, node001])
+  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH",
+    writing_mode: Horizontal,
+  })
+  let node02 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH",
+    writing_mode: Horizontal,
+  })
+  let node03 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH",
+    writing_mode: Horizontal,
+  })
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([fr(1.0), fr(1.0)])
+    .with_grid_template_columns([fr(1.0), fr(1.0)]),
+    [node00, node01, node02, node03],
+  )
+  let node = taffy.new_with_children(Style::default(), [node0])
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 140.0)
+  assert_eq(l_node.size.height, 20.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 140.0)
+  assert_eq(l0.size.height, 20.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l00 = taffy.layout(node00)
+  assert_eq(l00.size.width, 70.0)
+  assert_eq(l00.size.height, 10.0)
+  assert_eq(l00.location.x, 0.0)
+  assert_eq(l00.location.y, 0.0)
+  let l000 = taffy.layout(node000)
+  assert_eq(l000.size.width, 20.0)
+  assert_eq(l000.size.height, 10.0)
+  assert_eq(l000.location.x, 0.0)
+  assert_eq(l000.location.y, 0.0)
+  let l001 = taffy.layout(node001)
+  assert_eq(l001.size.width, 50.0)
+  assert_eq(l001.size.height, 10.0)
+  assert_eq(l001.location.x, 20.0)
+  assert_eq(l001.location.y, 0.0)
+  let l0010 = taffy.layout(node0010)
+  assert_eq(l0010.size.width, 20.0)
+  assert_eq(l0010.size.height, 10.0)
+  assert_eq(l0010.location.x, 0.0)
+  assert_eq(l0010.location.y, 0.0)
+  let l00100 = taffy.layout(node00100)
+  assert_eq(l00100.size.width, 20.0)
+  assert_eq(l00100.size.height, 3.0)
+  assert_eq(l00100.location.x, 0.0)
+  assert_eq(l00100.location.y, 0.0)
+  let l00101 = taffy.layout(node00101)
+  assert_eq(l00101.size.width, 2.0)
+  assert_eq(l00101.size.height, 3.0)
+  assert_eq(l00101.location.x, 20.0)
+  assert_eq(l00101.location.y, 0.0)
+  let l00102 = taffy.layout(node00102)
+  assert_eq(l00102.size.width, 20.0)
+  assert_eq(l00102.size.height, 1.0)
+  assert_eq(l00102.location.x, 0.0)
+  assert_eq(l00102.location.y, 3.0)
+  let l00103 = taffy.layout(node00103)
+  assert_eq(l00103.size.width, 2.0)
+  assert_eq(l00103.size.height, 1.0)
+  assert_eq(l00103.location.x, 20.0)
+  assert_eq(l00103.location.y, 3.0)
+  let l01 = taffy.layout(node01)
+  assert_eq(l01.size.width, 70.0)
+  assert_eq(l01.size.height, 10.0)
+  assert_eq(l01.location.x, 70.0)
+  assert_eq(l01.location.y, 0.0)
+  let l02 = taffy.layout(node02)
+  assert_eq(l02.size.width, 70.0)
+  assert_eq(l02.size.height, 10.0)
+  assert_eq(l02.location.x, 0.0)
+  assert_eq(l02.location.y, 10.0)
+  let l03 = taffy.layout(node03)
+  assert_eq(l03.size.width, 70.0)
+  assert_eq(l03.size.height, 10.0)
+  assert_eq(l03.location.x, 70.0)
+  assert_eq(l03.location.y, 10.0)
 }
 
 ///|
-#skip
 test "upstream/generated/gridflex/gridflex_kitchen_sink_minimise" {
-  // TODO: port from taffy-reference/tests/generated/gridflex/gridflex_kitchen_sink_minimise.rs
-  ()
+  // Ported from taffy-reference/tests/generated/gridflex/gridflex_kitchen_sink_minimise.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node00 = taffy.new_leaf(
+    Style::default().with_size(Size::new(width=length(50.0), height=auto())),
+  )
+  let node01 = taffy.new_leaf(Style::default())
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(20.0)])
+    .with_grid_template_columns([fr(1.0), fr(1.0)]),
+    [node00, node01],
+  )
+  let node = taffy.new_with_children(Style::default(), [node0])
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 100.0)
+  assert_eq(l_node.size.height, 20.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 100.0)
+  assert_eq(l0.size.height, 20.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l00 = taffy.layout(node00)
+  assert_eq(l00.size.width, 50.0)
+  assert_eq(l00.size.height, 20.0)
+  assert_eq(l00.location.x, 0.0)
+  assert_eq(l00.location.y, 0.0)
+  let l01 = taffy.layout(node01)
+  assert_eq(l01.size.width, 50.0)
+  assert_eq(l01.size.height, 20.0)
+  assert_eq(l01.location.x, 50.0)
+  assert_eq(l01.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/gridflex/gridflex_kitchen_sink_minimise2" {
-  // TODO: port from taffy-reference/tests/generated/gridflex/gridflex_kitchen_sink_minimise2.rs
-  ()
+  // Ported from taffy-reference/tests/generated/gridflex/gridflex_kitchen_sink_minimise2.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node00 = taffy.new_leaf(
+    Style::default().with_size(
+      Size::new(width=length(20.0), height=length(20.0)),
+    ),
+  )
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([auto()])
+    .with_grid_template_columns([auto()]),
+    [node00],
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_flex_grow(1.0)
+    .with_size(Size::new(width=length(50.0), height=auto())),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 50.0)
+  assert_eq(l_node.size.height, 20.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 20.0)
+  assert_eq(l0.size.height, 20.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l00 = taffy.layout(node00)
+  assert_eq(l00.size.width, 20.0)
+  assert_eq(l00.size.height, 20.0)
+  assert_eq(l00.location.x, 0.0)
+  assert_eq(l00.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/gridflex/gridflex_kitchen_sink_minimise3" {
-  // TODO: port from taffy-reference/tests/generated/gridflex/gridflex_kitchen_sink_minimise3.rs
-  ()
+  // Ported from taffy-reference/tests/generated/gridflex/gridflex_kitchen_sink_minimise3.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node00 = taffy.new_leaf(
+    Style::default().with_size(
+      Size::new(width=length(20.0), height=length(20.0)),
+    ),
+  )
+  let node01 = taffy.new_leaf(Style::default())
+  let node02 = taffy.new_leaf(Style::default())
+  let node03 = taffy.new_leaf(Style::default())
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([percent(0.3), percent(0.1)])
+    .with_grid_template_columns([auto(), percent(0.1)]),
+    [node00, node01, node02, node03],
+  )
+  let node = taffy.new_with_children(
+    Style::default().with_size(Size::new(width=length(50.0), height=auto())),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 50.0)
+  assert_eq(l_node.size.height, 20.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 20.0)
+  assert_eq(l0.size.height, 20.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l00 = taffy.layout(node00)
+  assert_eq(l00.size.width, 20.0)
+  assert_eq(l00.size.height, 20.0)
+  assert_eq(l00.location.x, 0.0)
+  assert_eq(l00.location.y, 0.0)
+  let l01 = taffy.layout(node01)
+  assert_eq(l01.size.width, 2.0)
+  assert_eq(l01.size.height, 6.0)
+  assert_eq(l01.location.x, 20.0)
+  assert_eq(l01.location.y, 0.0)
+  let l02 = taffy.layout(node02)
+  assert_eq(l02.size.width, 20.0)
+  assert_eq(l02.size.height, 2.0)
+  assert_eq(l02.location.x, 0.0)
+  assert_eq(l02.location.y, 6.0)
+  let l03 = taffy.layout(node03)
+  assert_eq(l03.size.width, 2.0)
+  assert_eq(l03.size.height, 2.0)
+  assert_eq(l03.location.x, 20.0)
+  assert_eq(l03.location.y, 6.0)
 }
 
 ///|
-#skip
 test "upstream/generated/gridflex/gridflex_row_integration" {
-  // TODO: port from taffy-reference/tests/generated/gridflex/gridflex_row_integration.rs
-  ()
+  // Ported from taffy-reference/tests/generated/gridflex/gridflex_row_integration.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node00 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH",
+    writing_mode: Horizontal,
+  })
+  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH",
+    writing_mode: Horizontal,
+  })
+  let node02 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH",
+    writing_mode: Horizontal,
+  })
+  let node03 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH",
+    writing_mode: Horizontal,
+  })
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([fr(1.0), fr(1.0)])
+    .with_grid_template_columns([fr(1.0), fr(1.0)]),
+    [node00, node01, node02, node03],
+  )
+  let node = taffy.new_with_children(Style::default(), [node0])
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 40.0)
+  assert_eq(l_node.size.height, 20.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 40.0)
+  assert_eq(l0.size.height, 20.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l00 = taffy.layout(node00)
+  assert_eq(l00.size.width, 20.0)
+  assert_eq(l00.size.height, 10.0)
+  assert_eq(l00.location.x, 0.0)
+  assert_eq(l00.location.y, 0.0)
+  let l01 = taffy.layout(node01)
+  assert_eq(l01.size.width, 20.0)
+  assert_eq(l01.size.height, 10.0)
+  assert_eq(l01.location.x, 20.0)
+  assert_eq(l01.location.y, 0.0)
+  let l02 = taffy.layout(node02)
+  assert_eq(l02.size.width, 20.0)
+  assert_eq(l02.size.height, 10.0)
+  assert_eq(l02.location.x, 0.0)
+  assert_eq(l02.location.y, 10.0)
+  let l03 = taffy.layout(node03)
+  assert_eq(l03.size.width, 20.0)
+  assert_eq(l03.size.height, 10.0)
+  assert_eq(l03.location.x, 20.0)
+  assert_eq(l03.location.y, 10.0)
 }
 
 ///|

@@ -899,6 +899,37 @@ fn compute_grid_track_sizes_with_contributions(
     }
   }
 
+  // Intrinsic sizing for flexible tracks: derive a flex fraction from content contributions.
+  // This matches taffy 0.5 behavior for `fr` tracks under indefinite available space.
+  if not(expand_to_fill) {
+    let mut flex_fraction = 0.0
+    for i in 0..<count {
+      let w = fr_weights[i]
+      if w > 0.0 {
+        let max_c = if i < max_contrib.length() { max_contrib[i] } else { 0.0 }
+        let ratio = max_c / w
+        if ratio > flex_fraction {
+          flex_fraction = ratio
+        }
+      }
+    }
+    if flex_fraction > 0.0 {
+      for i in 0..<count {
+        let w = fr_weights[i]
+        if w > 0.0 {
+          sizes[i] = flex_fraction * w
+          min_sizes[i] = if i < min_contrib.length() {
+            min_contrib[i]
+          } else {
+            0.0
+          }
+          max_limits[i] = inf
+          is_auto[i] = true
+        }
+      }
+    }
+  }
+
   // Shrink tracks down to their min-content contributions if the sum of preferred sizes overflows.
   let mut used = 0.0
   for s in sizes {
@@ -2468,27 +2499,44 @@ fn[C] compute_grid_layout_with_measure(
     gap : Double,
   ) -> Double {
     let mut total = 0.0
+    let mut fr_sum = 0.0
+    let mut fr_fraction = 0.0
     for i in 0..<tracks.length() {
       let min_c = min_contrib[i]
       let max_c = max_contrib[i]
-      total = total +
-        (match tracks[i] {
-          DimLength(v) => v
-          DimAuto => min_c
-          DimMinContent => min_c
-          DimMaxContent => max_c
-          DimFitContent(limit) =>
-            track_basis_fit_content(min_c, max_c, limit, 0.0)
-          DimMinMax(min_d, _max_d) =>
-            // Conservative: use the min sizing function where possible.
-            match min_d {
-              DimAuto | DimMinContent => min_c
-              DimMaxContent => max_c
-              _ => resolve_track_dimension(min_d, 0.0)
+      match tracks[i] {
+        DimFr(w) =>
+          if w > 0.0 {
+            fr_sum = fr_sum + w
+            let ratio = min_c / w
+            if ratio > fr_fraction {
+              fr_fraction = ratio
             }
-          _ => 0.0
-        })
+          } else {
+            ()
+          }
+        _ =>
+          total = total +
+            (match tracks[i] {
+              DimLength(v) => v
+              DimAuto => min_c
+              DimPercent(_) => min_c
+              DimMinContent => min_c
+              DimMaxContent => max_c
+              DimFitContent(limit) =>
+                track_basis_fit_content(min_c, max_c, limit, 0.0)
+              DimMinMax(min_d, _max_d) =>
+                // Conservative: use the min sizing function where possible.
+                match min_d {
+                  DimAuto | DimMinContent => min_c
+                  DimMaxContent => max_c
+                  _ => resolve_track_dimension(min_d, 0.0)
+                }
+              _ => 0.0
+            })
+      }
     }
+    total = total + fr_fraction * fr_sum
     if tracks.length() > 1 {
       total = total + gap * (tracks.length() - 1).to_double()
     }
@@ -2502,28 +2550,45 @@ fn[C] compute_grid_layout_with_measure(
     gap : Double,
   ) -> Double {
     let mut total = 0.0
+    let mut fr_sum = 0.0
+    let mut fr_fraction = 0.0
     for i in 0..<tracks.length() {
       let min_c = min_contrib[i]
       let max_c = max_contrib[i]
-      total = total +
-        (match tracks[i] {
-          DimLength(v) => v
-          DimAuto => max_c
-          DimMinContent => min_c
-          DimMaxContent => max_c
-          DimFitContent(limit) =>
-            track_basis_fit_content(min_c, max_c, limit, 0.0)
-          DimMinMax(_min_d, max_d) =>
-            match max_d {
-              DimAuto | DimMaxContent => max_c
+      match tracks[i] {
+        DimFr(w) =>
+          if w > 0.0 {
+            fr_sum = fr_sum + w
+            let ratio = max_c / w
+            if ratio > fr_fraction {
+              fr_fraction = ratio
+            }
+          } else {
+            ()
+          }
+        _ =>
+          total = total +
+            (match tracks[i] {
+              DimLength(v) => v
+              DimAuto => max_c
+              DimPercent(_) => max_c
               DimMinContent => min_c
+              DimMaxContent => max_c
               DimFitContent(limit) =>
                 track_basis_fit_content(min_c, max_c, limit, 0.0)
-              _ => resolve_track_dimension(max_d, 0.0)
-            }
-          _ => 0.0
-        })
+              DimMinMax(_min_d, max_d) =>
+                match max_d {
+                  DimAuto | DimMaxContent => max_c
+                  DimMinContent => min_c
+                  DimFitContent(limit) =>
+                    track_basis_fit_content(min_c, max_c, limit, 0.0)
+                  _ => resolve_track_dimension(max_d, 0.0)
+                }
+              _ => 0.0
+            })
+      }
     }
+    total = total + fr_fraction * fr_sum
     if tracks.length() > 1 {
       total = total + gap * (tracks.length() - 1).to_double()
     }

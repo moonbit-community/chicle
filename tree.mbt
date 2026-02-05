@@ -3207,9 +3207,95 @@ fn[C] compute_block_layout_with_measure(
     width=AvailDefinite(margin_basis_width),
     height=flow_available.height,
   )
+  fn collapse_state_add(
+    state : (Double, Double),
+    margin : Double,
+  ) -> (Double, Double) {
+    let mut max_pos = state.0
+    let mut min_neg = state.1
+    if margin > 0.0 {
+      if margin > max_pos {
+        max_pos = margin
+      } else {
+        ()
+      }
+    } else if margin < 0.0 {
+      if margin < min_neg {
+        min_neg = margin
+      } else {
+        ()
+      }
+    } else {
+      ()
+    }
+    (max_pos, min_neg)
+  }
+
+  fn collapse_state_value(state : (Double, Double)) -> Double {
+    state.0 + state.1
+  }
+
+  fn collapse_state_from(margin : Double) -> (Double, Double) {
+    collapse_state_add((0.0, 0.0), margin)
+  }
+
+  fn has_in_flow_children(
+    tree : TaffyTree[C],
+    children : Array[NodeId],
+  ) -> Bool raise TaffyError {
+    for child_id in children {
+      let child = match tree.nodes.get(child_id) {
+        Some(c) => c
+        None => raise InvalidNodeId(child_id)
+      }
+      match child.style.display {
+        DisplayNone => ()
+        _ =>
+          match child.style.position {
+            PosRelative => return true
+            PosAbsolute => ()
+          }
+      }
+    }
+    false
+  }
+
+  fn can_collapse_through_child(
+    tree : TaffyTree[C],
+    child : Node[C],
+    child_size : Size[Double],
+  ) -> Bool raise TaffyError {
+    if child_size.height != 0.0 {
+      return false
+    } else {
+      ()
+    }
+    match child.context {
+      Some(_) => return false
+      None => ()
+    }
+    let overflow_visible = match
+      (child.style.overflow.x, child.style.overflow.y) {
+      (OverflowVisible, OverflowVisible) => true
+      _ => false
+    }
+    if not(overflow_visible) {
+      return false
+    } else {
+      ()
+    }
+    if has_in_flow_children(tree, child.children) {
+      return false
+    } else {
+      ()
+    }
+    true
+  }
+
   let abs_child_ids : Array[NodeId] = []
   let abs_child_static_y : Array[Double] = []
-  let mut flow_cursor_y = 0.0
+  let mut flow_anchor_border_bottom : Double = 0.0
+  let mut flow_margin_collapse : (Double, Double) = (0.0, 0.0)
   let mut max_flow_child_width = 0.0
   let content_width_definite = match flow_available.width {
     AvailDefinite(_) => true
@@ -3230,7 +3316,10 @@ fn[C] compute_block_layout_with_measure(
         match child.style.position {
           PosAbsolute => {
             abs_child_ids.push(child_id)
-            abs_child_static_y.push(flow_cursor_y)
+            abs_child_static_y.push(
+              flow_anchor_border_bottom +
+              collapse_state_value(flow_margin_collapse),
+            )
           }
           PosRelative => {
             // Minimal normal flow: stack children vertically.
@@ -3361,6 +3450,10 @@ fn[C] compute_block_layout_with_measure(
               }
               None => ()
             }
+            let used_before = collapse_state_value(
+              collapse_state_add(flow_margin_collapse, fixed_margin_top),
+            )
+            let child_y_rel_static = flow_anchor_border_bottom + used_before
             compute_node_layout_with_measure(
               tree,
               child_id,
@@ -3368,7 +3461,7 @@ fn[C] compute_block_layout_with_measure(
               flow_available,
               Point::new(
                 x=content_origin.x + fixed_margin_left,
-                y=content_origin.y + flow_cursor_y + fixed_margin_top,
+                y=content_origin.y + child_y_rel_static,
               ),
               measure_function,
             )
@@ -3407,10 +3500,16 @@ fn[C] compute_block_layout_with_measure(
             } else {
               ()
             }
-            flow_cursor_y = flow_cursor_y +
-              fixed_margin_top +
-              child_size.height +
-              fixed_margin_bottom
+            let through = can_collapse_through_child(tree, child, child_size)
+            if through {
+              flow_margin_collapse = collapse_state_add(
+                collapse_state_add(flow_margin_collapse, fixed_margin_top),
+                fixed_margin_bottom,
+              )
+            } else {
+              flow_anchor_border_bottom = child_y_rel_static + child_size.height
+              flow_margin_collapse = collapse_state_from(fixed_margin_bottom)
+            }
             let child_outer_width = fixed_margin_left +
               auto_left +
               child_size.width +
@@ -3445,7 +3544,7 @@ fn[C] compute_block_layout_with_measure(
     None =>
       max_double(
         clamp_dimension(
-          max_double(vert_inset + flow_cursor_y, vert_inset),
+          max_double(vert_inset + flow_anchor_border_bottom, vert_inset),
           node.style.min_size.height,
           node.style.max_size.height,
           available_space.height,
@@ -3478,7 +3577,8 @@ fn[C] compute_block_layout_with_measure(
     )
     abs_child_ids.clear()
     abs_child_static_y.clear()
-    flow_cursor_y = 0.0
+    flow_anchor_border_bottom = 0.0
+    flow_margin_collapse = (0.0, 0.0)
     max_flow_child_width = 0.0
     let content_width_for_flow2 = final_content_width_for_flow
     for child_id in node.children {
@@ -3492,7 +3592,10 @@ fn[C] compute_block_layout_with_measure(
           match child.style.position {
             PosAbsolute => {
               abs_child_ids.push(child_id)
-              abs_child_static_y.push(flow_cursor_y)
+              abs_child_static_y.push(
+                flow_anchor_border_bottom +
+                collapse_state_value(flow_margin_collapse),
+              )
             }
             PosRelative => {
               let margin = child.style.margin
@@ -3609,6 +3712,10 @@ fn[C] compute_block_layout_with_measure(
                 }
                 None => ()
               }
+              let used_before = collapse_state_value(
+                collapse_state_add(flow_margin_collapse, fixed_margin_top),
+              )
+              let child_y_rel_static = flow_anchor_border_bottom + used_before
               compute_node_layout_with_measure(
                 tree,
                 child_id,
@@ -3616,7 +3723,7 @@ fn[C] compute_block_layout_with_measure(
                 flow_available2,
                 Point::new(
                   x=content_origin.x + fixed_margin_left,
-                  y=content_origin.y + flow_cursor_y + fixed_margin_top,
+                  y=content_origin.y + child_y_rel_static,
                 ),
                 measure_function,
               )
@@ -3647,10 +3754,17 @@ fn[C] compute_block_layout_with_measure(
               } else {
                 ()
               }
-              flow_cursor_y = flow_cursor_y +
-                fixed_margin_top +
-                child_size.height +
-                fixed_margin_bottom
+              let through = can_collapse_through_child(tree, child, child_size)
+              if through {
+                flow_margin_collapse = collapse_state_add(
+                  collapse_state_add(flow_margin_collapse, fixed_margin_top),
+                  fixed_margin_bottom,
+                )
+              } else {
+                flow_anchor_border_bottom = child_y_rel_static +
+                  child_size.height
+                flow_margin_collapse = collapse_state_from(fixed_margin_bottom)
+              }
               let child_outer_width = fixed_margin_left +
                 auto_left +
                 child_size.width +
@@ -3671,7 +3785,7 @@ fn[C] compute_block_layout_with_measure(
       None =>
         max_double(
           clamp_dimension(
-            max_double(vert_inset + flow_cursor_y, vert_inset),
+            max_double(vert_inset + flow_anchor_border_bottom, vert_inset),
             node.style.min_size.height,
             node.style.max_size.height,
             available_space.height,

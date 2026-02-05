@@ -1049,13 +1049,61 @@ fn[C] compute_grid_layout_with_measure(
     }
   }
 
-  fn merged_placement_start(
+  fn merged_placement_line(
     placement : Line[GridPlacement],
     legacy_start : Int?,
-  ) -> GridPlacement {
+  ) -> Line[GridPlacement] {
     match legacy_start {
-      Some(v) => PlaceLine(v)
-      None => placement.start
+      Some(v) => Line::new(start=PlaceLine(v), end=placement.end)
+      None => placement
+    }
+  }
+
+  fn placement_span_value(span : Int) -> Int {
+    if span > 0 {
+      span
+    } else {
+      1
+    }
+  }
+
+  fn axis_resolve_start_line_and_span(
+    placement : Line[GridPlacement],
+    explicit_track_count : Int,
+  ) -> (Int?, Int) {
+    let start_line = match placement.start {
+      PlaceLine(v) => origin_zero_line(v, explicit_track_count)
+      _ => None
+    }
+    let end_line = match placement.end {
+      PlaceLine(v) => origin_zero_line(v, explicit_track_count)
+      _ => None
+    }
+    let explicit_span = match placement.start {
+      PlaceSpan(s) => Some(placement_span_value(s))
+      _ =>
+        match placement.end {
+          PlaceSpan(s) => Some(placement_span_value(s))
+          _ => None
+        }
+    }
+    match explicit_span {
+      Some(span) =>
+        match (start_line, end_line) {
+          (Some(sl), _) => (Some(sl), span)
+          (None, Some(el)) => (Some(el - span), span)
+          _ => (None, span)
+        }
+      None =>
+        match (start_line, end_line) {
+          (Some(sl), Some(el)) => {
+            let span = if el > sl { el - sl } else { 1 }
+            (Some(sl), span)
+          }
+          (Some(sl), None) => (Some(sl), 1)
+          (None, Some(el)) => (Some(el - 1), 1)
+          _ => (None, 1)
+        }
     }
   }
 
@@ -1179,45 +1227,39 @@ fn[C] compute_grid_layout_with_measure(
       Some(c) => c
       None => raise InvalidNodeId(child_id)
     }
-    let col_start = merged_placement_start(
+    let col_line = merged_placement_line(
       child.style.grid_column,
       child.style.grid_column_start,
     )
-    let row_start = merged_placement_start(
+    let row_line = merged_placement_line(
       child.style.grid_row,
       child.style.grid_row_start,
     )
-    match col_start {
-      PlaceLine(v) =>
-        match origin_zero_line(v, explicit_col_count) {
-          Some(oz) => {
-            if oz < min_col_line {
-              min_col_line = oz
-            }
-            let end = oz + 1
-            if end > max_col_line {
-              max_col_line = end
-            }
-          }
-          None => ()
+    let col_res = axis_resolve_start_line_and_span(col_line, explicit_col_count)
+    match col_res.0 {
+      Some(sl) => {
+        if sl < min_col_line {
+          min_col_line = sl
         }
-      _ => ()
+        let end = sl + col_res.1
+        if end > max_col_line {
+          max_col_line = end
+        }
+      }
+      None => ()
     }
-    match row_start {
-      PlaceLine(v) =>
-        match origin_zero_line(v, explicit_row_count) {
-          Some(oz) => {
-            if oz < min_row_line {
-              min_row_line = oz
-            }
-            let end = oz + 1
-            if end > max_row_line {
-              max_row_line = end
-            }
-          }
-          None => ()
+    let row_res = axis_resolve_start_line_and_span(row_line, explicit_row_count)
+    match row_res.0 {
+      Some(sl) => {
+        if sl < min_row_line {
+          min_row_line = sl
         }
-      _ => ()
+        let end = sl + row_res.1
+        if end > max_row_line {
+          max_row_line = end
+        }
+      }
+      None => ()
     }
   }
   let negative_cols = if min_col_line < 0 { -min_col_line } else { 0 }
@@ -1270,6 +1312,8 @@ fn[C] compute_grid_layout_with_measure(
   let placed : Array[Bool] = Array::make(placement_count, false)
   let placed_row : Array[Int] = Array::make(placement_count, 0)
   let placed_col : Array[Int] = Array::make(placement_count, 0)
+  let placed_row_span : Array[Int] = Array::make(placement_count, 1)
+  let placed_col_span : Array[Int] = Array::make(placement_count, 1)
   let occ = matrix_make(row_tracks.length(), col_tracks.length())
   fn ensure_cols(
     occ : Array[Array[Bool]],
@@ -1305,10 +1349,29 @@ fn[C] compute_grid_layout_with_measure(
     }
   }
 
+  fn region_is_free(
+    occ : Array[Array[Bool]],
+    row : Int,
+    col : Int,
+    row_span : Int,
+    col_span : Int,
+  ) -> Bool {
+    for r in row..<(row + row_span) {
+      for c in col..<(col + col_span) {
+        if occ[r][c] {
+          return false
+        }
+      }
+    }
+    true
+  }
+
   fn mark_placed(
     placed : Array[Bool],
     placed_row : Array[Int],
     placed_col : Array[Int],
+    placed_row_span : Array[Int],
+    placed_col_span : Array[Int],
     occ : Array[Array[Bool]],
     row_tracks : Array[Dimension],
     col_tracks : Array[Dimension],
@@ -1321,51 +1384,66 @@ fn[C] compute_grid_layout_with_measure(
     idx : Int,
     row : Int,
     col : Int,
+    row_span : Int,
+    col_span : Int,
   ) -> Unit {
-    ensure_rows(occ, row_tracks, auto_rows, negative_rows, explicit_rows, row)
-    ensure_cols(occ, col_tracks, auto_cols, negative_cols, explicit_cols, col)
-    occ[row][col] = true
+    let row_end = row + row_span - 1
+    let col_end = col + col_span - 1
+    ensure_rows(
+      occ, row_tracks, auto_rows, negative_rows, explicit_rows, row_end,
+    )
+    ensure_cols(
+      occ, col_tracks, auto_cols, negative_cols, explicit_cols, col_end,
+    )
+    for r in row..<(row + row_span) {
+      for c in col..<(col + col_span) {
+        occ[r][c] = true
+      }
+    }
     placed[idx] = true
     placed_row[idx] = row
     placed_col[idx] = col
+    placed_row_span[idx] = row_span
+    placed_col_span[idx] = col_span
   }
 
-  fn track_index_from_line(
-    value : Int,
+  fn axis_start_index_and_span(
+    placement : Line[GridPlacement],
+    legacy_start : Int?,
     explicit_track_count : Int,
     negative_implicit : Int,
-  ) -> Int? {
-    match origin_zero_line(value, explicit_track_count) {
-      Some(oz) => Some(oz + negative_implicit)
+  ) -> (Int?, Int) {
+    let merged = merged_placement_line(placement, legacy_start)
+    let resolved = axis_resolve_start_line_and_span(
+      merged, explicit_track_count,
+    )
+    let start = match resolved.0 {
+      Some(sl) => Some(sl + negative_implicit)
       None => None
     }
+    (start, resolved.1)
   }
 
-  // Resolve definite starts into track indices.
-  fn child_definite_start_indexes(
+  fn child_start_indexes_and_spans(
     child_style : Style,
     explicit_cols : Int,
     explicit_rows : Int,
     negative_cols : Int,
     negative_rows : Int,
-  ) -> (Int?, Int?) {
-    let col_start = merged_placement_start(
+  ) -> (Int?, Int, Int?, Int) {
+    let col = axis_start_index_and_span(
       child_style.grid_column,
       child_style.grid_column_start,
+      explicit_cols,
+      negative_cols,
     )
-    let row_start = merged_placement_start(
+    let row = axis_start_index_and_span(
       child_style.grid_row,
       child_style.grid_row_start,
+      explicit_rows,
+      negative_rows,
     )
-    let col = match col_start {
-      PlaceLine(v) => track_index_from_line(v, explicit_cols, negative_cols)
-      _ => None
-    }
-    let row = match row_start {
-      PlaceLine(v) => track_index_from_line(v, explicit_rows, negative_rows)
-      _ => None
-    }
-    (row, col)
+    (row.0, row.1, col.0, col.1)
   }
 
   // Placement algorithm: very small subset of CSS Grid (enough for upstream implicit/auto tracks tests).
@@ -1381,19 +1459,35 @@ fn[C] compute_grid_layout_with_measure(
     match child.style.display {
       DisplayNone => ()
       _ => {
-        let def = child_definite_start_indexes(
+        let def = child_start_indexes_and_spans(
           child.style,
           explicit_col_count,
           explicit_row_count,
           negative_cols,
           negative_rows,
         )
-        match (def.0, def.1) {
+        match (def.0, def.2) {
           (Some(r), Some(c)) =>
             mark_placed(
-              placed, placed_row, placed_col, occ, row_tracks, col_tracks, auto_rows,
-              auto_cols, negative_rows, negative_cols, explicit_row_count, explicit_col_count,
-              i, r, c,
+              placed,
+              placed_row,
+              placed_col,
+              placed_row_span,
+              placed_col_span,
+              occ,
+              row_tracks,
+              col_tracks,
+              auto_rows,
+              auto_cols,
+              negative_rows,
+              negative_cols,
+              explicit_row_count,
+              explicit_col_count,
+              i,
+              r,
+              c,
+              def.1,
+              def.3,
             )
           _ => ()
         }
@@ -1414,7 +1508,7 @@ fn[C] compute_grid_layout_with_measure(
     match child.style.display {
       DisplayNone => ()
       _ => {
-        let def = child_definite_start_indexes(
+        let def = child_start_indexes_and_spans(
           child.style,
           explicit_col_count,
           explicit_row_count,
@@ -1423,69 +1517,77 @@ fn[C] compute_grid_layout_with_measure(
         )
         if primary_is_col {
           // Flow rows: primary axis is columns, secondary axis is rows.
-          match (def.0, def.1) {
+          match (def.0, def.2) {
             (Some(r), None) => {
-              ensure_rows(
-                occ, row_tracks, auto_rows, negative_rows, explicit_row_count, r,
-              )
+              let row_span = def.1
+              let col_span = def.3
               let mut c = 0
-              let mut found = false
-              while c < col_tracks.length() {
-                if not(occ[r][c]) {
-                  found = true
-                  break
-                }
-                c = c + 1
-              }
-              if not(found) {
-                ensure_cols(
-                  occ,
-                  col_tracks,
-                  auto_cols,
-                  negative_cols,
-                  explicit_col_count,
-                  col_tracks.length(),
-                )
-              }
-              mark_placed(
-                placed, placed_row, placed_col, occ, row_tracks, col_tracks, auto_rows,
-                auto_cols, negative_rows, negative_cols, explicit_row_count, explicit_col_count,
-                i, r, c,
-              )
-            }
-            _ => ()
-          }
-        } else {
-          // Flow columns: primary axis is rows, secondary axis is columns.
-          match (def.0, def.1) {
-            (None, Some(c)) => {
-              ensure_cols(
-                occ, col_tracks, auto_cols, negative_cols, explicit_col_count, c,
-              )
-              let mut r = 0
-              let mut found = false
-              while r < row_tracks.length() {
-                if not(occ[r][c]) {
-                  found = true
-                  break
-                }
-                r = r + 1
-              }
-              if not(found) {
+              while true {
                 ensure_rows(
                   occ,
                   row_tracks,
                   auto_rows,
                   negative_rows,
                   explicit_row_count,
-                  row_tracks.length(),
+                  r + row_span - 1,
                 )
+                ensure_cols(
+                  occ,
+                  col_tracks,
+                  auto_cols,
+                  negative_cols,
+                  explicit_col_count,
+                  c + col_span - 1,
+                )
+                if region_is_free(occ, r, c, row_span, col_span) {
+                  mark_placed(
+                    placed, placed_row, placed_col, placed_row_span, placed_col_span,
+                    occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
+                    negative_cols, explicit_row_count, explicit_col_count, i, r,
+                    c, row_span, col_span,
+                  )
+                  break
+                }
+                c = c + 1
               }
-              mark_placed(
-                placed, placed_row, placed_col, occ, row_tracks, col_tracks, auto_rows,
-                auto_cols, negative_rows, negative_cols, explicit_row_count, explicit_col_count,
-                i, r, c,
-              )
+            }
+            _ => ()
+          }
+        } else {
+          // Flow columns: primary axis is rows, secondary axis is columns.
+          match (def.0, def.2) {
+            (None, Some(c)) => {
+              let row_span = def.1
+              let col_span = def.3
+              let mut r = 0
+              while true {
+                ensure_rows(
+                  occ,
+                  row_tracks,
+                  auto_rows,
+                  negative_rows,
+                  explicit_row_count,
+                  r + row_span - 1,
+                )
+                ensure_cols(
+                  occ,
+                  col_tracks,
+                  auto_cols,
+                  negative_cols,
+                  explicit_col_count,
+                  c + col_span - 1,
+                )
+                if region_is_free(occ, r, c, row_span, col_span) {
+                  mark_placed(
+                    placed, placed_row, placed_col, placed_row_span, placed_col_span,
+                    occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
+                    negative_cols, explicit_row_count, explicit_col_count, i, r,
+                    c, row_span, col_span,
+                  )
+                  break
+                }
+                r = r + 1
+              }
             }
             _ => ()
           }
@@ -1507,50 +1609,176 @@ fn[C] compute_grid_layout_with_measure(
     match child.style.display {
       DisplayNone => ()
       _ => {
+        let def = child_start_indexes_and_spans(
+          child.style,
+          explicit_col_count,
+          explicit_row_count,
+          negative_cols,
+          negative_rows,
+        )
+        let row_span = def.1
+        let col_span = def.3
         let mut sec = 0
         while true {
           if primary_is_col {
-            ensure_rows(
-              occ, row_tracks, auto_rows, negative_rows, explicit_row_count, sec,
-            )
-            let mut prim = 0
-            while prim < col_tracks.length() {
-              if not(occ[sec][prim]) {
-                mark_placed(
-                  placed, placed_row, placed_col, occ, row_tracks, col_tracks, auto_rows,
-                  auto_cols, negative_rows, negative_cols, explicit_row_count, explicit_col_count,
-                  i, sec, prim,
+            // Auto-flow rows: scan row-by-row
+            let fixed_col = def.2
+            match fixed_col {
+              Some(c0) =>
+                while true {
+                  ensure_rows(
+                    occ,
+                    row_tracks,
+                    auto_rows,
+                    negative_rows,
+                    explicit_row_count,
+                    sec + row_span - 1,
+                  )
+                  ensure_cols(
+                    occ,
+                    col_tracks,
+                    auto_cols,
+                    negative_cols,
+                    explicit_col_count,
+                    c0 + col_span - 1,
+                  )
+                  if region_is_free(occ, sec, c0, row_span, col_span) {
+                    mark_placed(
+                      placed, placed_row, placed_col, placed_row_span, placed_col_span,
+                      occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
+                      negative_cols, explicit_row_count, explicit_col_count, i, sec,
+                      c0, row_span, col_span,
+                    )
+                    sec = -1
+                    break
+                  }
+                  sec = sec + 1
+                }
+              None => {
+                ensure_cols(
+                  occ,
+                  col_tracks,
+                  auto_cols,
+                  negative_cols,
+                  explicit_col_count,
+                  col_span - 1,
                 )
-                sec = -1
-                break
+                while true {
+                  ensure_rows(
+                    occ,
+                    row_tracks,
+                    auto_rows,
+                    negative_rows,
+                    explicit_row_count,
+                    sec + row_span - 1,
+                  )
+                  let mut prim = 0
+                  let max_prim = col_tracks.length() - col_span + 1
+                  let mut found = false
+                  while prim < max_prim {
+                    if region_is_free(occ, sec, prim, row_span, col_span) {
+                      mark_placed(
+                        placed, placed_row, placed_col, placed_row_span, placed_col_span,
+                        occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
+                        negative_cols, explicit_row_count, explicit_col_count, i,
+                        sec, prim, row_span, col_span,
+                      )
+                      found = true
+                      break
+                    }
+                    prim = prim + 1
+                  }
+                  if found {
+                    sec = -1
+                    break
+                  }
+                  sec = sec + 1
+                }
               }
-              prim = prim + 1
             }
             if sec == -1 {
               break
             }
           } else {
-            ensure_cols(
-              occ, col_tracks, auto_cols, negative_cols, explicit_col_count, sec,
-            )
-            let mut prim = 0
-            while prim < row_tracks.length() {
-              if not(occ[prim][sec]) {
-                mark_placed(
-                  placed, placed_row, placed_col, occ, row_tracks, col_tracks, auto_rows,
-                  auto_cols, negative_rows, negative_cols, explicit_row_count, explicit_col_count,
-                  i, prim, sec,
+            // Auto-flow columns: scan col-by-col
+            let fixed_row = def.0
+            match fixed_row {
+              Some(r0) =>
+                while true {
+                  ensure_cols(
+                    occ,
+                    col_tracks,
+                    auto_cols,
+                    negative_cols,
+                    explicit_col_count,
+                    sec + col_span - 1,
+                  )
+                  ensure_rows(
+                    occ,
+                    row_tracks,
+                    auto_rows,
+                    negative_rows,
+                    explicit_row_count,
+                    r0 + row_span - 1,
+                  )
+                  if region_is_free(occ, r0, sec, row_span, col_span) {
+                    mark_placed(
+                      placed, placed_row, placed_col, placed_row_span, placed_col_span,
+                      occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
+                      negative_cols, explicit_row_count, explicit_col_count, i, r0,
+                      sec, row_span, col_span,
+                    )
+                    sec = -1
+                    break
+                  }
+                  sec = sec + 1
+                }
+              None => {
+                ensure_rows(
+                  occ,
+                  row_tracks,
+                  auto_rows,
+                  negative_rows,
+                  explicit_row_count,
+                  row_span - 1,
                 )
-                sec = -1
-                break
+                while true {
+                  ensure_cols(
+                    occ,
+                    col_tracks,
+                    auto_cols,
+                    negative_cols,
+                    explicit_col_count,
+                    sec + col_span - 1,
+                  )
+                  let mut prim = 0
+                  let max_prim = row_tracks.length() - row_span + 1
+                  let mut found = false
+                  while prim < max_prim {
+                    if region_is_free(occ, prim, sec, row_span, col_span) {
+                      mark_placed(
+                        placed, placed_row, placed_col, placed_row_span, placed_col_span,
+                        occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
+                        negative_cols, explicit_row_count, explicit_col_count, i,
+                        prim, sec, row_span, col_span,
+                      )
+                      found = true
+                      break
+                    }
+                    prim = prim + 1
+                  }
+                  if found {
+                    sec = -1
+                    break
+                  }
+                  sec = sec + 1
+                }
               }
-              prim = prim + 1
             }
             if sec == -1 {
               break
             }
           }
-          sec = sec + 1
         }
       }
     }
@@ -1558,7 +1786,7 @@ fn[C] compute_grid_layout_with_measure(
   let mut col_count = col_tracks.length()
   let mut row_count = row_tracks.length()
 
-  // Compute min-content and max-content contributions for each track (span=1 only).
+  // Compute min-content and max-content contributions for each track.
   let col_min_contrib : Array[Double] = Array::make(col_count, 0.0)
   let col_max_contrib : Array[Double] = Array::make(col_count, 0.0)
   let row_min_contrib : Array[Double] = Array::make(row_count, 0.0)
@@ -1569,6 +1797,8 @@ fn[C] compute_grid_layout_with_measure(
     }
     let child_id = node.children[i]
     let c = placed_col[i]
+    let col_span = placed_col_span[i]
+    let gap_total = col_gap * (col_span - 1).to_double()
 
     // Max-content contribution in the column axis
     compute_node_layout_with_measure(
@@ -1580,8 +1810,12 @@ fn[C] compute_grid_layout_with_measure(
       measure_function,
     )
     let max_sz = tree.nodes[child_id].layout.size
-    if max_sz.width > col_max_contrib[c] {
-      col_max_contrib[c] = max_sz.width
+    let max_needed = max_double(max_sz.width - gap_total, 0.0)
+    let max_share = max_needed / col_span.to_double()
+    for j in c..<(c + col_span) {
+      if max_share > col_max_contrib[j] {
+        col_max_contrib[j] = max_share
+      }
     }
 
     // Min-content contribution in the column axis
@@ -1594,8 +1828,12 @@ fn[C] compute_grid_layout_with_measure(
       measure_function,
     )
     let min_col = tree.nodes[child_id].layout.size.width
-    if min_col > col_min_contrib[c] {
-      col_min_contrib[c] = min_col
+    let min_needed = max_double(min_col - gap_total, 0.0)
+    let min_share = min_needed / col_span.to_double()
+    for j in c..<(c + col_span) {
+      if min_share > col_min_contrib[j] {
+        col_min_contrib[j] = min_share
+      }
     }
   }
   fn track_basis_fit_content(
@@ -1732,8 +1970,17 @@ fn[C] compute_grid_layout_with_measure(
     }
     let child_id = node.children[i]
     let c = placed_col[i]
+    let col_span = placed_col_span[i]
     let r = placed_row[i]
-    let col_w = col_sizes[c]
+    let row_span = placed_row_span[i]
+    let mut col_w = 0.0
+    for j in c..<(c + col_span) {
+      col_w = col_w + col_sizes[j]
+    }
+    if col_span > 1 {
+      col_w = col_w + col_gap * (col_span - 1).to_double()
+    }
+    let row_gap_total = row_gap * (row_span - 1).to_double()
 
     // Max-content contribution in the row axis under the column width constraint.
     compute_node_layout_with_measure(
@@ -1745,8 +1992,12 @@ fn[C] compute_grid_layout_with_measure(
       measure_function,
     )
     let max_h = tree.nodes[child_id].layout.size.height
-    if max_h > row_max_contrib[r] {
-      row_max_contrib[r] = max_h
+    let max_needed = max_double(max_h - row_gap_total, 0.0)
+    let max_share = max_needed / row_span.to_double()
+    for j in r..<(r + row_span) {
+      if max_share > row_max_contrib[j] {
+        row_max_contrib[j] = max_share
+      }
     }
 
     // Min-content contribution in the row axis under the column width constraint.
@@ -1759,8 +2010,12 @@ fn[C] compute_grid_layout_with_measure(
       measure_function,
     )
     let min_h = tree.nodes[child_id].layout.size.height
-    if min_h > row_min_contrib[r] {
-      row_min_contrib[r] = min_h
+    let min_needed = max_double(min_h - row_gap_total, 0.0)
+    let min_share = min_needed / row_span.to_double()
+    for j in r..<(r + row_span) {
+      if min_share > row_min_contrib[j] {
+        row_min_contrib[j] = min_share
+      }
     }
   }
   let row_min_basis = axis_min_content_basis(
@@ -1856,11 +2111,13 @@ fn[C] compute_grid_layout_with_measure(
       }
       let row = placed_row[i]
       let col = placed_col[i]
-      if row > max_row_used {
-        max_row_used = row
+      let row_end = row + placed_row_span[i] - 1
+      let col_end = col + placed_col_span[i] - 1
+      if row_end > max_row_used {
+        max_row_used = row_end
       }
-      if col > max_col_used {
-        max_col_used = col
+      if col_end > max_col_used {
+        max_col_used = col_end
       }
     }
     if has_auto_fit_cols {
@@ -2037,7 +2294,11 @@ fn[C] compute_grid_layout_with_measure(
       _ => {
         let row = placed_row[i]
         let col = placed_col[i]
-        if row >= row_count || col >= col_count {
+        let row_span = placed_row_span[i]
+        let col_span = placed_col_span[i]
+        let row_end = row + row_span - 1
+        let col_end = col + col_span - 1
+        if row < 0 || col < 0 || row_end >= row_count || col_end >= col_count {
           continue
         }
         let mut x = start_x
@@ -2048,8 +2309,20 @@ fn[C] compute_grid_layout_with_measure(
         for r in 0..<row {
           y = y + row_sizes[r] + row_gap_effective
         }
-        let cell_w = col_sizes[col]
-        let cell_h = row_sizes[row]
+        let mut cell_w = 0.0
+        for c in col..<(col + col_span) {
+          cell_w = cell_w + col_sizes[c]
+        }
+        if col_span > 1 {
+          cell_w = cell_w + col_gap_effective * (col_span - 1).to_double()
+        }
+        let mut cell_h = 0.0
+        for r in row..<(row + row_span) {
+          cell_h = cell_h + row_sizes[r]
+        }
+        if row_span > 1 {
+          cell_h = cell_h + row_gap_effective * (row_span - 1).to_double()
+        }
         let child_available = Size::new(
           width=AvailDefinite(cell_w),
           height=AvailDefinite(cell_h),

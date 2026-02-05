@@ -1165,10 +1165,6 @@ fn[C] compute_grid_layout_with_measure(
     None => style_height
   }
 
-  // Grid gaps: treat `gap.width` as column gap, and `gap.height` as row gap.
-  let col_gap = resolve_dimension(node.style.gap.width, available_space.width)
-  let row_gap = resolve_dimension(node.style.gap.height, available_space.height)
-
   // If the container size is definite, resolve track sizing against the content box.
   // Otherwise fall back to a simplified "fixed only" resolution.
   let mut content_width = 0.0
@@ -1198,6 +1194,34 @@ fn[C] compute_grid_layout_with_measure(
       content_height = max_double(border_box_height - vert_inset, 0.0)
     }
     None => ()
+  }
+
+  // Grid gaps: treat `gap.width` as column gap, and `gap.height` as row gap.
+  // For `percent` gaps, follow CSS semantics and resolve against the container's inline content size (width).
+  // If that basis is not yet known (intrinsic sizing), percent gaps are deferred and handled after sizing.
+  let gap_width_percent = match node.style.gap.width {
+    DimPercent(p) => Some(p)
+    _ => None
+  }
+  let gap_height_percent = match node.style.gap.height {
+    DimPercent(p) => Some(p)
+    _ => None
+  }
+  let gap_inline_basis = match specified_width {
+    Some(_) => content_width
+    None =>
+      match available_space.width {
+        AvailDefinite(v) => max_double(v - horiz_inset, 0.0)
+        _ => 0.0
+      }
+  }
+  let mut col_gap = match gap_width_percent {
+    Some(p) => gap_inline_basis * p
+    None => resolve_dimension(node.style.gap.width, available_space.width)
+  }
+  let mut row_gap = match gap_height_percent {
+    Some(p) => gap_inline_basis * p
+    None => resolve_dimension(node.style.gap.height, available_space.height)
   }
 
   // Expand `repeat(...)` in grid templates.
@@ -2025,6 +2049,7 @@ fn[C] compute_grid_layout_with_measure(
         col_max_basis,
       )
   }
+  let col_available_base = col_available
   let mut col_sizes : Array[Double] = compute_grid_track_sizes_with_contributions(
     col_tracks,
     col_available,
@@ -2105,6 +2130,7 @@ fn[C] compute_grid_layout_with_measure(
         row_max_basis,
       )
   }
+  let row_available_base = row_available
   let mut row_sizes : Array[Double] = compute_grid_track_sizes_with_contributions(
     row_tracks,
     row_available,
@@ -2156,6 +2182,158 @@ fn[C] compute_grid_layout_with_measure(
       available_space.height,
     )
     content_height = max_double(border_box_height - vert_inset, 0.0)
+  }
+
+  // Deferred percentage gaps: if the container inline size was unknown during intrinsic sizing,
+  // re-resolve percentage gaps against the computed inline content size and recompute track sizes.
+  let mut rerun_track_sizing = false
+  match gap_width_percent {
+    Some(p) =>
+      if col_gap == 0.0 && content_width > 0.0 {
+        col_gap = content_width * p
+        rerun_track_sizing = true
+      }
+    None => ()
+  }
+  match gap_height_percent {
+    Some(p) =>
+      if row_gap == 0.0 && content_width > 0.0 {
+        row_gap = content_width * p
+        rerun_track_sizing = true
+      }
+    None => ()
+  }
+  if rerun_track_sizing {
+    // Recompute contributions with the updated gap values.
+    for i in 0..<col_count {
+      col_min_contrib[i] = 0.0
+      col_max_contrib[i] = 0.0
+    }
+    for i in 0..<row_count {
+      row_min_contrib[i] = 0.0
+      row_max_contrib[i] = 0.0
+    }
+    for i in 0..<placement_count {
+      if not(placed[i]) {
+        continue
+      }
+      let child_id = node.children[i]
+      let c = placed_col[i]
+      let col_span = placed_col_span[i]
+      let gap_total = col_gap * (col_span - 1).to_double()
+      compute_node_layout_with_measure(
+        tree,
+        child_id,
+        Size::new(width=None, height=None),
+        Size::new(width=AvailMaxContent, height=AvailMaxContent),
+        Point::zero(),
+        measure_function,
+      )
+      let max_sz = tree.nodes[child_id].layout.size
+      let max_needed = max_double(max_sz.width - gap_total, 0.0)
+      let max_share = max_needed / col_span.to_double()
+      for j in c..<(c + col_span) {
+        if max_share > col_max_contrib[j] {
+          col_max_contrib[j] = max_share
+        }
+      }
+      compute_node_layout_with_measure(
+        tree,
+        child_id,
+        Size::new(width=None, height=None),
+        Size::new(width=AvailMinContent, height=AvailMaxContent),
+        Point::zero(),
+        measure_function,
+      )
+      let min_col = tree.nodes[child_id].layout.size.width
+      let min_needed = max_double(min_col - gap_total, 0.0)
+      let min_share = min_needed / col_span.to_double()
+      for j in c..<(c + col_span) {
+        if min_share > col_min_contrib[j] {
+          col_min_contrib[j] = min_share
+        }
+      }
+    }
+    col_sizes = compute_grid_track_sizes_with_contributions(
+      col_tracks,
+      col_available_base,
+      col_gap,
+      col_min_contrib,
+      col_max_contrib,
+      specified_width is Some(_),
+    )
+    for i in 0..<placement_count {
+      if not(placed[i]) {
+        continue
+      }
+      let child_id = node.children[i]
+      let c = placed_col[i]
+      let col_span = placed_col_span[i]
+      let r = placed_row[i]
+      let row_span = placed_row_span[i]
+      let mut col_w = 0.0
+      for j in c..<(c + col_span) {
+        col_w = col_w + col_sizes[j]
+      }
+      if col_span > 1 {
+        col_w = col_w + col_gap * (col_span - 1).to_double()
+      }
+      let row_gap_total = row_gap * (row_span - 1).to_double()
+      compute_node_layout_with_measure(
+        tree,
+        child_id,
+        Size::new(width=Some(col_w), height=None),
+        Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
+        Point::zero(),
+        measure_function,
+      )
+      let max_h = tree.nodes[child_id].layout.size.height
+      let max_needed = max_double(max_h - row_gap_total, 0.0)
+      let max_share = max_needed / row_span.to_double()
+      for j in r..<(r + row_span) {
+        if max_share > row_max_contrib[j] {
+          row_max_contrib[j] = max_share
+        }
+      }
+      compute_node_layout_with_measure(
+        tree,
+        child_id,
+        Size::new(width=Some(col_w), height=None),
+        Size::new(width=AvailDefinite(col_w), height=AvailMinContent),
+        Point::zero(),
+        measure_function,
+      )
+      let min_h = tree.nodes[child_id].layout.size.height
+      let min_needed = max_double(min_h - row_gap_total, 0.0)
+      let min_share = min_needed / row_span.to_double()
+      for j in r..<(r + row_span) {
+        if min_share > row_min_contrib[j] {
+          row_min_contrib[j] = min_share
+        }
+      }
+    }
+    row_sizes = compute_grid_track_sizes_with_contributions(
+      row_tracks,
+      row_available_base,
+      row_gap,
+      row_min_contrib,
+      row_max_contrib,
+      specified_height is Some(_),
+    )
+    used_cols = 0.0
+    for w in col_sizes {
+      used_cols = used_cols + w
+    }
+    if col_count > 1 {
+      used_cols = used_cols + col_gap * (col_count - 1).to_double()
+    }
+    used_rows = 0.0
+    for h in row_sizes {
+      used_rows = used_rows + h
+    }
+    if row_count > 1 {
+      used_rows = used_rows + row_gap * (row_count - 1).to_double()
+    }
   }
   tree.nodes[node_id].layout = Layout::{
     location: absolute_origin,

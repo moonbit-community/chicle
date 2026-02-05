@@ -244,6 +244,15 @@ fn max_double(a : Double, b : Double) -> Double {
 }
 
 ///|
+fn min_double(a : Double, b : Double) -> Double {
+  if a < b {
+    a
+  } else {
+    b
+  }
+}
+
+///|
 fn resolve_optional_dimension(
   d : Dimension,
   available : AvailableSpace,
@@ -2926,6 +2935,18 @@ fn[C] compute_block_layout_with_measure(
       None => AvailMaxContent
     },
   )
+  let margin_basis_width = match available_space.width {
+    AvailDefinite(v) => v
+    _ =>
+      match specified_width {
+        Some(w) => max_double(w - horiz_inset, 0.0)
+        None => 0.0
+      }
+  }
+  let margin_basis_available = Size::new(
+    width=AvailDefinite(margin_basis_width),
+    height=flow_available.height,
+  )
   let abs_child_ids : Array[NodeId] = []
   let abs_child_static_y : Array[Double] = []
   let mut flow_cursor_y = 0.0
@@ -2945,18 +2966,31 @@ fn[C] compute_block_layout_with_measure(
           }
           PosRelative => {
             // Minimal normal flow: stack children vertically.
+            let resolved_margin = resolve_rect_width_basis(
+              child.style.margin,
+              margin_basis_available,
+            )
             compute_node_layout_with_measure(
               tree,
               child_id,
               Size::new(width=None, height=None),
               flow_available,
-              Point::new(x=content_origin.x, y=content_origin.y + flow_cursor_y),
+              Point::new(
+                x=content_origin.x + resolved_margin.left,
+                y=content_origin.y + flow_cursor_y + resolved_margin.top,
+              ),
               measure_function,
             )
             let child_size = tree.nodes[child_id].layout.size
-            flow_cursor_y = flow_cursor_y + child_size.height
-            if child_size.width > max_flow_child_width {
-              max_flow_child_width = child_size.width
+            flow_cursor_y = flow_cursor_y +
+              resolved_margin.top +
+              child_size.height +
+              resolved_margin.bottom
+            let child_outer_width = resolved_margin.left +
+              child_size.width +
+              resolved_margin.right
+            if child_outer_width > max_flow_child_width {
+              max_flow_child_width = child_outer_width
             } else {
               ()
             }
@@ -3020,9 +3054,39 @@ fn[C] compute_block_layout_with_measure(
       Some(c) => c
       None => raise InvalidNodeId(child_id)
     }
-    let resolved_margin = resolve_rect_width_basis(
-      child.style.margin,
-      abs_available,
+    let margin = child.style.margin
+    // CSS compatibility: margin percentages are resolved against the width.
+    let margin_left_auto = match margin.left {
+      DimAuto => true
+      _ => false
+    }
+    let margin_right_auto = match margin.right {
+      DimAuto => true
+      _ => false
+    }
+    let margin_top_auto = match margin.top {
+      DimAuto => true
+      _ => false
+    }
+    let margin_bottom_auto = match margin.bottom {
+      DimAuto => true
+      _ => false
+    }
+    let margin_left_fixed = resolve_dimension_width_basis(
+      margin.left,
+      final_padding_box_width,
+    )
+    let margin_right_fixed = resolve_dimension_width_basis(
+      margin.right,
+      final_padding_box_width,
+    )
+    let margin_top_fixed = resolve_dimension_width_basis(
+      margin.top,
+      final_padding_box_width,
+    )
+    let margin_bottom_fixed = resolve_dimension_width_basis(
+      margin.bottom,
+      final_padding_box_width,
     )
     let inset = child.style.inset
     let left = resolve_optional_dimension(inset.left, abs_available.width)
@@ -3060,8 +3124,8 @@ fn[C] compute_block_layout_with_measure(
                 final_padding_box_width -
                 l -
                 r -
-                resolved_margin.left -
-                resolved_margin.right,
+                margin_left_fixed -
+                margin_right_fixed,
                 0.0,
               ),
             )
@@ -3078,8 +3142,8 @@ fn[C] compute_block_layout_with_measure(
                 final_padding_box_height -
                 t -
                 b -
-                resolved_margin.top -
-                resolved_margin.bottom,
+                margin_top_fixed -
+                margin_bottom_fixed,
                 0.0,
               ),
             )
@@ -3166,28 +3230,109 @@ fn[C] compute_block_layout_with_measure(
       measure_function,
     )
     let final_size = tree.nodes[child_id].layout.size
+    let mut final_margin_left = if margin_left_auto {
+      0.0
+    } else {
+      margin_left_fixed
+    }
+    let mut final_margin_right = if margin_right_auto {
+      0.0
+    } else {
+      margin_right_fixed
+    }
+    let mut final_margin_top = if margin_top_auto {
+      0.0
+    } else {
+      margin_top_fixed
+    }
+    let mut final_margin_bottom = if margin_bottom_auto {
+      0.0
+    } else {
+      margin_bottom_fixed
+    }
+
+    // Absolute auto margins: distribute remaining space when both inset sides are definite.
+    match (left, right) {
+      (Some(l), Some(r)) => {
+        let fixed = (if margin_left_auto { 0.0 } else { final_margin_left }) +
+          (if margin_right_auto { 0.0 } else { final_margin_right })
+        let remaining = final_padding_box_width -
+          l -
+          r -
+          final_size.width -
+          fixed
+        let auto_count = (if margin_left_auto { 1 } else { 0 }) +
+          (if margin_right_auto { 1 } else { 0 })
+        match auto_count {
+          2 =>
+            if remaining >= 0.0 {
+              final_margin_left = remaining / 2.0
+              final_margin_right = remaining / 2.0
+            } else {
+              final_margin_left = 0.0
+              final_margin_right = 0.0
+            }
+          1 =>
+            if margin_left_auto {
+              final_margin_left = remaining
+            } else {
+              final_margin_right = remaining
+            }
+          _ => ()
+        }
+      }
+      _ => ()
+    }
+    match (top, bottom) {
+      (Some(t), Some(b)) => {
+        let fixed = (if margin_top_auto { 0.0 } else { final_margin_top }) +
+          (if margin_bottom_auto { 0.0 } else { final_margin_bottom })
+        let remaining = final_padding_box_height -
+          t -
+          b -
+          final_size.height -
+          fixed
+        let auto_count = (if margin_top_auto { 1 } else { 0 }) +
+          (if margin_bottom_auto { 1 } else { 0 })
+        match auto_count {
+          2 =>
+            if remaining >= 0.0 {
+              final_margin_top = remaining / 2.0
+              final_margin_bottom = remaining / 2.0
+            } else {
+              final_margin_top = 0.0
+              final_margin_bottom = 0.0
+            }
+          1 =>
+            if margin_top_auto {
+              final_margin_top = remaining
+            } else {
+              final_margin_bottom = remaining
+            }
+          _ => ()
+        }
+      }
+      _ => ()
+    }
     let x_in_padding = match left {
-      Some(v) => v + resolved_margin.left
+      Some(v) => v + final_margin_left
       None =>
         match right {
           Some(v) =>
-            final_padding_box_width -
-            v -
-            resolved_margin.right -
-            final_size.width
-          None => padding.left + resolved_margin.left
+            final_padding_box_width - v - final_margin_right - final_size.width
+          None => padding.left + final_margin_left
         }
     }
     let y_in_padding = match top {
-      Some(v) => v + resolved_margin.top
+      Some(v) => v + final_margin_top
       None =>
         match bottom {
           Some(v) =>
             final_padding_box_height -
             v -
-            resolved_margin.bottom -
+            final_margin_bottom -
             final_size.height
-          None => padding.top + static_y + resolved_margin.top
+          None => padding.top + static_y + final_margin_top
         }
     }
     compute_node_layout_with_measure(
@@ -3214,29 +3359,33 @@ fn[C] baseline_offset_y(
     None => raise InvalidNodeId(node_id)
   }
   let node_layout = node.layout
-  if node.children.length() == 0 {
-    node_layout.size.height
-  } else {
-    for child_id in node.children {
-      let child = match tree.nodes.get(child_id) {
-        Some(c) => c
-        None => raise InvalidNodeId(child_id)
-      }
-      match child.style.display {
-        DisplayNone => ()
-        _ =>
-          match child.style.position {
-            PosAbsolute => ()
-            PosRelative => {
-              let child_layout = child.layout
-              return child_layout.location.y -
-                node_layout.location.y +
-                baseline_offset_y(tree, child_id)
-            }
+  match node.style.display {
+    DisplayBlock | DisplayGrid => node_layout.size.height
+    _ =>
+      if node.children.length() == 0 {
+        node_layout.size.height
+      } else {
+        for child_id in node.children {
+          let child = match tree.nodes.get(child_id) {
+            Some(c) => c
+            None => raise InvalidNodeId(child_id)
           }
+          match child.style.display {
+            DisplayNone => ()
+            _ =>
+              match child.style.position {
+                PosAbsolute => ()
+                PosRelative => {
+                  let child_layout = child.layout
+                  return child_layout.location.y -
+                    node_layout.location.y +
+                    baseline_offset_y(tree, child_id)
+                }
+              }
+          }
+        }
+        node_layout.size.height
       }
-    }
-    node_layout.size.height
   }
 }
 
@@ -3338,6 +3487,9 @@ fn[C] compute_flex_layout_with_measure(
     flow_count, default_align_items,
   )
   let baseline_offsets : Array[Double] = Array::make(flow_count, 0.0)
+  let base_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
+  let min_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
+  let max_main_sizes : Array[Double?] = Array::make(flow_count, None)
   let mut total_base_main = 0.0
   let mut total_base_margin_main = 0.0
   let mut max_cross = 0.0
@@ -3426,6 +3578,17 @@ fn[C] compute_flex_layout_with_measure(
     } else {
       resolve_optional_dimension(child.style.size.width, main_axis_available)
     }
+    let max_from_style = if is_col {
+      resolve_optional_dimension(
+        child.style.max_size.height,
+        main_axis_available,
+      )
+    } else {
+      resolve_optional_dimension(
+        child.style.max_size.width,
+        main_axis_available,
+      )
+    }
     let main = match basis {
       Some(v) => v
       None =>
@@ -3439,6 +3602,8 @@ fn[C] compute_flex_layout_with_measure(
             }
         }
     }
+    base_main_sizes[i] = main
+    max_main_sizes[i] = max_from_style
     let cross_from_size = if is_col {
       resolve_optional_dimension(child.style.size.width, cross_axis_available)
     } else {
@@ -3478,6 +3643,99 @@ fn[C] compute_flex_layout_with_measure(
         _ => ()
       }
     }
+    let min_from_style = if is_col {
+      resolve_optional_dimension(
+        child.style.min_size.height,
+        main_axis_available,
+      )
+    } else {
+      resolve_optional_dimension(
+        child.style.min_size.width,
+        main_axis_available,
+      )
+    }
+    let overflow_main = if is_col {
+      child.style.overflow.y
+    } else {
+      child.style.overflow.x
+    }
+    let min_from_style = match min_from_style {
+      Some(v) => Some(v)
+      None =>
+        match overflow_main {
+          OverflowVisible => None
+          _ => Some(0.0)
+        }
+    }
+    let resolved_min_main = match min_from_style {
+      Some(v) => v
+      None => {
+        let original_style = tree.nodes[child_id].style
+        let original_layout = tree.nodes[child_id].layout
+        let cleared_size = if is_col {
+          Size::new(width=original_style.size.width, height=DimAuto)
+        } else {
+          Size::new(width=DimAuto, height=original_style.size.height)
+        }
+        tree.nodes[child_id].style = { ..original_style, size: cleared_size }
+        let min_content_space = if is_col {
+          Size::new(
+            width=parent_available_for_children.width,
+            height=AvailMinContent,
+          )
+        } else {
+          Size::new(
+            width=AvailMinContent,
+            height=parent_available_for_children.height,
+          )
+        }
+        compute_node_layout_with_measure(
+          tree,
+          child_id,
+          Size::new(width=None, height=None),
+          min_content_space,
+          Point::zero(),
+          measure_function,
+        )
+        let min_layout = tree.layout(child_id)
+        let min_content_main = if is_col {
+          min_layout.size.height
+        } else {
+          min_layout.size.width
+        }
+        tree.nodes[child_id].style = original_style
+        tree.nodes[child_id].layout = original_layout
+        let mut clamped = min_content_main
+        match main_from_size {
+          Some(v) => clamped = min_double(clamped, v)
+          None => ()
+        }
+        match max_from_style {
+          Some(v) => clamped = min_double(clamped, v)
+          None => ()
+        }
+        let resolved_padding = resolve_rect_width_basis(
+          original_style.padding,
+          parent_available_for_children,
+        )
+        let resolved_border = resolve_rect_width_basis(
+          original_style.border,
+          parent_available_for_children,
+        )
+        let padding_main_sum = if is_col {
+          resolved_padding.top + resolved_padding.bottom
+        } else {
+          resolved_padding.left + resolved_padding.right
+        }
+        let border_main_sum = if is_col {
+          resolved_border.top + resolved_border.bottom
+        } else {
+          resolved_border.left + resolved_border.right
+        }
+        max_double(clamped, padding_main_sum + border_main_sum)
+      }
+    }
+    min_main_sizes[i] = max_double(resolved_min_main, 0.0)
   }
   if !is_col {
     let mut baseline_before_max = 0.0
@@ -3901,43 +4159,87 @@ fn[C] compute_flex_layout_with_measure(
 
     // Flex grow/shrink (single-line, simplified)
     let final_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
+    let frozen : Array[Bool] = Array::make(flow_count, false)
+    let violations : Array[Double] = Array::make(flow_count, 0.0)
     for i in 0..<flow_count {
-      final_main_sizes[i] = get_main(base_sizes[i], is_col)
+      final_main_sizes[i] = base_main_sizes[i]
     }
-    let free_space = container_main -
-      total_base_main -
-      total_base_margin_main -
-      total_gap_main
-    if free_space > 0.0 {
-      let mut total_grow = 0.0
+    while true {
+      let mut all_frozen = true
       for i in 0..<flow_count {
-        total_grow = total_grow + flex_grow[i]
+        if !frozen[i] {
+          all_frozen = false
+        }
       }
-      if total_grow > 0.0 {
-        for i in 0..<flow_count {
-          let grow = flex_grow[i]
-          if grow > 0.0 {
-            final_main_sizes[i] = final_main_sizes[i] +
-              free_space * (grow / total_grow)
+      if all_frozen {
+        break
+      }
+      let mut used = total_gap_main
+      for i in 0..<flow_count {
+        used = used +
+          margin_main_start[i] +
+          margin_main_end[i] +
+          (if frozen[i] { final_main_sizes[i] } else { base_main_sizes[i] })
+      }
+      let free_space = container_main - used
+      let mut sum_grow = 0.0
+      let mut sum_shrink = 0.0
+      let mut sum_scaled_shrink = 0.0
+      for i in 0..<flow_count {
+        if !frozen[i] {
+          sum_grow = sum_grow + flex_grow[i]
+          sum_shrink = sum_shrink + flex_shrink[i]
+          sum_scaled_shrink = sum_scaled_shrink +
+            base_main_sizes[i] * flex_shrink[i]
+        }
+      }
+      for i in 0..<flow_count {
+        if !frozen[i] {
+          let base_main = base_main_sizes[i]
+          if free_space > 0.0 && sum_grow > 0.0 {
+            final_main_sizes[i] = base_main +
+              free_space * (flex_grow[i] / sum_grow)
+          } else if free_space < 0.0 &&
+            sum_shrink > 0.0 &&
+            sum_scaled_shrink > 0.0 {
+            let scaled = base_main * flex_shrink[i]
+            final_main_sizes[i] = base_main +
+              free_space * (scaled / sum_scaled_shrink)
+          } else {
+            final_main_sizes[i] = base_main
           }
         }
       }
-    } else if free_space < 0.0 {
-      let mut total_shrink_scaled = 0.0
+      let mut total_violation = 0.0
       for i in 0..<flow_count {
-        let shrink = flex_shrink[i]
-        let base_main = get_main(base_sizes[i], is_col)
-        let scaled = shrink * base_main
-        total_shrink_scaled = total_shrink_scaled + scaled
+        if !frozen[i] {
+          let unclamped = final_main_sizes[i]
+          let min_main = min_main_sizes[i]
+          let max_main = max_main_sizes[i]
+          let mut clamped = unclamped
+          if clamped < min_main {
+            clamped = min_main
+          }
+          match max_main {
+            Some(v) => if clamped > v { clamped = v }
+            None => ()
+          }
+          if clamped < 0.0 {
+            clamped = 0.0
+          }
+          violations[i] = clamped - unclamped
+          final_main_sizes[i] = clamped
+          total_violation = total_violation + violations[i]
+        }
       }
-      if total_shrink_scaled > 0.0 {
-        for i in 0..<flow_count {
-          let shrink = flex_shrink[i]
-          let base_main = get_main(base_sizes[i], is_col)
-          let scaled = shrink * base_main
-          if scaled > 0.0 {
-            final_main_sizes[i] = final_main_sizes[i] +
-              free_space * (scaled / total_shrink_scaled)
+      for i in 0..<flow_count {
+        if !frozen[i] {
+          if total_violation > 0.0 {
+            frozen[i] = violations[i] > 0.0
+          } else if total_violation < 0.0 {
+            frozen[i] = violations[i] < 0.0
+          } else {
+            frozen[i] = true
           }
         }
       }

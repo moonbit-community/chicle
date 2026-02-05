@@ -1011,143 +1011,841 @@ test "upstream/generated/block/block_absolute_layout_within_border" {
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_bottom_and_top_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_bottom_and_top_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_bottom_and_top_with_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(left=length(0.0), right=length(0.0), top=auto(), bottom=auto()),
+    )
+    .with_inset(
+      Rect::new(
+        left=auto(),
+        right=auto(),
+        top=length(10.0),
+        bottom=length(20.0),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 70.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_bottom_and_top_without_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_bottom_and_top_without_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_bottom_and_top_without_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(left=length(0.0), right=length(0.0), top=auto(), bottom=auto()),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_bottom_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_bottom_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_bottom_with_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(0.0),
+        bottom=auto(),
+      ),
+    )
+    .with_inset(
+      Rect::new(
+        left=auto(),
+        right=auto(),
+        top=length(10.0),
+        bottom=length(20.0),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 10.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_bottom_without_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_bottom_without_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_bottom_without_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(0.0),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_left_and_right_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_and_right_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_and_right_with_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(left=auto(), right=auto(), top=length(0.0), bottom=length(0.0)),
+    )
+    .with_inset(
+      Rect::new(
+        left=length(10.0),
+        right=length(20.0),
+        top=auto(),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 70.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_left_and_right_without_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_and_right_without_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_and_right_without_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(left=auto(), right=auto(), top=length(0.0), bottom=length(0.0)),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_left_child_bigger_than_parent_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_child_bigger_than_parent_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_child_bigger_than_parent_with_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(72.0), height=length(72.0)))
+    .with_margin(
+      Rect::new(
+        left=auto(),
+        right=length(0.0),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    )
+    .with_inset(
+      Rect::new(
+        left=length(10.0),
+        right=length(20.0),
+        top=auto(),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(52.0), height=length(52.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 52.0)
+  assert_eq(root_layout.size.height, 52.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 72.0)
+  assert_eq(c.size.height, 72.0)
+  assert_eq(c.location.x, -40.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_left_child_bigger_than_parent_without_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_child_bigger_than_parent_without_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_child_bigger_than_parent_without_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(72.0), height=length(72.0)))
+    .with_margin(
+      Rect::new(
+        left=auto(),
+        right=length(0.0),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(52.0), height=length(52.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 52.0)
+  assert_eq(root_layout.size.height, 52.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 72.0)
+  assert_eq(c.size.height, 72.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_left_fix_right_child_bigger_than_parent_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_fix_right_child_bigger_than_parent_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_fix_right_child_bigger_than_parent_with_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(72.0), height=length(72.0)))
+    .with_margin(
+      Rect::new(
+        left=auto(),
+        right=length(10.0),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    )
+    .with_inset(
+      Rect::new(
+        left=length(10.0),
+        right=length(20.0),
+        top=auto(),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(52.0), height=length(52.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 52.0)
+  assert_eq(root_layout.size.height, 52.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 72.0)
+  assert_eq(c.size.height, 72.0)
+  assert_eq(c.location.x, -50.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_left_fix_right_child_bigger_than_parent_without_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_fix_right_child_bigger_than_parent_without_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_fix_right_child_bigger_than_parent_without_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(72.0), height=length(72.0)))
+    .with_margin(
+      Rect::new(
+        left=auto(),
+        right=length(10.0),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(52.0), height=length(52.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 52.0)
+  assert_eq(root_layout.size.height, 52.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 72.0)
+  assert_eq(c.size.height, 72.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_left_right_child_bigger_than_parent_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_right_child_bigger_than_parent_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_right_child_bigger_than_parent_with_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(72.0), height=length(72.0)))
+    .with_margin(
+      Rect::new(left=auto(), right=auto(), top=length(0.0), bottom=length(0.0)),
+    )
+    .with_inset(
+      Rect::new(
+        left=length(10.0),
+        right=length(20.0),
+        top=auto(),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(52.0), height=length(52.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 52.0)
+  assert_eq(root_layout.size.height, 52.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 72.0)
+  assert_eq(c.size.height, 72.0)
+  assert_eq(c.location.x, 10.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_left_right_child_bigger_than_parent_without_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_right_child_bigger_than_parent_without_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_right_child_bigger_than_parent_without_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(72.0), height=length(72.0)))
+    .with_margin(
+      Rect::new(left=auto(), right=auto(), top=length(0.0), bottom=length(0.0)),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(52.0), height=length(52.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 52.0)
+  assert_eq(root_layout.size.height, 52.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 72.0)
+  assert_eq(c.size.height, 72.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_left_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_with_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=auto(),
+        right=length(0.0),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    )
+    .with_inset(
+      Rect::new(
+        left=length(10.0),
+        right=length(20.0),
+        top=auto(),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 130.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_left_without_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_without_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_left_without_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=auto(),
+        right=length(0.0),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_multiple_children_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_multiple_children_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_multiple_children_with_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(100.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=auto(),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    )
+    .with_inset(
+      Rect::new(
+        left=length(10.0),
+        right=length(20.0),
+        top=auto(),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=auto(),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    )
+    .with_inset(
+      Rect::new(
+        left=length(20.0),
+        right=length(10.0),
+        top=auto(),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_align_items(align_items_center())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 100.0)
+  assert_eq(l0.size.height, 50.0)
+  assert_eq(l0.location.x, 10.0)
+  assert_eq(l0.location.y, 0.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 50.0)
+  assert_eq(l1.size.height, 50.0)
+  assert_eq(l1.location.x, 20.0)
+  assert_eq(l1.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_multiple_children_without_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_multiple_children_without_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_multiple_children_without_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(100.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=auto(),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    ),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=auto(),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_align_items(align_items_center())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 100.0)
+  assert_eq(l0.size.height, 50.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 50.0)
+  assert_eq(l1.size.height, 50.0)
+  assert_eq(l1.location.x, 0.0)
+  assert_eq(l1.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_right_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_right_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_right_with_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=auto(),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    )
+    .with_inset(
+      Rect::new(
+        left=length(10.0),
+        right=length(20.0),
+        top=auto(),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 10.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_right_without_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_right_without_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_right_without_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=auto(),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_top_with_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_top_with_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_top_with_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=auto(),
+        bottom=length(0.0),
+      ),
+    )
+    .with_inset(
+      Rect::new(
+        left=auto(),
+        right=auto(),
+        top=length(20.0),
+        bottom=length(10.0),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 140.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_absolute_margin_auto_top_without_inset" {
-  // TODO: port from taffy-reference/tests/generated/block/block_absolute_margin_auto_top_without_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_absolute_margin_auto_top_without_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_position(position_absolute())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=auto(),
+        bottom=length(0.0),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 200.0)
+  assert_eq(root_layout.size.height, 200.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let c = taffy.layout(node0)
+  assert_eq(c.size.width, 50.0)
+  assert_eq(c.size.height, 50.0)
+  assert_eq(c.location.x, 0.0)
+  assert_eq(c.location.y, 0.0)
 }
 
 ///|
@@ -1467,52 +2165,410 @@ test "upstream/generated/block/block_absolute_padding_border_overrides_size" {
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_align_baseline_child" {
-  // TODO: port from taffy-reference/tests/generated/block/block_align_baseline_child.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_align_baseline_child.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(50.0))),
+  )
+  let node10 = taffy.new_leaf(
+    Style::default().with_size(
+      Size::new(width=length(50.0), height=length(10.0)),
+    ),
+  )
+  let node1 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(20.0))),
+    [node10],
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_align_items(align_items_baseline())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 100.0)
+  assert_eq(root_layout.size.height, 100.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 50.0)
+  assert_eq(l0.size.height, 50.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 50.0)
+  assert_eq(l1.size.height, 20.0)
+  assert_eq(l1.location.x, 50.0)
+  assert_eq(l1.location.y, 30.0)
+  let l10 = taffy.layout(node10)
+  assert_eq(l10.size.width, 50.0)
+  assert_eq(l10.size.height, 10.0)
+  assert_eq(l10.location.x, 0.0)
+  assert_eq(l10.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_align_baseline_child_margin" {
-  // TODO: port from taffy-reference/tests/generated/block/block_align_baseline_child_margin.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_align_baseline_child_margin.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=length(5.0),
+        right=length(5.0),
+        top=length(5.0),
+        bottom=length(5.0),
+      ),
+    ),
+  )
+  let node10 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=length(50.0), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(5.0),
+        right=length(5.0),
+        top=length(5.0),
+        bottom=length(5.0),
+      ),
+    ),
+  )
+  let node1 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(20.0))),
+    [node10],
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_align_items(align_items_baseline())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 100.0)
+  assert_eq(root_layout.size.height, 100.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 40.0)
+  assert_eq(l0.size.height, 50.0)
+  assert_eq(l0.location.x, 5.0)
+  assert_eq(l0.location.y, 5.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 50.0)
+  assert_eq(l1.size.height, 20.0)
+  assert_eq(l1.location.x, 50.0)
+  assert_eq(l1.location.y, 35.0)
+  let l10 = taffy.layout(node10)
+  assert_eq(l10.size.width, 50.0)
+  assert_eq(l10.size.height, 10.0)
+  assert_eq(l10.location.x, 5.0)
+  assert_eq(l10.location.y, 5.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_align_baseline_child_margin_percent" {
-  // TODO: port from taffy-reference/tests/generated/block/block_align_baseline_child_margin_percent.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_align_baseline_child_margin_percent.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_margin(
+      Rect::new(
+        left=percent(0.05),
+        right=percent(0.05),
+        top=percent(0.05),
+        bottom=percent(0.05),
+      ),
+    ),
+  )
+  let node10 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=percent(0.01),
+        right=percent(0.01),
+        top=percent(0.01),
+        bottom=percent(0.01),
+      ),
+    ),
+  )
+  let node1 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(20.0))),
+    [node10],
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_align_items(align_items_baseline())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 100.0)
+  assert_eq(root_layout.size.height, 100.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 40.0)
+  assert_eq(l0.size.height, 50.0)
+  assert_eq(l0.location.x, 5.0)
+  assert_eq(l0.location.y, 5.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 50.0)
+  assert_eq(l1.size.height, 20.0)
+  assert_eq(l1.location.x, 50.0)
+  assert_eq(l1.location.y, 35.0)
+  let l10 = taffy.layout(node10)
+  assert_eq(l10.size.width, 50.0)
+  assert_eq(l10.size.height, 10.0)
+  assert_eq(l10.location.x, 1.0)
+  assert_eq(l10.location.y, 1.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_align_baseline_child_padding" {
-  // TODO: port from taffy-reference/tests/generated/block/block_align_baseline_child_padding.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_align_baseline_child_padding.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(50.0))),
+  )
+  let node10 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(10.0))),
+  )
+  let node1 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(20.0)))
+    .with_padding(
+      Rect::new(
+        left=length(5.0),
+        right=length(5.0),
+        top=length(5.0),
+        bottom=length(5.0),
+      ),
+    ),
+    [node10],
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_align_items(align_items_baseline())
+    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+    .with_padding(
+      Rect::new(
+        left=length(5.0),
+        right=length(5.0),
+        top=length(5.0),
+        bottom=length(5.0),
+      ),
+    ),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 100.0)
+  assert_eq(root_layout.size.height, 100.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 40.0)
+  assert_eq(l0.size.height, 50.0)
+  assert_eq(l0.location.x, 5.0)
+  assert_eq(l0.location.y, 5.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 50.0)
+  assert_eq(l1.size.height, 20.0)
+  assert_eq(l1.location.x, 45.0)
+  assert_eq(l1.location.y, 35.0)
+  let l10 = taffy.layout(node10)
+  assert_eq(l10.size.width, 50.0)
+  assert_eq(l10.size.height, 10.0)
+  assert_eq(l10.location.x, 5.0)
+  assert_eq(l10.location.y, 5.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_align_baseline_child_top" {
-  // TODO: port from taffy-reference/tests/generated/block/block_align_baseline_child_top.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_align_baseline_child_top.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_inset(
+      Rect::new(left=auto(), right=auto(), top=length(10.0), bottom=auto()),
+    ),
+  )
+  let node10 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(10.0))),
+  )
+  let node1 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(20.0))),
+    [node10],
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_align_items(align_items_baseline())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 100.0)
+  assert_eq(root_layout.size.height, 100.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 50.0)
+  assert_eq(l0.size.height, 50.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 10.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 50.0)
+  assert_eq(l1.size.height, 20.0)
+  assert_eq(l1.location.x, 50.0)
+  assert_eq(l1.location.y, 30.0)
+  let l10 = taffy.layout(node10)
+  assert_eq(l10.size.width, 50.0)
+  assert_eq(l10.size.height, 10.0)
+  assert_eq(l10.location.x, 0.0)
+  assert_eq(l10.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_align_baseline_child_top2" {
-  // TODO: port from taffy-reference/tests/generated/block/block_align_baseline_child_top2.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_align_baseline_child_top2.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(50.0))),
+  )
+  let node10 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(10.0))),
+  )
+  let node1 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(20.0)))
+    .with_inset(
+      Rect::new(left=auto(), right=auto(), top=length(5.0), bottom=auto()),
+    ),
+    [node10],
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_align_items(align_items_baseline())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 100.0)
+  assert_eq(root_layout.size.height, 100.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 50.0)
+  assert_eq(l0.size.height, 50.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 50.0)
+  assert_eq(l1.size.height, 20.0)
+  assert_eq(l1.location.x, 50.0)
+  assert_eq(l1.location.y, 35.0)
+  let l10 = taffy.layout(node10)
+  assert_eq(l10.size.width, 50.0)
+  assert_eq(l10.size.height, 10.0)
+  assert_eq(l10.location.x, 0.0)
+  assert_eq(l10.location.y, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/block/block_align_baseline_double_nested_child" {
-  // TODO: port from taffy-reference/tests/generated/block/block_align_baseline_double_nested_child.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_align_baseline_double_nested_child.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node00 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(20.0))),
+  )
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(50.0))),
+    [node00],
+  )
+  let node10 = taffy.new_leaf(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(15.0))),
+  )
+  let node1 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=length(20.0))),
+    [node10],
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_align_items(align_items_baseline())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 100.0)
+  assert_eq(root_layout.size.height, 100.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 50.0)
+  assert_eq(l0.size.height, 50.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l00 = taffy.layout(node00)
+  assert_eq(l00.size.width, 50.0)
+  assert_eq(l00.size.height, 20.0)
+  assert_eq(l00.location.x, 0.0)
+  assert_eq(l00.location.y, 0.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 50.0)
+  assert_eq(l1.size.height, 20.0)
+  assert_eq(l1.location.x, 50.0)
+  assert_eq(l1.location.y, 30.0)
+  let l10 = taffy.layout(node10)
+  assert_eq(l10.size.width, 50.0)
+  assert_eq(l10.size.height, 15.0)
+  assert_eq(l10.location.x, 0.0)
+  assert_eq(l10.location.y, 0.0)
 }
 
 ///|

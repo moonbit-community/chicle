@@ -2029,6 +2029,10 @@ fn[C] compute_grid_layout_with_measure(
     match child.style.display {
       DisplayNone => ()
       _ => {
+        match child.style.position {
+          PosAbsolute => continue
+          PosRelative => ()
+        }
         let def = child_start_indexes_and_spans(
           child.style,
           explicit_col_count,
@@ -2078,6 +2082,10 @@ fn[C] compute_grid_layout_with_measure(
     match child.style.display {
       DisplayNone => ()
       _ => {
+        match child.style.position {
+          PosAbsolute => continue
+          PosRelative => ()
+        }
         let def = child_start_indexes_and_spans(
           child.style,
           explicit_col_count,
@@ -2183,6 +2191,10 @@ fn[C] compute_grid_layout_with_measure(
     match child.style.display {
       DisplayNone => ()
       _ => {
+        match child.style.position {
+          PosAbsolute => continue
+          PosRelative => ()
+        }
         let def = child_start_indexes_and_spans(
           child.style,
           explicit_col_count,
@@ -3186,6 +3198,15 @@ fn[C] compute_grid_layout_with_measure(
     match child.style.display {
       DisplayNone => compute_hidden_layout(tree, child_id, Point::zero())
       _ => {
+        if not(placed[i]) {
+          continue
+        } else {
+          ()
+        }
+        match child.style.position {
+          PosAbsolute => continue
+          PosRelative => ()
+        }
         let row = placed_row[i]
         let col = placed_col[i]
         let row_span = placed_row_span[i]
@@ -3335,6 +3356,526 @@ fn[C] compute_grid_layout_with_measure(
           false,
         )
       }
+    }
+  }
+  let padding_origin = Point::new(
+    x=absolute_origin.x + border.left,
+    y=absolute_origin.y + border.top,
+  )
+  let padding_box_width = max_double(
+    border_box_width - border.left - border.right,
+    0.0,
+  )
+  let padding_box_height = max_double(
+    border_box_height - border.top - border.bottom,
+    0.0,
+  )
+  let content_start_x = padding.left + start_x
+  let content_start_y = padding.top + start_y
+  let explicit_col_lines : Array[Double] = [content_start_x]
+  let explicit_row_lines : Array[Double] = [content_start_y]
+  let mut col_line_pos = content_start_x
+  let mut row_line_pos = content_start_y
+  for i in 0..<explicit_col_count {
+    let track_idx = negative_cols + i
+    if track_idx >= 0 && track_idx < col_sizes.length() {
+      col_line_pos = col_line_pos + col_sizes[track_idx]
+    }
+    if i + 1 < explicit_col_count {
+      col_line_pos = col_line_pos + col_gap_effective
+    }
+    explicit_col_lines.push(col_line_pos)
+  }
+  for i in 0..<explicit_row_count {
+    let track_idx = negative_rows + i
+    if track_idx >= 0 && track_idx < row_sizes.length() {
+      row_line_pos = row_line_pos + row_sizes[track_idx]
+    }
+    if i + 1 < explicit_row_count {
+      row_line_pos = row_line_pos + row_gap_effective
+    }
+    explicit_row_lines.push(row_line_pos)
+  }
+  fn resolve_grid_abs_line_position(
+    lines : Array[Double],
+    line : Int,
+  ) -> Double {
+    let last = lines.length() - 1
+    if last <= 0 {
+      lines[0]
+    } else {
+      let raw = if line > 0 { line - 1 } else { last + line + 1 }
+      let idx = if raw < 0 { 0 } else if raw > last { last } else { raw }
+      lines[idx]
+    }
+  }
+
+  fn resolve_grid_abs_axis_containing_block(
+    placement : Line[GridPlacement],
+    lines : Array[Double],
+    padding_box_size : Double,
+  ) -> (Double, Double) {
+    let start_line = match placement.start {
+      PlaceLine(v) => Some(resolve_grid_abs_line_position(lines, v))
+      _ => None
+    }
+    let end_line = match placement.end {
+      PlaceLine(v) => Some(resolve_grid_abs_line_position(lines, v))
+      _ => None
+    }
+    let start_pos = match (start_line, end_line) {
+      (Some(s), _) => s
+      (None, Some(_)) => 0.0
+      (None, None) => 0.0
+    }
+    let end_pos = match (start_line, end_line) {
+      (_, Some(e)) => e
+      (Some(_), None) => padding_box_size
+      (None, None) => padding_box_size
+    }
+    if end_pos >= start_pos {
+      (start_pos, end_pos)
+    } else {
+      (end_pos, start_pos)
+    }
+  }
+
+  let default_abs_align = match node.style.align_items {
+    Some(v) => v
+    None => ItemsStretch
+  }
+  let default_abs_justify = match node.style.justify_items {
+    Some(v) => v
+    None => ItemsStretch
+  }
+  for child_id in node.children {
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+    match child.style.display {
+      DisplayNone => ()
+      _ =>
+        match child.style.position {
+          PosRelative => ()
+          PosAbsolute => {
+            let col_line = merged_placement_line(
+              child.style.grid_column,
+              child.style.grid_column_start,
+            )
+            let row_line = merged_placement_line(
+              child.style.grid_row,
+              child.style.grid_row_start,
+            )
+            let cb_x = resolve_grid_abs_axis_containing_block(
+              col_line, explicit_col_lines, padding_box_width,
+            )
+            let cb_y = resolve_grid_abs_axis_containing_block(
+              row_line, explicit_row_lines, padding_box_height,
+            )
+            let containing_x = cb_x.0
+            let containing_y = cb_y.0
+            let containing_width = max_double(cb_x.1 - cb_x.0, 0.0)
+            let containing_height = max_double(cb_y.1 - cb_y.0, 0.0)
+            let abs_available = Size::new(
+              width=AvailDefinite(containing_width),
+              height=AvailDefinite(containing_height),
+            )
+            let margin = child.style.margin
+            let margin_left_auto = margin.left is DimAuto
+            let margin_right_auto = margin.right is DimAuto
+            let margin_top_auto = margin.top is DimAuto
+            let margin_bottom_auto = margin.bottom is DimAuto
+            let margin_left_fixed = resolve_dimension_width_basis(
+              margin.left,
+              containing_width,
+            )
+            let margin_right_fixed = resolve_dimension_width_basis(
+              margin.right,
+              containing_width,
+            )
+            let margin_top_fixed = resolve_dimension_width_basis(
+              margin.top,
+              containing_width,
+            )
+            let margin_bottom_fixed = resolve_dimension_width_basis(
+              margin.bottom,
+              containing_width,
+            )
+            let inset = child.style.inset
+            let left = resolve_optional_dimension(
+              inset.left,
+              abs_available.width,
+            )
+            let right = resolve_optional_dimension(
+              inset.right,
+              abs_available.width,
+            )
+            let top = resolve_optional_dimension(
+              inset.top,
+              abs_available.height,
+            )
+            let bottom = resolve_optional_dimension(
+              inset.bottom,
+              abs_available.height,
+            )
+            let mut used_width = resolve_optional_dimension(
+              child.style.size.width,
+              abs_available.width,
+            )
+            let mut used_height = resolve_optional_dimension(
+              child.style.size.height,
+              abs_available.height,
+            )
+            let width_was_auto = used_width is None
+            let height_was_auto = used_height is None
+            let mut width_from_inset = false
+            let mut height_from_inset = false
+            match used_width {
+              Some(_) => ()
+              None =>
+                match (left, right) {
+                  (Some(l), Some(r)) =>
+                    used_width = Some(
+                      max_double(
+                        containing_width -
+                        l -
+                        r -
+                        margin_left_fixed -
+                        margin_right_fixed,
+                        0.0,
+                      ),
+                    )
+                  _ => ()
+                }
+            }
+            match used_height {
+              Some(_) => ()
+              None =>
+                match (top, bottom) {
+                  (Some(t), Some(b)) =>
+                    used_height = Some(
+                      max_double(
+                        containing_height -
+                        t -
+                        b -
+                        margin_top_fixed -
+                        margin_bottom_fixed,
+                        0.0,
+                      ),
+                    )
+                  _ => ()
+                }
+            }
+            match (used_width, used_height) {
+              (Some(_), _) =>
+                if width_was_auto {
+                  match (left, right) {
+                    (Some(_), Some(_)) => width_from_inset = true
+                    _ => ()
+                  }
+                } else {
+                  ()
+                }
+              _ => ()
+            }
+            match (used_width, used_height) {
+              (_, Some(_)) =>
+                if height_was_auto {
+                  match (top, bottom) {
+                    (Some(_), Some(_)) => height_from_inset = true
+                    _ => ()
+                  }
+                } else {
+                  ()
+                }
+              _ => ()
+            }
+            match child.style.aspect_ratio {
+              Some(ratio) =>
+                if ratio > 0.0 {
+                  match (used_width, used_height) {
+                    (Some(w), None) => used_height = Some((w / ratio).round())
+                    (None, Some(h)) => used_width = Some((h * ratio).round())
+                    (Some(w), Some(_h)) =>
+                      if width_was_auto &&
+                        height_was_auto &&
+                        width_from_inset &&
+                        height_from_inset {
+                        used_height = Some((w / ratio).round())
+                      } else {
+                        ()
+                      }
+                    _ => ()
+                  }
+                }
+              None => ()
+            }
+            let mut min_width = resolve_optional_dimension(
+              child.style.min_size.width,
+              abs_available.width,
+            )
+            let mut min_height = resolve_optional_dimension(
+              child.style.min_size.height,
+              abs_available.height,
+            )
+            let mut max_width = resolve_optional_dimension(
+              child.style.max_size.width,
+              abs_available.width,
+            )
+            let mut max_height = resolve_optional_dimension(
+              child.style.max_size.height,
+              abs_available.height,
+            )
+            match child.style.aspect_ratio {
+              Some(ratio) =>
+                if ratio > 0.0 {
+                  match (min_width, min_height) {
+                    (None, Some(h)) => min_width = Some((h * ratio).round())
+                    (Some(w), None) => min_height = Some((w / ratio).round())
+                    _ => ()
+                  }
+                  match (max_width, max_height) {
+                    (None, Some(h)) => max_width = Some((h * ratio).round())
+                    (Some(w), None) => max_height = Some((w / ratio).round())
+                    _ => ()
+                  }
+                } else {
+                  ()
+                }
+              None => ()
+            }
+            let intrinsic = match (used_width, used_height) {
+              (Some(w), Some(h)) => Size::new(width=w, height=h)
+              _ => {
+                compute_node_layout_with_measure(
+                  tree,
+                  child_id,
+                  Size::new(width=None, height=None),
+                  abs_available,
+                  Point::zero(),
+                  measure_function,
+                  false,
+                )
+                tree.nodes[child_id].layout.size
+              }
+            }
+            let final_width = match used_width {
+              Some(w) => w
+              None => intrinsic.width
+            }
+            let final_height = match used_height {
+              Some(h) => h
+              None => intrinsic.height
+            }
+            let mut clamped_final_width = final_width
+            let mut clamped_final_height = final_height
+            match min_width {
+              Some(m) =>
+                clamped_final_width = max_double(clamped_final_width, m)
+              None => ()
+            }
+            match max_width {
+              Some(m) =>
+                if clamped_final_width > m {
+                  clamped_final_width = m
+                } else {
+                  ()
+                }
+              None => ()
+            }
+            match min_height {
+              Some(m) =>
+                clamped_final_height = max_double(clamped_final_height, m)
+              None => ()
+            }
+            match max_height {
+              Some(m) =>
+                if clamped_final_height > m {
+                  clamped_final_height = m
+                } else {
+                  ()
+                }
+              None => ()
+            }
+            compute_node_layout_with_measure(
+              tree,
+              child_id,
+              Size::new(
+                width=Some(clamped_final_width),
+                height=Some(clamped_final_height),
+              ),
+              abs_available,
+              Point::zero(),
+              measure_function,
+              false,
+            )
+            let final_size = tree.nodes[child_id].layout.size
+            let mut final_margin_left = if margin_left_auto {
+              0.0
+            } else {
+              margin_left_fixed
+            }
+            let mut final_margin_right = if margin_right_auto {
+              0.0
+            } else {
+              margin_right_fixed
+            }
+            let mut final_margin_top = if margin_top_auto {
+              0.0
+            } else {
+              margin_top_fixed
+            }
+            let mut final_margin_bottom = if margin_bottom_auto {
+              0.0
+            } else {
+              margin_bottom_fixed
+            }
+            match (left, right) {
+              (Some(l), Some(r)) => {
+                let fixed = (if margin_left_auto {
+                    0.0
+                  } else {
+                    final_margin_left
+                  }) +
+                  (if margin_right_auto { 0.0 } else { final_margin_right })
+                let remaining = containing_width -
+                  l -
+                  r -
+                  final_size.width -
+                  fixed
+                let auto_count = (if margin_left_auto { 1 } else { 0 }) +
+                  (if margin_right_auto { 1 } else { 0 })
+                match auto_count {
+                  2 =>
+                    if remaining >= 0.0 {
+                      final_margin_left = remaining / 2.0
+                      final_margin_right = remaining / 2.0
+                    } else {
+                      final_margin_left = 0.0
+                      final_margin_right = 0.0
+                    }
+                  1 =>
+                    if margin_left_auto {
+                      final_margin_left = remaining
+                    } else {
+                      final_margin_right = remaining
+                    }
+                  _ => ()
+                }
+              }
+              _ => ()
+            }
+            match (top, bottom) {
+              (Some(t), Some(b)) => {
+                let fixed = (if margin_top_auto {
+                    0.0
+                  } else {
+                    final_margin_top
+                  }) +
+                  (if margin_bottom_auto { 0.0 } else { final_margin_bottom })
+                let remaining = containing_height -
+                  t -
+                  b -
+                  final_size.height -
+                  fixed
+                let auto_count = (if margin_top_auto { 1 } else { 0 }) +
+                  (if margin_bottom_auto { 1 } else { 0 })
+                match auto_count {
+                  2 =>
+                    if remaining >= 0.0 {
+                      final_margin_top = remaining / 2.0
+                      final_margin_bottom = remaining / 2.0
+                    } else {
+                      final_margin_top = 0.0
+                      final_margin_bottom = 0.0
+                    }
+                  1 =>
+                    if margin_top_auto {
+                      final_margin_top = remaining
+                    } else {
+                      final_margin_bottom = remaining
+                    }
+                  _ => ()
+                }
+              }
+              _ => ()
+            }
+            let justify = match child.style.justify_self {
+              Some(v) => v
+              None => default_abs_justify
+            }
+            let align = match child.style.align_self {
+              Some(v) => v
+              None => default_abs_align
+            }
+            let available_width_for_static = max_double(
+              containing_width - final_margin_left - final_margin_right,
+              0.0,
+            )
+            let available_height_for_static = max_double(
+              containing_height - final_margin_top - final_margin_bottom,
+              0.0,
+            )
+            let static_x = final_margin_left +
+              (match justify {
+                ItemsEnd | ItemsFlexEnd =>
+                  available_width_for_static - final_size.width
+                ItemsCenter =>
+                  (available_width_for_static - final_size.width) / 2.0
+                _ => 0.0
+              })
+            let static_y = final_margin_top +
+              (match align {
+                ItemsEnd | ItemsFlexEnd =>
+                  available_height_for_static - final_size.height
+                ItemsCenter =>
+                  (available_height_for_static - final_size.height) / 2.0
+                _ => 0.0
+              })
+            let x_in_padding = match left {
+              Some(v) => containing_x + v + final_margin_left
+              None =>
+                match right {
+                  Some(v) =>
+                    containing_x +
+                    containing_width -
+                    v -
+                    final_margin_right -
+                    final_size.width
+                  None => containing_x + static_x
+                }
+            }
+            let y_in_padding = match top {
+              Some(v) => containing_y + v + final_margin_top
+              None =>
+                match bottom {
+                  Some(v) =>
+                    containing_y +
+                    containing_height -
+                    v -
+                    final_margin_bottom -
+                    final_size.height
+                  None => containing_y + static_y
+                }
+            }
+            compute_node_layout_with_measure(
+              tree,
+              child_id,
+              Size::new(
+                width=Some(final_size.width),
+                height=Some(final_size.height),
+              ),
+              abs_available,
+              Point::new(
+                x=padding_origin.x + x_in_padding,
+                y=padding_origin.y + y_in_padding,
+              ),
+              measure_function,
+              false,
+            )
+          }
+        }
     }
   }
   let resolved_margin = resolve_rect_width_basis(

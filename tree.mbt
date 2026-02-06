@@ -3064,18 +3064,29 @@ fn[C] compute_grid_layout_with_measure(
     AlignFlexEnd | AlignEnd => start_x = leftover_x
     AlignFlexStart | AlignStart => ()
     AlignSpaceBetween =>
-      if col_count > 1 {
+      if col_count > 1 && leftover_x > 0.0 {
         col_gap_effective = col_gap_effective +
           leftover_x / (col_count - 1).to_double()
       }
     AlignSpaceAround =>
-      if col_count > 0 {
+      if col_count > 0 && leftover_x > 0.0 {
         let extra = leftover_x / col_count.to_double()
-        col_gap_effective = col_gap_effective + extra
-        start_x = extra / 2.0
+        if is_near_int(leftover_x) {
+          let gap_extra_floor = extra.floor()
+          let gap_extra = if extra > gap_extra_floor {
+            gap_extra_floor + 1.0
+          } else {
+            gap_extra_floor
+          }
+          col_gap_effective = col_gap_effective + gap_extra
+          start_x = (extra / 2.0).floor()
+        } else {
+          col_gap_effective = col_gap_effective + extra
+          start_x = extra / 2.0
+        }
       }
     AlignSpaceEvenly =>
-      if col_count > 0 {
+      if col_count > 0 && leftover_x > 0.0 {
         let spaces = (col_count + 1).to_double()
         let extra = leftover_x / spaces
         if leftover_x > 0.0 && is_near_int(leftover_x) {
@@ -3108,18 +3119,29 @@ fn[C] compute_grid_layout_with_measure(
     AlignFlexEnd | AlignEnd => start_y = leftover_y
     AlignFlexStart | AlignStart => ()
     AlignSpaceBetween =>
-      if row_count > 1 {
+      if row_count > 1 && leftover_y > 0.0 {
         row_gap_effective = row_gap_effective +
           leftover_y / (row_count - 1).to_double()
       }
     AlignSpaceAround =>
-      if row_count > 0 {
+      if row_count > 0 && leftover_y > 0.0 {
         let extra = leftover_y / row_count.to_double()
-        row_gap_effective = row_gap_effective + extra
-        start_y = extra / 2.0
+        if is_near_int(leftover_y) {
+          let gap_extra_floor = extra.floor()
+          let gap_extra = if extra > gap_extra_floor {
+            gap_extra_floor + 1.0
+          } else {
+            gap_extra_floor
+          }
+          row_gap_effective = row_gap_effective + gap_extra
+          start_y = (extra / 2.0).floor()
+        } else {
+          row_gap_effective = row_gap_effective + extra
+          start_y = extra / 2.0
+        }
       }
     AlignSpaceEvenly =>
-      if row_count > 0 {
+      if row_count > 0 && leftover_y > 0.0 {
         let spaces = (row_count + 1).to_double()
         let extra = leftover_y / spaces
         if leftover_y > 0.0 && is_near_int(leftover_y) {

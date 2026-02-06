@@ -15425,38 +15425,145 @@ test "upstream/generated/grid/grid_align_self_sized_all" {
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_aspect_ratio_absolute_aspect_ratio_overrides_height_of_full_inset" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_aspect_ratio_absolute_aspect_ratio_overrides_height_of_full_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_aspect_ratio_absolute_aspect_ratio_overrides_height_of_full_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=percent(0.05),
+        right=percent(0.05),
+        top=percent(0.05),
+        bottom=percent(0.05),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 400.0, 300.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 360.0, 120.0, 20.0, 15.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_aspect_ratio_absolute_fill_height_from_inset" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_aspect_ratio_absolute_fill_height_from_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_aspect_ratio_absolute_fill_height_from_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=percent(0.1),
+        right=percent(0.1),
+        top=percent(0.05),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 400.0, 300.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 320.0, 107.0, 40.0, 15.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_aspect_ratio_absolute_fill_width_from_inset" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_aspect_ratio_absolute_fill_width_from_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_aspect_ratio_absolute_fill_width_from_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=auto(),
+        right=auto(),
+        top=percent(0.3),
+        bottom=percent(0.5),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 400.0, 300.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 180.0, 60.0, 0.0, 90.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_aspect_ratio_absolute_height_overrides_inset" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_aspect_ratio_absolute_height_overrides_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_aspect_ratio_absolute_height_overrides_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_size(Size::new(width=auto(), height=percent(0.1)))
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=auto(),
+        right=auto(),
+        top=percent(0.3),
+        bottom=percent(0.5),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 400.0, 300.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 90.0, 30.0, 0.0, 90.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_aspect_ratio_absolute_width_overrides_inset" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_aspect_ratio_absolute_width_overrides_inset.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_aspect_ratio_absolute_width_overrides_inset.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_position(position_absolute())
+    .with_size(Size::new(width=percent(0.4), height=auto()))
+    .with_aspect_ratio(3.0)
+    .with_inset(
+      Rect::new(
+        left=percent(0.1),
+        right=percent(0.1),
+        top=percent(0.05),
+        bottom=auto(),
+      ),
+    ),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_size(Size::new(width=length(400.0), height=length(300.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 400.0, 300.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 160.0, 53.0, 40.0, 15.0)
 }
 
 ///|

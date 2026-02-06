@@ -14602,38 +14602,275 @@ test "upstream/generated/grid/grid_justify_content_start_with_padding_border" {
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_justify_items_sized_center" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_justify_items_sized_center.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_justify_items_sized_center.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(1)
+    .with_grid_column_start(1)
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(3)
+    .with_grid_column_start(3)
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_justify_items(align_items_center())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
+    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 120.0)
+  assert_eq(root_layout.size.height, 120.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 20.0)
+  assert_eq(l0.size.height, 20.0)
+  assert_eq(l0.location.x, 10.0)
+  assert_eq(l0.location.y, 0.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 60.0)
+  assert_eq(l1.size.height, 60.0)
+  assert_eq(l1.location.x, 70.0)
+  assert_eq(l1.location.y, 80.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_justify_items_sized_end" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_justify_items_sized_end.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_justify_items_sized_end.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(1)
+    .with_grid_column_start(1)
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(3)
+    .with_grid_column_start(3)
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_justify_items(align_items_end())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
+    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 120.0)
+  assert_eq(root_layout.size.height, 120.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 20.0)
+  assert_eq(l0.size.height, 20.0)
+  assert_eq(l0.location.x, 20.0)
+  assert_eq(l0.location.y, 0.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 60.0)
+  assert_eq(l1.size.height, 60.0)
+  assert_eq(l1.location.x, 60.0)
+  assert_eq(l1.location.y, 80.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_justify_items_sized_start" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_justify_items_sized_start.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_justify_items_sized_start.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(1)
+    .with_grid_column_start(1)
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(3)
+    .with_grid_column_start(3)
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_justify_items(align_items_start())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
+    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 120.0)
+  assert_eq(root_layout.size.height, 120.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 20.0)
+  assert_eq(l0.size.height, 20.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 60.0)
+  assert_eq(l1.size.height, 60.0)
+  assert_eq(l1.location.x, 80.0)
+  assert_eq(l1.location.y, 80.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_justify_items_sized_stretch" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_justify_items_sized_stretch.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_justify_items_sized_stretch.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(1)
+    .with_grid_column_start(1)
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(3)
+    .with_grid_column_start(3)
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_justify_items(align_items_stretch())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
+    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 120.0)
+  assert_eq(root_layout.size.height, 120.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 20.0)
+  assert_eq(l0.size.height, 20.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 60.0)
+  assert_eq(l1.size.height, 60.0)
+  assert_eq(l1.location.x, 80.0)
+  assert_eq(l1.location.y, 80.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_justify_self_sized_all" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_justify_self_sized_all.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_justify_self_sized_all.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_justify_self(align_items_start())
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_justify_self(align_items_start())
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let node2 = taffy.new_leaf(
+    Style::default()
+    .with_justify_self(align_items_end())
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node3 = taffy.new_leaf(
+    Style::default()
+    .with_justify_self(align_items_end())
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let node4 = taffy.new_leaf(
+    Style::default()
+    .with_justify_self(align_items_center())
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node5 = taffy.new_leaf(
+    Style::default()
+    .with_justify_self(align_items_center())
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let node6 = taffy.new_leaf(
+    Style::default()
+    .with_justify_self(align_items_stretch())
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node7 = taffy.new_leaf(
+    Style::default()
+    .with_justify_self(align_items_stretch())
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
+    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    [node0, node1, node2, node3, node4, node5, node6, node7],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 120.0)
+  assert_eq(root_layout.size.height, 120.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let l0 = taffy.layout(node0)
+  assert_eq(l0.size.width, 20.0)
+  assert_eq(l0.size.height, 20.0)
+  assert_eq(l0.location.x, 0.0)
+  assert_eq(l0.location.y, 0.0)
+  let l1 = taffy.layout(node1)
+  assert_eq(l1.size.width, 60.0)
+  assert_eq(l1.size.height, 60.0)
+  assert_eq(l1.location.x, 40.0)
+  assert_eq(l1.location.y, 0.0)
+  let l2 = taffy.layout(node2)
+  assert_eq(l2.size.width, 20.0)
+  assert_eq(l2.size.height, 20.0)
+  assert_eq(l2.location.x, 100.0)
+  assert_eq(l2.location.y, 0.0)
+  let l3 = taffy.layout(node3)
+  assert_eq(l3.size.width, 60.0)
+  assert_eq(l3.size.height, 60.0)
+  assert_eq(l3.location.x, -20.0)
+  assert_eq(l3.location.y, 40.0)
+  let l4 = taffy.layout(node4)
+  assert_eq(l4.size.width, 20.0)
+  assert_eq(l4.size.height, 20.0)
+  assert_eq(l4.location.x, 50.0)
+  assert_eq(l4.location.y, 40.0)
+  let l5 = taffy.layout(node5)
+  assert_eq(l5.size.width, 60.0)
+  assert_eq(l5.size.height, 60.0)
+  assert_eq(l5.location.x, 70.0)
+  assert_eq(l5.location.y, 40.0)
+  let l6 = taffy.layout(node6)
+  assert_eq(l6.size.width, 20.0)
+  assert_eq(l6.size.height, 20.0)
+  assert_eq(l6.location.x, 0.0)
+  assert_eq(l6.location.y, 80.0)
+  let l7 = taffy.layout(node7)
+  assert_eq(l7.size.width, 60.0)
+  assert_eq(l7.size.height, 60.0)
+  assert_eq(l7.location.x, 40.0)
+  assert_eq(l7.location.y, 80.0)
 }
 
 ///|

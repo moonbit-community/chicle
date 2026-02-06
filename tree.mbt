@@ -3189,6 +3189,134 @@ fn[C] compute_grid_layout_with_measure(
     Some(v) => v
     None => ItemsStretch
   }
+  let row_baseline_before_max : Array[Double] = Array::make(row_count, 0.0)
+  let row_baseline_after_max : Array[Double] = Array::make(row_count, 0.0)
+  let item_baseline_offsets : Array[Double] = Array::make(placement_count, 0.0)
+  for i in 0..<placement_count {
+    if not(placed[i]) {
+      continue
+    }
+    let child_id = node.children[i]
+    let child = match tree.nodes.get(child_id) {
+      Some(c) => c
+      None => raise InvalidNodeId(child_id)
+    }
+    match child.style.display {
+      DisplayNone => continue
+      _ => ()
+    }
+    match child.style.position {
+      PosAbsolute => continue
+      PosRelative => ()
+    }
+    let row = placed_row[i]
+    let col = placed_col[i]
+    let row_span = placed_row_span[i]
+    let col_span = placed_col_span[i]
+    let row_end = row + row_span - 1
+    let col_end = col + col_span - 1
+    if row < 0 || col < 0 || row_end >= row_count || col_end >= col_count {
+      continue
+    }
+    let align = match child.style.align_self {
+      Some(v) => v
+      None => default_align_items
+    }
+    if row_span != 1 {
+      continue
+    }
+    match align {
+      ItemsBaseline => ()
+      _ => continue
+    }
+    let mut cell_w = 0.0
+    for c in col..<(col + col_span) {
+      cell_w = cell_w + col_sizes[c]
+    }
+    if col_span > 1 {
+      cell_w = cell_w + col_gap_effective * (col_span - 1).to_double()
+    }
+    let mut cell_h = 0.0
+    for r in row..<(row + row_span) {
+      cell_h = cell_h + row_sizes[r]
+    }
+    if row_span > 1 {
+      cell_h = cell_h + row_gap_effective * (row_span - 1).to_double()
+    }
+    let child_available = Size::new(
+      width=AvailDefinite(cell_w),
+      height=AvailDefinite(cell_h),
+    )
+    let resolved_margin = resolve_rect_width_basis(
+      child.style.margin,
+      child_available,
+    )
+    let margin_left_auto = child.style.margin.left is DimAuto
+    let margin_right_auto = child.style.margin.right is DimAuto
+    let margin_top_auto = child.style.margin.top is DimAuto
+    let margin_bottom_auto = child.style.margin.bottom is DimAuto
+    let has_auto_margin_x = margin_left_auto || margin_right_auto
+    let has_auto_margin_y = margin_top_auto || margin_bottom_auto
+    if has_auto_margin_y {
+      continue
+    }
+    let available_w_for_item = max_double(
+      cell_w - resolved_margin.left - resolved_margin.right,
+      0.0,
+    )
+    let available_h_for_item = max_double(
+      cell_h - resolved_margin.top - resolved_margin.bottom,
+      0.0,
+    )
+    let item_available = Size::new(
+      width=AvailDefinite(available_w_for_item),
+      height=AvailDefinite(available_h_for_item),
+    )
+    let justify = match child.style.justify_self {
+      Some(v) => v
+      None => default_justify_items
+    }
+    let known_w = match justify {
+      ItemsStretch =>
+        if child.style.size.width is DimAuto && !has_auto_margin_x {
+          Some(available_w_for_item)
+        } else {
+          None
+        }
+      _ => None
+    }
+    compute_node_layout_with_measure(
+      tree,
+      child_id,
+      Size::new(width=known_w, height=None),
+      item_available,
+      Point::zero(),
+      measure_function,
+      false,
+    )
+    let baseline = grid_item_baseline_offset_y(tree, child_id)
+    let intrinsic = tree.nodes[child_id].layout.size
+    item_baseline_offsets[i] = baseline
+    let before = resolved_margin.top + baseline
+    let after = resolved_margin.bottom +
+      max_double(intrinsic.height - baseline, 0.0)
+    row_baseline_before_max[row] = max_double(
+      row_baseline_before_max[row],
+      before,
+    )
+    row_baseline_after_max[row] = max_double(row_baseline_after_max[row], after)
+  }
+  for row in 0..<row_count {
+    let baseline_total = row_baseline_before_max[row] +
+      row_baseline_after_max[row]
+    match row_tracks[row] {
+      DimAuto =>
+        if baseline_total > row_sizes[row] {
+          row_sizes[row] = baseline_total
+        }
+      _ => ()
+    }
+  }
   for i in 0..<placement_count {
     let child_id = node.children[i]
     let child = match tree.nodes.get(child_id) {
@@ -3338,6 +3466,14 @@ fn[C] compute_grid_layout_with_measure(
           match align {
             ItemsEnd | ItemsFlexEnd => available_h_for_item - intrinsic.height
             ItemsCenter => (available_h_for_item - intrinsic.height) / 2.0
+            ItemsBaseline =>
+              if row_span == 1 {
+                row_baseline_before_max[row] -
+                resolved_margin.top -
+                item_baseline_offsets[i]
+              } else {
+                0.0
+              }
             _ => 0.0
           }
         }
@@ -3349,8 +3485,8 @@ fn[C] compute_grid_layout_with_measure(
           Size::new(width=known_w, height=known_h),
           item_available,
           Point::new(
-            x=base_x + x + margin_left + offset_x,
-            y=base_y + y + margin_top + offset_y,
+            x=(base_x + x + margin_left + offset_x).round(),
+            y=(base_y + y + margin_top + offset_y).round(),
           ),
           measure_function,
           false,
@@ -5206,6 +5342,42 @@ fn[C] baseline_offset_y(
         }
         node_layout.size.height
       }
+  }
+}
+
+///|
+fn[C] grid_item_baseline_offset_y(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+) -> Double raise TaffyError {
+  let node = match tree.nodes.get(node_id) {
+    Some(n) => n
+    None => raise InvalidNodeId(node_id)
+  }
+  let node_layout = node.layout
+  if node.children.length() == 0 {
+    node_layout.size.height
+  } else {
+    for child_id in node.children {
+      let child = match tree.nodes.get(child_id) {
+        Some(c) => c
+        None => raise InvalidNodeId(child_id)
+      }
+      match child.style.display {
+        DisplayNone => ()
+        _ =>
+          match child.style.position {
+            PosAbsolute => ()
+            PosRelative => {
+              let child_layout = child.layout
+              return child_layout.location.y -
+                node_layout.location.y +
+                grid_item_baseline_offset_y(tree, child_id)
+            }
+          }
+      }
+    }
+    node_layout.size.height
   }
 }
 

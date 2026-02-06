@@ -766,7 +766,7 @@ fn compute_grid_track_sizes_with_contributions(
     max_c : Double,
   ) -> Double {
     match d {
-      DimAuto => min_c
+      DimAuto => 0.0
       DimMinContent => min_c
       DimMaxContent => max_c
       DimFitContent(limit) => {
@@ -2517,6 +2517,22 @@ fn[C] compute_grid_layout_with_measure(
           }
         }
       }
+    } else if positive_weight_sum > 0.0 {
+      let mut current_sum = 0.0
+      for offset in 0..<span {
+        let idx = start + offset
+        current_sum = current_sum + contrib[idx]
+      }
+      let deficit = needed - current_sum
+      if deficit > 0.0 {
+        for offset in 0..<span {
+          let idx = start + offset
+          let weight = weights[offset]
+          if weight > 0.0 {
+            contrib[idx] = contrib[idx] + deficit * weight / positive_weight_sum
+          }
+        }
+      }
     } else {
       let share = needed / span.to_double()
       for offset in 0..<span {
@@ -2697,14 +2713,30 @@ fn[C] compute_grid_layout_with_measure(
               DimMaxContent => max_c
               DimFitContent(limit) =>
                 track_basis_fit_content(min_c, max_c, limit, 0.0)
-              DimMinMax(_min_d, max_d) =>
-                match max_d {
+              DimMinMax(_min_d, max_d) => {
+                let min_basis = match _min_d {
+                  DimAuto => 0.0
+                  DimMinContent => min_c
+                  DimMaxContent => max_c
+                  DimFitContent(limit) =>
+                    track_basis_fit_content(min_c, max_c, limit, 0.0)
+                  _ => resolve_track_dimension(_min_d, 0.0)
+                }
+                let max_basis = match max_d {
                   DimAuto | DimMaxContent => max_c
                   DimMinContent => min_c
+                  DimPercent(_) => max_c
+                  DimFr(_) => max_c
                   DimFitContent(limit) =>
                     track_basis_fit_content(min_c, max_c, limit, 0.0)
                   _ => resolve_track_dimension(max_d, 0.0)
                 }
+                if max_basis < min_basis {
+                  min_basis
+                } else {
+                  max_basis
+                }
+              }
               _ => 0.0
             })
       }
@@ -5635,12 +5667,16 @@ fn[C] compute_flex_layout_with_measure(
     0.0,
   )
   let parent_available_for_children = Size::new(
-    width=resolve_available_for_percent(
-      width_def_for_percent, tentative_content_width,
-    ),
-    height=resolve_available_for_percent(
-      height_def_for_percent, tentative_content_height,
-    ),
+    width=if width_def_for_percent {
+      AvailDefinite(tentative_content_width)
+    } else {
+      available_space.width
+    },
+    height=if height_def_for_percent {
+      AvailDefinite(tentative_content_height)
+    } else {
+      available_space.height
+    },
   )
   let flow_children : Array[NodeId] = []
   let abs_children : Array[NodeId] = []
@@ -5712,11 +5748,18 @@ fn[C] compute_flex_layout_with_measure(
   } else {
     0.0
   }
+  let intrinsic_main_available = match main_available_pre {
+    AvailMinContent => AvailMinContent
+    _ => AvailMaxContent
+  }
   let intrinsic_available_for_children = if is_col {
-    Size::new(width=parent_available_for_children.width, height=AvailMaxContent)
+    Size::new(
+      width=parent_available_for_children.width,
+      height=intrinsic_main_available,
+    )
   } else {
     Size::new(
-      width=AvailMaxContent,
+      width=intrinsic_main_available,
       height=parent_available_for_children.height,
     )
   }

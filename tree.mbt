@@ -3226,6 +3226,12 @@ fn[C] compute_grid_layout_with_measure(
           child.style.margin,
           child_available,
         )
+        let margin_left_auto = child.style.margin.left is DimAuto
+        let margin_right_auto = child.style.margin.right is DimAuto
+        let margin_top_auto = child.style.margin.top is DimAuto
+        let margin_bottom_auto = child.style.margin.bottom is DimAuto
+        let has_auto_margin_x = margin_left_auto || margin_right_auto
+        let has_auto_margin_y = margin_top_auto || margin_bottom_auto
         let available_w_for_item = max_double(
           cell_w - resolved_margin.left - resolved_margin.right,
           0.0,
@@ -3248,7 +3254,7 @@ fn[C] compute_grid_layout_with_measure(
         }
         let known_w = match justify {
           ItemsStretch =>
-            if child.style.size.width is DimAuto {
+            if child.style.size.width is DimAuto && !has_auto_margin_x {
               Some(available_w_for_item)
             } else {
               None
@@ -3257,7 +3263,7 @@ fn[C] compute_grid_layout_with_measure(
         }
         let known_h = match align {
           ItemsStretch =>
-            if child.style.size.height is DimAuto {
+            if child.style.size.height is DimAuto && !has_auto_margin_y {
               Some(available_h_for_item)
             } else {
               None
@@ -3276,15 +3282,43 @@ fn[C] compute_grid_layout_with_measure(
           false,
         )
         let intrinsic = tree.nodes[child_id].layout.size
-        let offset_x = match justify {
-          ItemsEnd | ItemsFlexEnd => available_w_for_item - intrinsic.width
-          ItemsCenter => (available_w_for_item - intrinsic.width) / 2.0
-          _ => 0.0
+        let free_x = max_double(available_w_for_item - intrinsic.width, 0.0)
+        let free_y = max_double(available_h_for_item - intrinsic.height, 0.0)
+        let margin_left = if margin_left_auto {
+          if margin_right_auto {
+            free_x / 2.0
+          } else {
+            free_x
+          }
+        } else {
+          resolved_margin.left
         }
-        let offset_y = match align {
-          ItemsEnd | ItemsFlexEnd => available_h_for_item - intrinsic.height
-          ItemsCenter => (available_h_for_item - intrinsic.height) / 2.0
-          _ => 0.0
+        let margin_top = if margin_top_auto {
+          if margin_bottom_auto {
+            free_y / 2.0
+          } else {
+            free_y
+          }
+        } else {
+          resolved_margin.top
+        }
+        let offset_x = if has_auto_margin_x {
+          0.0
+        } else {
+          match justify {
+            ItemsEnd | ItemsFlexEnd => available_w_for_item - intrinsic.width
+            ItemsCenter => (available_w_for_item - intrinsic.width) / 2.0
+            _ => 0.0
+          }
+        }
+        let offset_y = if has_auto_margin_y {
+          0.0
+        } else {
+          match align {
+            ItemsEnd | ItemsFlexEnd => available_h_for_item - intrinsic.height
+            ItemsCenter => (available_h_for_item - intrinsic.height) / 2.0
+            _ => 0.0
+          }
         }
 
         // Second pass: position the item within the cell.
@@ -3294,8 +3328,8 @@ fn[C] compute_grid_layout_with_measure(
           Size::new(width=known_w, height=known_h),
           item_available,
           Point::new(
-            x=base_x + x + resolved_margin.left + offset_x,
-            y=base_y + y + resolved_margin.top + offset_y,
+            x=base_x + x + margin_left + offset_x,
+            y=base_y + y + margin_top + offset_y,
           ),
           measure_function,
           false,

@@ -14434,8 +14434,8 @@ test "upstream/generated/grid/grid_align_content_start_with_padding_border" {
 }
 
 ///|
-fn assert_layout_xywh(
-  taffy : TaffyTree[TextMeasure],
+fn[C] assert_layout_xywh(
+  taffy : TaffyTree[C],
   node : NodeId,
   width : Double,
   height : Double,
@@ -15237,31 +15237,127 @@ test "upstream/generated/grid/grid_align_items_baseline_nested_column" {
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_align_items_sized_center" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_align_items_sized_center.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_align_items_sized_center.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(1)
+    .with_grid_column_start(1)
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(3)
+    .with_grid_column_start(3)
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_align_items(align_items_center())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
+    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 120.0, 120.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 20.0, 20.0, 0.0, 10.0)
+  assert_layout_xywh(taffy, node1, 60.0, 60.0, 80.0, 70.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_align_items_sized_end" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_align_items_sized_end.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_align_items_sized_end.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(1)
+    .with_grid_column_start(1)
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(3)
+    .with_grid_column_start(3)
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_align_items(align_items_end())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
+    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 120.0, 120.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 20.0, 20.0, 0.0, 20.0)
+  assert_layout_xywh(taffy, node1, 60.0, 60.0, 80.0, 60.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_align_items_sized_start" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_align_items_sized_start.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_align_items_sized_start.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(1)
+    .with_grid_column_start(1)
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(3)
+    .with_grid_column_start(3)
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_align_items(align_items_start())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
+    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 120.0, 120.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 20.0, 20.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 60.0, 60.0, 80.0, 80.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_align_items_sized_stretch" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_align_items_sized_stretch.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_align_items_sized_stretch.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(1)
+    .with_grid_column_start(1)
+    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row_start(3)
+    .with_grid_column_start(3)
+    .with_size(Size::new(width=length(60.0), height=length(60.0))),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_align_items(align_items_stretch())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
+    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    [node0, node1],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 120.0, 120.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 20.0, 20.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 60.0, 60.0, 80.0, 80.0)
 }
 
 ///|

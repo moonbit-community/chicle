@@ -862,8 +862,9 @@ fn compute_grid_track_sizes_with_contributions(
       }
       DimFr(w) => {
         fr_weights[i] = if w > 0.0 { w } else { 0.0 }
-        sizes[i] = 0.0
-        min_sizes[i] = 0.0
+        let base = if w > 0.0 { min_c } else { max_c }
+        sizes[i] = base
+        min_sizes[i] = base
         max_limits[i] = inf
       }
       DimMinMax(min_d, max_d) => {
@@ -917,7 +918,12 @@ fn compute_grid_track_sizes_with_contributions(
       for i in 0..<count {
         let w = fr_weights[i]
         if w > 0.0 {
-          sizes[i] = flex_fraction * w
+          let flex_size = flex_fraction * w
+          sizes[i] = if flex_size < min_sizes[i] {
+            min_sizes[i]
+          } else {
+            flex_size
+          }
           min_sizes[i] = if i < min_contrib.length() {
             min_contrib[i]
           } else {
@@ -985,50 +991,85 @@ fn compute_grid_track_sizes_with_contributions(
       sum_fr = sum_fr + w
     }
     if sum_fr > 0.0 {
-      let denom = if sum_fr < 1.0 { 1.0 } else { sum_fr }
-      let flex_fraction = free / denom
-      let total_fr_space = if sum_fr < 1.0 { free * sum_fr } else { free }
-      if is_near_int(total_fr_space) {
-        let total_int = total_fr_space.floor().to_int()
-        let fr_indices : Array[Int] = []
-        let fr_ints : Array[Int] = []
-        let fr_fracs : Array[Double] = []
-        let mut sum_ints = 0
-        for i in 0..<count {
-          if fr_weights[i] > 0.0 {
-            let raw = flex_fraction * fr_weights[i]
-            let base = raw.floor().to_int()
-            fr_indices.push(i)
-            fr_ints.push(base)
-            fr_fracs.push(raw - base.to_double())
-            sum_ints = sum_ints + base
+      let mut fixed_used = 0.0
+      for i in 0..<count {
+        if fr_weights[i] <= 0.0 {
+          fixed_used = fixed_used + sizes[i]
+        }
+      }
+      let mut remaining_for_fr = max_double(available - fixed_used, 0.0)
+      let mut unresolved : Array[Int] = []
+      for i in 0..<count {
+        if fr_weights[i] > 0.0 {
+          unresolved.push(i)
+          sizes[i] = min_sizes[i]
+        }
+      }
+      while unresolved.length() > 0 {
+        let mut unresolved_sum = 0.0
+        for idx in unresolved {
+          unresolved_sum = unresolved_sum + fr_weights[idx]
+        }
+        let denom = if unresolved_sum < 1.0 { 1.0 } else { unresolved_sum }
+        let flex_fraction = remaining_for_fr / denom
+        let mut froze_any = false
+        let next_unresolved : Array[Int] = []
+        for idx in unresolved {
+          let proposed = flex_fraction * fr_weights[idx]
+          if proposed + 0.000001 < min_sizes[idx] {
+            sizes[idx] = min_sizes[idx]
+            remaining_for_fr = max_double(
+              remaining_for_fr - min_sizes[idx],
+              0.0,
+            )
+            froze_any = true
+          } else {
+            next_unresolved.push(idx)
           }
         }
-        let mut remainder = total_int - sum_ints
-        while remainder > 0 {
-          let mut best_j = 0
-          let mut best_frac = -1.0
-          for j in 0..<fr_fracs.length() {
-            let f = fr_fracs[j]
-            if f > best_frac {
-              best_frac = f
-              best_j = j
+        if not(froze_any) {
+          let total_fr_space = if unresolved_sum < 1.0 {
+            remaining_for_fr * unresolved_sum
+          } else {
+            remaining_for_fr
+          }
+          if is_near_int(total_fr_space) {
+            let total_int = total_fr_space.floor().to_int()
+            let raw_bases : Array[Int] = []
+            let raw_fracs : Array[Double] = []
+            let mut sum_bases = 0
+            for idx in unresolved {
+              let raw = flex_fraction * fr_weights[idx]
+              let base = raw.floor().to_int()
+              raw_bases.push(base)
+              raw_fracs.push(raw - base.to_double())
+              sum_bases = sum_bases + base
+            }
+            let mut remainder = total_int - sum_bases
+            while remainder > 0 {
+              let mut best_j = 0
+              let mut best_frac = -1.0
+              for j in 0..<raw_fracs.length() {
+                if raw_fracs[j] > best_frac {
+                  best_frac = raw_fracs[j]
+                  best_j = j
+                }
+              }
+              raw_bases[best_j] = raw_bases[best_j] + 1
+              raw_fracs[best_j] = -1.0
+              remainder = remainder - 1
+            }
+            for j in 0..<unresolved.length() {
+              sizes[unresolved[j]] = raw_bases[j].to_double()
+            }
+          } else {
+            for idx in unresolved {
+              sizes[idx] = flex_fraction * fr_weights[idx]
             }
           }
-          fr_ints[best_j] = fr_ints[best_j] + 1
-          fr_fracs[best_j] = -1.0
-          remainder = remainder - 1
+          break
         }
-        for j in 0..<fr_indices.length() {
-          let idx = fr_indices[j]
-          sizes[idx] = sizes[idx] + fr_ints[j].to_double()
-        }
-      } else {
-        for i in 0..<count {
-          if fr_weights[i] > 0.0 {
-            sizes[i] = sizes[i] + flex_fraction * fr_weights[i]
-          }
-        }
+        unresolved = next_unresolved
       }
     } else {
       // Distribute remaining free space evenly to auto-like tracks, respecting fit-content/minmax caps.
@@ -2423,6 +2464,70 @@ fn[C] compute_grid_layout_with_measure(
   let col_max_contrib : Array[Double] = Array::make(col_count, 0.0)
   let row_min_contrib : Array[Double] = Array::make(row_count, 0.0)
   let row_max_contrib : Array[Double] = Array::make(row_count, 0.0)
+  fn fr_track_weight(track : Dimension) -> Double {
+    match track {
+      DimFr(w) => if w > 0.0 { w } else { 0.0 }
+      _ => 0.0
+    }
+  }
+
+  fn apply_col_contribution(
+    col_tracks : Array[Dimension],
+    start : Int,
+    span : Int,
+    needed : Double,
+    contrib : Array[Double],
+  ) -> Unit {
+    if span <= 1 {
+      if needed > contrib[start] {
+        contrib[start] = needed
+      }
+      return
+    }
+    let mut all_fr = true
+    let weights : Array[Double] = Array::make(span, 0.0)
+    let mut positive_weight_sum = 0.0
+    for offset in 0..<span {
+      let idx = start + offset
+      let track = col_tracks[idx]
+      if not(track is DimFr(_)) {
+        all_fr = false
+      }
+      let weight = fr_track_weight(track)
+      weights[offset] = weight
+      if weight > 0.0 {
+        positive_weight_sum = positive_weight_sum + weight
+      }
+    }
+    if all_fr {
+      if positive_weight_sum > 0.0 {
+        for offset in 0..<span {
+          let idx = start + offset
+          let share = needed * weights[offset] / positive_weight_sum
+          if share > contrib[idx] {
+            contrib[idx] = share
+          }
+        }
+      } else {
+        let share = needed / span.to_double()
+        for offset in 0..<span {
+          let idx = start + offset
+          if share > contrib[idx] {
+            contrib[idx] = share
+          }
+        }
+      }
+    } else {
+      let share = needed / span.to_double()
+      for offset in 0..<span {
+        let idx = start + offset
+        if share > contrib[idx] {
+          contrib[idx] = share
+        }
+      }
+    }
+  }
+
   for i in 0..<placement_count {
     if not(placed[i]) {
       continue
@@ -2455,12 +2560,7 @@ fn[C] compute_grid_layout_with_measure(
       max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
       0.0,
     )
-    let max_share = max_needed / col_span.to_double()
-    for j in c..<(c + col_span) {
-      if max_share > col_max_contrib[j] {
-        col_max_contrib[j] = max_share
-      }
-    }
+    apply_col_contribution(col_tracks, c, col_span, max_needed, col_max_contrib)
 
     // Min-content contribution in the column axis
     compute_node_layout_with_measure(
@@ -2472,17 +2572,26 @@ fn[C] compute_grid_layout_with_measure(
       measure_function,
       false,
     )
-    let min_col = tree.nodes[child_id].layout.size.width
+    let min_col_raw = tree.nodes[child_id].layout.size.width
+    let min_col = match (child.style.overflow.x, child.style.overflow.y) {
+      (OverflowVisible, OverflowVisible) => min_col_raw
+      _ => {
+        let reduced = max_double(
+          min_col_raw - child.style.scrollbar_width * 2.0,
+          0.0,
+        )
+        if reduced < min_col_raw {
+          reduced
+        } else {
+          min_col_raw
+        }
+      }
+    }
     let min_needed = max_double(
       min_col + resolved_margin.left + resolved_margin.right - gap_total,
       0.0,
     )
-    let min_share = min_needed / col_span.to_double()
-    for j in c..<(c + col_span) {
-      if min_share > col_min_contrib[j] {
-        col_min_contrib[j] = min_share
-      }
-    }
+    apply_col_contribution(col_tracks, c, col_span, min_needed, col_min_contrib)
   }
   fn track_basis_fit_content(
     min_c : Double,
@@ -2525,7 +2634,7 @@ fn[C] compute_grid_layout_with_measure(
               fr_fraction = ratio
             }
           } else {
-            ()
+            total = total + min_c
           }
         _ =>
           total = total +
@@ -2576,7 +2685,7 @@ fn[C] compute_grid_layout_with_measure(
               fr_fraction = ratio
             }
           } else {
-            ()
+            total = total + max_c
           }
         _ =>
           total = total +
@@ -2846,12 +2955,9 @@ fn[C] compute_grid_layout_with_measure(
         max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
         0.0,
       )
-      let max_share = max_needed / col_span.to_double()
-      for j in c..<(c + col_span) {
-        if max_share > col_max_contrib[j] {
-          col_max_contrib[j] = max_share
-        }
-      }
+      apply_col_contribution(
+        col_tracks, c, col_span, max_needed, col_max_contrib,
+      )
       compute_node_layout_with_measure(
         tree,
         child_id,
@@ -2866,12 +2972,9 @@ fn[C] compute_grid_layout_with_measure(
         min_col + resolved_margin.left + resolved_margin.right - gap_total,
         0.0,
       )
-      let min_share = min_needed / col_span.to_double()
-      for j in c..<(c + col_span) {
-        if min_share > col_min_contrib[j] {
-          col_min_contrib[j] = min_share
-        }
-      }
+      apply_col_contribution(
+        col_tracks, c, col_span, min_needed, col_min_contrib,
+      )
     }
     col_sizes = compute_grid_track_sizes_with_contributions(
       col_tracks,
@@ -3276,10 +3379,33 @@ fn[C] compute_grid_layout_with_measure(
       Some(v) => v
       None => default_justify_items
     }
+    let stretch_fit_limit_w = if col_span == 1 {
+      match child.style.overflow.x {
+        OverflowVisible => None
+        _ =>
+          match col_tracks[col] {
+            DimFitContent(limit) =>
+              resolve_optional_dimension(limit, AvailDefinite(content_width))
+            _ => None
+          }
+      }
+    } else {
+      None
+    }
     let known_w = match justify {
       ItemsStretch =>
         if child.style.size.width is DimAuto && !has_auto_margin_x {
-          Some(available_w_for_item)
+          match stretch_fit_limit_w {
+            Some(limit_w) =>
+              Some(
+                if limit_w < available_w_for_item {
+                  limit_w
+                } else {
+                  available_w_for_item
+                },
+              )
+            None => Some(available_w_for_item)
+          }
         } else {
           None
         }
@@ -3401,10 +3527,36 @@ fn[C] compute_grid_layout_with_measure(
           Some(v) => v
           None => default_align_items
         }
+        let stretch_fit_limit_w = if col_span == 1 {
+          match child.style.overflow.x {
+            OverflowVisible => None
+            _ =>
+              match col_tracks[col] {
+                DimFitContent(limit) =>
+                  resolve_optional_dimension(
+                    limit,
+                    AvailDefinite(content_width),
+                  )
+                _ => None
+              }
+          }
+        } else {
+          None
+        }
         let mut known_w = match justify {
           ItemsStretch =>
             if child.style.size.width is DimAuto && !has_auto_margin_x {
-              Some(available_w_for_item)
+              match stretch_fit_limit_w {
+                Some(limit_w) =>
+                  Some(
+                    if limit_w < available_w_for_item {
+                      limit_w
+                    } else {
+                      available_w_for_item
+                    },
+                  )
+                None => Some(available_w_for_item)
+              }
             } else {
               None
             }

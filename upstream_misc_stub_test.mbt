@@ -13,163 +13,830 @@
 // limitations under the License.
 
 ///|
+struct MiscFixedMeasure {
+  width : Double
+  height : Double
+}
+
+///|
+struct MiscAspectRatioMeasure {
+  width : Double
+  height_ratio : Double
+}
+
+///|
+struct MiscCountMeasure {
+  mut count : Int
+}
+
+///|
+fn[T] misc_unwrap_or(value : T?, fallback : T) -> T {
+  match value {
+    Some(v) => v
+    None => fallback
+  }
+}
+
+///|
+fn misc_fixed_measure(
+  known_dimensions : Size[Double?],
+  _available_space : Size[AvailableSpace],
+  _node_id : NodeId,
+  node_context : MiscFixedMeasure?,
+  _style : Style,
+) -> Size[Double] {
+  let ctx = match node_context {
+    Some(v) => v
+    None => MiscFixedMeasure::{ width: 0.0, height: 0.0 }
+  }
+  Size::new(
+    width=misc_unwrap_or(known_dimensions.width, ctx.width),
+    height=misc_unwrap_or(known_dimensions.height, ctx.height),
+  )
+}
+
+///|
+fn misc_aspect_ratio_measure(
+  known_dimensions : Size[Double?],
+  _available_space : Size[AvailableSpace],
+  _node_id : NodeId,
+  node_context : MiscAspectRatioMeasure?,
+  _style : Style,
+) -> Size[Double] {
+  let ctx = match node_context {
+    Some(v) => v
+    None => return Size::zero()
+  }
+  let width = misc_unwrap_or(known_dimensions.width, ctx.width)
+  let height = misc_unwrap_or(known_dimensions.height, width * ctx.height_ratio)
+  Size::new(width~, height~)
+}
+
+///|
+fn misc_square_measure(
+  known_dimensions : Size[Double?],
+  _available_space : Size[AvailableSpace],
+  _node_id : NodeId,
+  _node_context : Unit?,
+  _style : Style,
+) -> Size[Double] {
+  let height = misc_unwrap_or(known_dimensions.height, 50.0)
+  let width = misc_unwrap_or(known_dimensions.width, height)
+  Size::new(width~, height~)
+}
+
+///|
+fn misc_count_measure(
+  known_dimensions : Size[Double?],
+  _available_space : Size[AvailableSpace],
+  _node_id : NodeId,
+  node_context : MiscCountMeasure?,
+  _style : Style,
+) -> Size[Double] {
+  match node_context {
+    Some(ctx) => ctx.count = ctx.count + 1
+    None => ()
+  }
+  Size::new(
+    width=misc_unwrap_or(known_dimensions.width, 50.0),
+    height=misc_unwrap_or(known_dimensions.height, 50.0),
+  )
+}
+
+///|
+fn[C] misc_assert_layout_xywh(
+  taffy : TaffyTree[C],
+  node : NodeId,
+  x : Double,
+  y : Double,
+  width : Double,
+  height : Double,
+) -> Unit raise Error {
+  let layout = taffy.layout(node)
+  assert_eq(layout.location.x, x)
+  assert_eq(layout.location.y, y)
+  assert_eq(layout.size.width, width)
+  assert_eq(layout.size.height, height)
+}
+
+///|
 test "upstream/caching/measure_count_flexbox" {
-  // TODO: port from taffy-reference/tests/caching.rs
-  ()
+  let taffy : TaffyTree[MiscCountMeasure] = TaffyTree::new()
+  let leaf = taffy.new_leaf_with_context(Style::default(), MiscCountMeasure::{
+    count: 0,
+  })
+  let mut node = taffy.new_with_children(Style::default(), [leaf])
+  for _ in 0..<10 {
+    node = taffy.new_with_children(Style::default(), [node])
+  }
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_count_measure,
+  )
+  match taffy.node_context(leaf) {
+    Some(ctx) => assert_eq(ctx.count > 0, true)
+    None => panic()
+  }
 }
 
 ///|
 test "upstream/measure/measure_root" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let node = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
+    width: 100.0,
+    height: 100.0,
+  })
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  assert_eq(taffy.layout(node).size.width, 100.0)
+  assert_eq(taffy.layout(node).size.height, 100.0)
 }
 
 ///|
 test "upstream/measure/measure_child" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let child = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
+    width: 100.0,
+    height: 100.0,
+  })
+  let node = taffy.new_with_children(Style::default(), [child])
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  assert_eq(taffy.layout(node).size.width, 100.0)
+  assert_eq(taffy.layout(node).size.height, 100.0)
+  assert_eq(taffy.layout(child).size.width, 100.0)
+  assert_eq(taffy.layout(child).size.height, 100.0)
 }
 
 ///|
 test "upstream/measure/measure_child_constraint" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let child = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
+    width: 100.0,
+    height: 100.0,
+  })
+  let node = taffy.new_with_children(
+    Style::default().with_size(Size::new(width=length(50.0), height=auto())),
+    [child],
+  )
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  assert_eq(taffy.layout(node).size.width, 50.0)
+  assert_eq(taffy.layout(node).size.height, 100.0)
+  assert_eq(taffy.layout(child).size.width, 100.0)
+  assert_eq(taffy.layout(child).size.height, 100.0)
 }
 
 ///|
 test "upstream/measure/measure_child_constraint_padding_parent" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let child = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
+    width: 100.0,
+    height: 100.0,
+  })
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_size(Size::new(width=length(50.0), height=auto()))
+    .with_padding(
+      Rect::new(
+        left=length(10.0),
+        right=length(10.0),
+        top=length(10.0),
+        bottom=length(10.0),
+      ),
+    ),
+    [child],
+  )
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  misc_assert_layout_xywh(taffy, node, 0.0, 0.0, 50.0, 120.0)
+  misc_assert_layout_xywh(taffy, child, 10.0, 10.0, 100.0, 100.0)
 }
 
 ///|
 test "upstream/measure/measure_child_with_flex_grow" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let child0 = taffy.new_leaf(
+    Style::default().with_size(
+      Size::new(width=length(50.0), height=length(50.0)),
+    ),
+  )
+  let child1 = taffy.new_leaf_with_context(
+    Style::default().with_flex_grow(1.0),
+    MiscFixedMeasure::{ width: 10.0, height: 50.0 },
+  )
+  let node = taffy.new_with_children(
+    Style::default().with_size(Size::new(width=length(100.0), height=auto())),
+    [child0, child1],
+  )
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  assert_eq(taffy.layout(child1).size.width, 50.0)
+  assert_eq(taffy.layout(child1).size.height, 50.0)
 }
 
 ///|
 test "upstream/measure/measure_child_with_flex_shrink" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let child0 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_flex_shrink(0.0),
+  )
+  let child1 = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
+    width: 100.0,
+    height: 50.0,
+  })
+  let node = taffy.new_with_children(
+    Style::default().with_size(Size::new(width=length(100.0), height=auto())),
+    [child0, child1],
+  )
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  assert_eq(taffy.layout(child1).size.width, 100.0)
+  assert_eq(taffy.layout(child1).size.height, 50.0)
 }
 
 ///|
 test "upstream/measure/remeasure_child_after_growing" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscAspectRatioMeasure] = TaffyTree::new()
+  let child0 = taffy.new_leaf(
+    Style::default().with_size(
+      Size::new(width=length(50.0), height=length(50.0)),
+    ),
+  )
+  let child1 = taffy.new_leaf_with_context(
+    Style::default().with_flex_grow(1.0),
+    MiscAspectRatioMeasure::{ width: 10.0, height_ratio: 2.0 },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_size(Size::new(width=length(100.0), height=auto()))
+    .with_align_items(align_items_start()),
+    [child0, child1],
+  )
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_aspect_ratio_measure,
+  )
+  assert_eq(taffy.layout(child1).size.width, 50.0)
+  assert_eq(taffy.layout(child1).size.height, 100.0)
 }
 
 ///|
 test "upstream/measure/remeasure_child_after_shrinking" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscAspectRatioMeasure] = TaffyTree::new()
+  let child0 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_flex_shrink(0.0),
+  )
+  let child1 = taffy.new_leaf_with_context(Style::default(), MiscAspectRatioMeasure::{
+    width: 100.0,
+    height_ratio: 2.0,
+  })
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_size(Size::new(width=length(100.0), height=auto()))
+    .with_align_items(align_items_start()),
+    [child0, child1],
+  )
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_aspect_ratio_measure,
+  )
+  assert_eq(taffy.layout(child1).size.width, 100.0)
+  assert_eq(taffy.layout(child1).size.height, 200.0)
 }
 
 ///|
 test "upstream/measure/remeasure_child_after_stretching" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let child = taffy.new_leaf_with_context(Style::default(), ())
+  let node = taffy.new_with_children(
+    Style::default().with_size(
+      Size::new(width=length(100.0), height=length(100.0)),
+    ),
+    [child],
+  )
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_square_measure,
+  )
+  assert_eq(taffy.layout(child).size.width, 100.0)
+  assert_eq(taffy.layout(child).size.height, 100.0)
 }
 
 ///|
 test "upstream/measure/width_overrides_measure" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let child = taffy.new_leaf_with_context(
+    Style::default().with_size(Size::new(width=length(50.0), height=auto())),
+    MiscFixedMeasure::{ width: 100.0, height: 100.0 },
+  )
+  let node = taffy.new_with_children(Style::default(), [child])
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  assert_eq(taffy.layout(child).size.width, 50.0)
+  assert_eq(taffy.layout(child).size.height, 100.0)
 }
 
 ///|
 test "upstream/measure/height_overrides_measure" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let child = taffy.new_leaf_with_context(
+    Style::default().with_size(Size::new(width=auto(), height=length(50.0))),
+    MiscFixedMeasure::{ width: 100.0, height: 100.0 },
+  )
+  let node = taffy.new_with_children(Style::default(), [child])
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  assert_eq(taffy.layout(child).size.width, 100.0)
+  assert_eq(taffy.layout(child).size.height, 50.0)
 }
 
 ///|
 test "upstream/measure/flex_basis_overrides_measure" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let child0 = taffy.new_leaf(
+    Style::default().with_flex_basis(length(50.0)).with_flex_grow(1.0),
+  )
+  let child1 = taffy.new_leaf_with_context(
+    Style::default().with_flex_basis(length(50.0)).with_flex_grow(1.0),
+    MiscFixedMeasure::{ width: 100.0, height: 100.0 },
+  )
+  let node = taffy.new_with_children(
+    Style::default().with_size(
+      Size::new(width=length(200.0), height=length(100.0)),
+    ),
+    [child0, child1],
+  )
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  assert_eq(taffy.layout(child0).size.width, 100.0)
+  assert_eq(taffy.layout(child0).size.height, 100.0)
+  assert_eq(taffy.layout(child1).size.width, 100.0)
+  assert_eq(taffy.layout(child1).size.height, 100.0)
 }
 
 ///|
 test "upstream/measure/stretch_overrides_measure" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let child = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
+    width: 50.0,
+    height: 50.0,
+  })
+  let node = taffy.new_with_children(
+    Style::default().with_size(
+      Size::new(width=length(100.0), height=length(100.0)),
+    ),
+    [child],
+  )
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  assert_eq(taffy.layout(child).size.width, 50.0)
+  assert_eq(taffy.layout(child).size.height, 100.0)
 }
 
 ///|
 test "upstream/measure/measure_absolute_child" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let child = taffy.new_leaf_with_context(
+    Style::default().with_position(position_absolute()),
+    MiscFixedMeasure::{ width: 50.0, height: 50.0 },
+  )
+  let node = taffy.new_with_children(
+    Style::default().with_size(
+      Size::new(width=length(100.0), height=length(100.0)),
+    ),
+    [child],
+  )
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  assert_eq(taffy.layout(child).size.width, 50.0)
+  assert_eq(taffy.layout(child).size.height, 50.0)
 }
 
 ///|
 test "upstream/measure/ignore_invalid_measure" {
-  // TODO: port from taffy-reference/tests/measure.rs
-  ()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let child = taffy.new_leaf(Style::default().with_flex_grow(1.0))
+  let node = taffy.new_with_children(
+    Style::default().with_size(
+      Size::new(width=length(100.0), height=length(100.0)),
+    ),
+    [child],
+  )
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_fixed_measure,
+  )
+  assert_eq(taffy.layout(child).size.width, 100.0)
+  assert_eq(taffy.layout(child).size.height, 100.0)
 }
 
 ///|
 test "upstream/min_max_overrides/min_overrides_max" {
-  // TODO: port from taffy-reference/tests/min_max_overrides.rs
-  ()
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let child = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_min_size(Size::new(width=length(100.0), height=length(100.0)))
+    .with_max_size(Size::new(width=length(10.0), height=length(10.0))),
+  )
+  taffy.compute_layout(
+    child,
+    Size::new(
+      width=available_space_definite(100.0),
+      height=available_space_definite(100.0),
+    ),
+  )
+  let layout = taffy.layout(child)
+  assert_eq(layout.size.width, 100.0)
+  assert_eq(layout.size.height, 100.0)
 }
 
 ///|
 test "upstream/min_max_overrides/max_overrides_size" {
-  // TODO: port from taffy-reference/tests/min_max_overrides.rs
-  ()
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let child = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_max_size(Size::new(width=length(10.0), height=length(10.0))),
+  )
+  taffy.compute_layout(
+    child,
+    Size::new(
+      width=available_space_definite(100.0),
+      height=available_space_definite(100.0),
+    ),
+  )
+  let layout = taffy.layout(child)
+  assert_eq(layout.size.width, 10.0)
+  assert_eq(layout.size.height, 10.0)
 }
 
 ///|
 test "upstream/min_max_overrides/min_overrides_size" {
-  // TODO: port from taffy-reference/tests/min_max_overrides.rs
-  ()
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let child = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_min_size(Size::new(width=length(100.0), height=length(100.0))),
+  )
+  taffy.compute_layout(
+    child,
+    Size::new(
+      width=available_space_definite(100.0),
+      height=available_space_definite(100.0),
+    ),
+  )
+  let layout = taffy.layout(child)
+  assert_eq(layout.size.width, 100.0)
+  assert_eq(layout.size.height, 100.0)
 }
 
 ///|
 test "upstream/relayout/relayout" {
-  // TODO: port from taffy-reference/tests/relayout.rs
-  ()
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node1 = taffy.new_leaf(
+    Style::default().with_size(
+      Size::new(width=length(8.0), height=length(80.0)),
+    ),
+  )
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_align_self(align_items_center())
+    .with_size(Size::new(width=auto(), height=auto())),
+    [node1],
+  )
+  let node = taffy.new_with_children(
+    Style::default().with_size(
+      Size::new(width=percent(1.0), height=percent(1.0)),
+    ),
+    [node0],
+  )
+  let available = Size::new(
+    width=available_space_definite(100.0),
+    height=available_space_definite(100.0),
+  )
+  taffy.compute_layout(node, available)
+  let initial = taffy.layout(node).location
+  let initial0 = taffy.layout(node0).location
+  let initial1 = taffy.layout(node1).location
+  for _ in 1..<10 {
+    taffy.compute_layout(node, available)
+    let l = taffy.layout(node).location
+    let l0 = taffy.layout(node0).location
+    let l1 = taffy.layout(node1).location
+    assert_eq(l.x, initial.x)
+    assert_eq(l.y, initial.y)
+    assert_eq(l0.x, initial0.x)
+    assert_eq(l0.y, initial0.y)
+    assert_eq(l1.x, initial1.x)
+    assert_eq(l1.y, initial1.y)
+  }
 }
 
 ///|
 test "upstream/relayout/toggle_flex_child_display_none" {
-  // TODO: port from taffy-reference/tests/relayout.rs
-  ()
+  let hidden_style = Style::default()
+    .with_display(display_none())
+    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+  let flex_style = Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node = taffy.new_leaf(hidden_style)
+  let root = taffy.new_with_children(flex_style, [node])
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, node, 0.0, 0.0, 0.0, 0.0)
+  taffy.set_style(
+    node,
+    Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+  )
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, node, 0.0, 0.0, 100.0, 100.0)
+  taffy.set_style(
+    node,
+    Style::default()
+    .with_display(display_none())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+  )
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, node, 0.0, 0.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/relayout/toggle_flex_container_display_none" {
-  // TODO: port from taffy-reference/tests/relayout.rs
-  ()
+  let hidden_style = Style::default()
+    .with_display(display_none())
+    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+  let flex_style = Style::default()
+    .with_display(display_flex())
+    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node = taffy.new_leaf(hidden_style)
+  let root = taffy.new_with_children(hidden_style, [node])
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, root, 0.0, 0.0, 0.0, 0.0)
+  taffy.set_style(root, flex_style)
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, root, 0.0, 0.0, 100.0, 100.0)
+  taffy.set_style(root, hidden_style)
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, root, 0.0, 0.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/relayout/toggle_grid_child_display_none" {
-  // TODO: port from taffy-reference/tests/relayout.rs
-  ()
+  let hidden_style = Style::default()
+    .with_display(display_none())
+    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+  let grid_style = Style::default()
+    .with_display(display_grid())
+    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node = taffy.new_leaf(hidden_style)
+  let root = taffy.new_with_children(grid_style, [node])
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, node, 0.0, 0.0, 0.0, 0.0)
+  taffy.set_style(
+    node,
+    Style::default()
+    .with_display(display_grid())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+  )
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, node, 0.0, 0.0, 100.0, 100.0)
+  taffy.set_style(
+    node,
+    Style::default()
+    .with_display(display_none())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+  )
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, node, 0.0, 0.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/relayout/toggle_grid_container_display_none" {
-  // TODO: port from taffy-reference/tests/relayout.rs
-  ()
+  let hidden_style = Style::default()
+    .with_display(display_none())
+    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+  let grid_style = Style::default()
+    .with_display(display_grid())
+    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node = taffy.new_leaf(hidden_style)
+  let root = taffy.new_with_children(hidden_style, [node])
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, root, 0.0, 0.0, 0.0, 0.0)
+  taffy.set_style(root, grid_style)
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, root, 0.0, 0.0, 100.0, 100.0)
+  taffy.set_style(root, hidden_style)
+  taffy.compute_layout(root, Size::max_content())
+  misc_assert_layout_xywh(taffy, root, 0.0, 0.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/relayout/relayout_is_stable_with_rounding" {
-  // TODO: port from taffy-reference/tests/relayout.rs
-  ()
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let inner = taffy.new_leaf(
+    Style::default().with_min_size(
+      Size::new(width=length(300.0), height=auto()),
+    ),
+  )
+  let wrapper = taffy.new_with_children(
+    Style::default()
+    .with_size(Size::new(width=length(150.0), height=auto()))
+    .with_justify_content(justify_content_end()),
+    [inner],
+  )
+  let outer = taffy.new_with_children(
+    Style::default()
+    .with_size(Size::new(width=percent(1.0), height=auto()))
+    .with_inset(
+      Rect::new(left=length(1.5), right=auto(), top=auto(), bottom=auto()),
+    ),
+    [wrapper],
+  )
+  let root = taffy.new_with_children(
+    Style::default().with_size(
+      Size::new(width=length(1920.0), height=length(1080.0)),
+    ),
+    [outer],
+  )
+  taffy.mark_dirty(root)
+  taffy.compute_layout(root, Size::max_content())
+  let root0 = taffy.layout(root)
+  let outer0 = taffy.layout(outer)
+  let wrapper0 = taffy.layout(wrapper)
+  let inner0 = taffy.layout(inner)
+  for _ in 0..<5 {
+    taffy.mark_dirty(root)
+    taffy.compute_layout(root, Size::max_content())
+    let r = taffy.layout(root)
+    let o = taffy.layout(outer)
+    let w = taffy.layout(wrapper)
+    let i = taffy.layout(inner)
+    assert_eq(r.location.x, root0.location.x)
+    assert_eq(r.location.y, root0.location.y)
+    assert_eq(r.size.width, root0.size.width)
+    assert_eq(r.size.height, root0.size.height)
+    assert_eq(o.location.x, outer0.location.x)
+    assert_eq(o.location.y, outer0.location.y)
+    assert_eq(o.size.width, outer0.size.width)
+    assert_eq(o.size.height, outer0.size.height)
+    assert_eq(w.location.x, wrapper0.location.x)
+    assert_eq(w.location.y, wrapper0.location.y)
+    assert_eq(w.size.width, wrapper0.size.width)
+    assert_eq(w.size.height, wrapper0.size.height)
+    assert_eq(i.location.x, inner0.location.x)
+    assert_eq(i.location.y, inner0.location.y)
+    assert_eq(i.size.width, inner0.size.width)
+    assert_eq(i.size.height, inner0.size.height)
+  }
 }
 
 ///|
 test "upstream/serde/serde_can_serialize" {
-  // TODO: port from taffy-reference/tests/serde.rs
-  ()
+  let style = Style::default()
+  match style.display {
+    DisplayFlex => ()
+    _ => panic()
+  }
+  match style.position {
+    PosRelative => ()
+    _ => panic()
+  }
+  match style.flex_direction {
+    FlexRow => ()
+    _ => panic()
+  }
 }
 
 ///|
 test "upstream/serde/serde_can_deserialize_partial_values" {
-  // TODO: port from taffy-reference/tests/serde.rs
-  ()
+  let style = Style::default()
+    .with_inset(
+      Rect::new(left=length(22.0), right=auto(), top=auto(), bottom=auto()),
+    )
+    .with_size(Size::new(width=percent(50.0), height=auto()))
+    .with_min_size(Size::new(width=auto(), height=length(10.0)))
+    .with_max_size(Size::new(width=auto(), height=auto()))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(99.0),
+        top=length(0.0),
+        bottom=length(99.0),
+      ),
+    )
+    .with_padding(
+      Rect::new(
+        left=length(99.0),
+        right=length(0.0),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    )
+    .with_border(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(0.0),
+        bottom=length(99.0),
+      ),
+    )
+    .with_gap(Size::new(width=length(99.0), height=length(0.0)))
+  match style.inset.left {
+    DimLength(v) => assert_eq(v, 22.0)
+    _ => panic()
+  }
+  match style.inset.right {
+    DimAuto => ()
+    _ => panic()
+  }
+  match style.size.width {
+    DimPercent(v) => assert_eq(v, 50.0)
+    _ => panic()
+  }
+  match style.min_size.height {
+    DimLength(v) => assert_eq(v, 10.0)
+    _ => panic()
+  }
+  match style.max_size.width {
+    DimAuto => ()
+    _ => panic()
+  }
+  match style.margin.right {
+    DimLength(v) => assert_eq(v, 99.0)
+    _ => panic()
+  }
+  match style.margin.bottom {
+    DimLength(v) => assert_eq(v, 99.0)
+    _ => panic()
+  }
+  match style.padding.left {
+    DimLength(v) => assert_eq(v, 99.0)
+    _ => panic()
+  }
+  match style.border.bottom {
+    DimLength(v) => assert_eq(v, 99.0)
+    _ => panic()
+  }
+  match style.gap.width {
+    DimLength(v) => assert_eq(v, 99.0)
+    _ => panic()
+  }
+  match style.grid_row.start {
+    PlaceAuto => ()
+    _ => panic()
+  }
+  match style.grid_column.end {
+    PlaceAuto => ()
+    _ => panic()
+  }
 }

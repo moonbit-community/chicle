@@ -468,6 +468,21 @@ pub fn[C] TaffyTree::clear_node_context(
 }
 
 ///|
+pub fn[C] TaffyTree::node_context(
+  self : TaffyTree[C],
+  node : NodeId,
+) -> C? raise TaffyError {
+  let node_ref = match self.nodes.get(node) {
+    Some(n) => n
+    None => raise InvalidNodeId(node)
+  }
+  if not(node_ref.alive) {
+    raise InvalidNodeId(node)
+  }
+  node_ref.context
+}
+
+///|
 pub fn[C] TaffyTree::layout(
   self : TaffyTree[C],
   node : NodeId,
@@ -5713,6 +5728,9 @@ fn[C] compute_flex_layout_with_measure(
   )
   let baseline_offsets : Array[Double] = Array::make(flow_count, 0.0)
   let base_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
+  let main_size_is_known_constraint : Array[Bool] = Array::make(
+    flow_count, false,
+  )
   let min_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
   let max_main_sizes : Array[Double?] = Array::make(flow_count, None)
   let mut total_base_main = 0.0
@@ -5843,6 +5861,8 @@ fn[C] compute_flex_layout_with_measure(
             }
         }
     }
+    main_size_is_known_constraint[i] = basis is Some(_) ||
+      main_from_size is Some(_)
     base_main_sizes[i] = main
     max_main_sizes[i] = max_from_style
     let cross_from_size = if is_col {
@@ -6370,9 +6390,55 @@ fn[C] compute_flex_layout_with_measure(
             actual_gap_main
           pos
         }
-        let child_size = make_size_from_main_cross(
-          main_size, cross_size, is_col,
-        )
+        let has_measure_context = tree.nodes[child_id].context is Some(_)
+        let known_width = if has_measure_context {
+          let main_changed = abs_double(main_size - base_main_sizes[idx]) >
+            0.0001
+          let main_known = if main_size_is_known_constraint[idx] || main_changed {
+            Some(main_size)
+          } else {
+            None
+          }
+          let cross_known = if !cross_is_auto[idx] {
+            Some(cross_size)
+          } else {
+            match align {
+              ItemsStretch => Some(cross_size)
+              _ => None
+            }
+          }
+          if is_col {
+            cross_known
+          } else {
+            main_known
+          }
+        } else {
+          Some(if is_col { cross_size } else { main_size })
+        }
+        let known_height = if has_measure_context {
+          let main_changed = abs_double(main_size - base_main_sizes[idx]) >
+            0.0001
+          let main_known = if main_size_is_known_constraint[idx] || main_changed {
+            Some(main_size)
+          } else {
+            None
+          }
+          let cross_known = if !cross_is_auto[idx] {
+            Some(cross_size)
+          } else {
+            match align {
+              ItemsStretch => Some(cross_size)
+              _ => None
+            }
+          }
+          if is_col {
+            main_known
+          } else {
+            cross_known
+          }
+        } else {
+          Some(if is_col { main_size } else { cross_size })
+        }
         let child_origin = if is_col {
           Point::new(x=base_x + cross_offset, y=base_y + main_pos)
         } else {
@@ -6381,10 +6447,7 @@ fn[C] compute_flex_layout_with_measure(
         compute_node_layout_with_measure(
           tree,
           child_id,
-          Size::new(
-            width=Some(child_size.width),
-            height=Some(child_size.height),
-          ),
+          Size::new(width=known_width, height=known_height),
           child_available_for_final,
           child_origin,
           measure_function,
@@ -6611,7 +6674,53 @@ fn[C] compute_flex_layout_with_measure(
           actual_gap_main
         pos
       }
-      let child_size = make_size_from_main_cross(main_size, cross_size, is_col)
+      let has_measure_context = tree.nodes[child_id].context is Some(_)
+      let known_width = if has_measure_context {
+        let main_changed = abs_double(main_size - base_main_sizes[i]) > 0.0001
+        let main_known = if main_size_is_known_constraint[i] || main_changed {
+          Some(main_size)
+        } else {
+          None
+        }
+        let cross_known = if !cross_is_auto[i] {
+          Some(cross_size)
+        } else {
+          match align {
+            ItemsStretch => Some(cross_size)
+            _ => None
+          }
+        }
+        if is_col {
+          cross_known
+        } else {
+          main_known
+        }
+      } else {
+        Some(if is_col { cross_size } else { main_size })
+      }
+      let known_height = if has_measure_context {
+        let main_changed = abs_double(main_size - base_main_sizes[i]) > 0.0001
+        let main_known = if main_size_is_known_constraint[i] || main_changed {
+          Some(main_size)
+        } else {
+          None
+        }
+        let cross_known = if !cross_is_auto[i] {
+          Some(cross_size)
+        } else {
+          match align {
+            ItemsStretch => Some(cross_size)
+            _ => None
+          }
+        }
+        if is_col {
+          main_known
+        } else {
+          cross_known
+        }
+      } else {
+        Some(if is_col { main_size } else { cross_size })
+      }
       let child_origin = if is_col {
         Point::new(x=base_x + cross_offset, y=base_y + main_pos)
       } else {
@@ -6620,7 +6729,7 @@ fn[C] compute_flex_layout_with_measure(
       compute_node_layout_with_measure(
         tree,
         child_id,
-        Size::new(width=Some(child_size.width), height=Some(child_size.height)),
+        Size::new(width=known_width, height=known_height),
         child_available_for_final,
         child_origin,
         measure_function,

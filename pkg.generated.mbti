@@ -350,6 +350,7 @@ pub fn[C] TaffyTree::new() -> Self[C]
 pub fn[C] TaffyTree::new_leaf(Self[C], Style) -> Int
 pub fn[C] TaffyTree::new_leaf_with_context(Self[C], Style, C) -> Int
 pub fn[C] TaffyTree::new_with_children(Self[C], Style, Array[Int]) -> Int
+pub fn[C] TaffyTree::node_context(Self[C], Int) -> C? raise TaffyError
 pub fn[C] TaffyTree::remove(Self[C], Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::remove_child(Self[C], Int, Int) -> Int raise TaffyError
 pub fn[C] TaffyTree::remove_subtree(Self[C], Int) -> Unit raise TaffyError

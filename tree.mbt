@@ -3410,9 +3410,11 @@ fn[C] compute_grid_layout_with_measure(
             }
           _ => None
         }
-        let known_h = match align {
+        let mut known_h = match align {
           ItemsStretch =>
-            if child.style.size.height is DimAuto && !has_auto_margin_y {
+            if child.style.size.height is DimAuto &&
+              !has_auto_margin_y &&
+              child.style.aspect_ratio is None {
               Some(available_h_for_item)
             } else {
               None
@@ -3430,6 +3432,28 @@ fn[C] compute_grid_layout_with_measure(
           measure_function,
           false,
         )
+        match (align, child.style.aspect_ratio, child.style.size.height) {
+          (ItemsStretch, Some(ratio), DimAuto) =>
+            if ratio > 0.0 &&
+              known_w is Some(_) &&
+              known_h is None &&
+              !has_auto_margin_y {
+              let stretched_width = tree.nodes[child_id].layout.size.width
+              known_h = Some((stretched_width / ratio).round())
+              compute_node_layout_with_measure(
+                tree,
+                child_id,
+                Size::new(width=known_w, height=known_h),
+                item_available,
+                Point::zero(),
+                measure_function,
+                false,
+              )
+            } else {
+              ()
+            }
+          _ => ()
+        }
         let intrinsic = tree.nodes[child_id].layout.size
         let free_x = max_double(available_w_for_item - intrinsic.width, 0.0)
         let free_y = max_double(available_h_for_item - intrinsic.height, 0.0)

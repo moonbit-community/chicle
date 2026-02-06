@@ -7035,8 +7035,206 @@ test "upstream/generated/block/block_margin_y_first_child_collapse_positive_pare
 
 ///|
 test "upstream/generated/block/block_margin_y_first_granchild_collapse_positive_and_negative" {
-  // TODO: port from taffy-reference/tests/generated/block/block_margin_y_first_granchild_collapse_positive_and_negative.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_margin_y_first_granchild_collapse_positive_and_negative.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0000 = taffy.new_leaf(
+    Style::default().with_size(Size::new(width=auto(), height=length(10.0))),
+  )
+  let node000 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(-10.0),
+        bottom=length(0.0),
+      ),
+    ),
+    [node0000],
+  )
+  let node00 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(10.0),
+        bottom=length(0.0),
+      ),
+    ),
+    [node000],
+  )
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(-10.0),
+        bottom=length(0.0),
+      ),
+    ),
+    [node00],
+  )
+  let node1000 = taffy.new_leaf(
+    Style::default().with_size(Size::new(width=auto(), height=length(10.0))),
+  )
+  let node100 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(-2.0),
+        bottom=length(0.0),
+      ),
+    ),
+    [node1000],
+  )
+  let node10 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(5.0),
+        bottom=length(0.0),
+      ),
+    ),
+    [node100],
+  )
+  let node1 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(-10.0),
+        bottom=length(0.0),
+      ),
+    ),
+    [node10],
+  )
+  let node2000 = taffy.new_leaf(
+    Style::default().with_size(Size::new(width=auto(), height=length(10.0))),
+  )
+  let node200 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(15.0),
+        bottom=length(0.0),
+      ),
+    ),
+    [node2000],
+  )
+  let node20 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(5.0),
+        bottom=length(0.0),
+      ),
+    ),
+    [node200],
+  )
+  let node2 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(-10.0),
+        bottom=length(0.0),
+      ),
+    ),
+    [node20],
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=auto())),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 50.0)
+  assert_eq(l_node.size.height, 30.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l_node0 = taffy.layout(node0)
+  assert_eq(l_node0.size.width, 50.0)
+  assert_eq(l_node0.size.height, 10.0)
+  assert_eq(l_node0.location.x, 0.0)
+  assert_eq(l_node0.location.y, 0.0)
+  let l_node00 = taffy.layout(node00)
+  assert_eq(l_node00.size.width, 50.0)
+  assert_eq(l_node00.size.height, 10.0)
+  assert_eq(l_node00.location.x, 0.0)
+  assert_eq(l_node00.location.y, 0.0)
+  let l_node000 = taffy.layout(node000)
+  assert_eq(l_node000.size.width, 50.0)
+  assert_eq(l_node000.size.height, 10.0)
+  assert_eq(l_node000.location.x, 0.0)
+  assert_eq(l_node000.location.y, 0.0)
+  let l_node0000 = taffy.layout(node0000)
+  assert_eq(l_node0000.size.width, 50.0)
+  assert_eq(l_node0000.size.height, 10.0)
+  assert_eq(l_node0000.location.x, 0.0)
+  assert_eq(l_node0000.location.y, 0.0)
+  let l_node1 = taffy.layout(node1)
+  assert_eq(l_node1.size.width, 50.0)
+  assert_eq(l_node1.size.height, 10.0)
+  assert_eq(l_node1.location.x, 0.0)
+  assert_eq(l_node1.location.y, 5.0)
+  let l_node10 = taffy.layout(node10)
+  assert_eq(l_node10.size.width, 50.0)
+  assert_eq(l_node10.size.height, 10.0)
+  assert_eq(l_node10.location.x, 0.0)
+  assert_eq(l_node10.location.y, 0.0)
+  let l_node100 = taffy.layout(node100)
+  assert_eq(l_node100.size.width, 50.0)
+  assert_eq(l_node100.size.height, 10.0)
+  assert_eq(l_node100.location.x, 0.0)
+  assert_eq(l_node100.location.y, 0.0)
+  let l_node1000 = taffy.layout(node1000)
+  assert_eq(l_node1000.size.width, 50.0)
+  assert_eq(l_node1000.size.height, 10.0)
+  assert_eq(l_node1000.location.x, 0.0)
+  assert_eq(l_node1000.location.y, 0.0)
+  let l_node2 = taffy.layout(node2)
+  assert_eq(l_node2.size.width, 50.0)
+  assert_eq(l_node2.size.height, 10.0)
+  assert_eq(l_node2.location.x, 0.0)
+  assert_eq(l_node2.location.y, 20.0)
+  let l_node20 = taffy.layout(node20)
+  assert_eq(l_node20.size.width, 50.0)
+  assert_eq(l_node20.size.height, 10.0)
+  assert_eq(l_node20.location.x, 0.0)
+  assert_eq(l_node20.location.y, 0.0)
+  let l_node200 = taffy.layout(node200)
+  assert_eq(l_node200.size.width, 50.0)
+  assert_eq(l_node200.size.height, 10.0)
+  assert_eq(l_node200.location.x, 0.0)
+  assert_eq(l_node200.location.y, 0.0)
+  let l_node2000 = taffy.layout(node2000)
+  assert_eq(l_node2000.size.width, 50.0)
+  assert_eq(l_node2000.size.height, 10.0)
+  assert_eq(l_node2000.location.x, 0.0)
+  assert_eq(l_node2000.location.y, 0.0)
 }
 
 ///|
@@ -8243,8 +8441,88 @@ test "upstream/generated/block/block_margin_y_last_granchild_collapse_positive_e
 
 ///|
 test "upstream/generated/block/block_margin_y_sibling_collapse_negative" {
-  // TODO: port from taffy-reference/tests/generated/block/block_margin_y_sibling_collapse_negative.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_margin_y_sibling_collapse_negative.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(-10.0),
+        bottom=length(-10.0),
+      ),
+    ),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(-10.0),
+        bottom=length(-10.0),
+      ),
+    ),
+  )
+  let node2 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(-5.0),
+        bottom=length(-5.0),
+      ),
+    ),
+  )
+  let node3 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(-10.0),
+        bottom=length(-10.0),
+      ),
+    ),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=auto())),
+    [node0, node1, node2, node3],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 50.0)
+  assert_eq(l_node.size.height, 0.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l_node0 = taffy.layout(node0)
+  assert_eq(l_node0.size.width, 50.0)
+  assert_eq(l_node0.size.height, 10.0)
+  assert_eq(l_node0.location.x, 0.0)
+  assert_eq(l_node0.location.y, -10.0)
+  let l_node1 = taffy.layout(node1)
+  assert_eq(l_node1.size.width, 50.0)
+  assert_eq(l_node1.size.height, 10.0)
+  assert_eq(l_node1.location.x, 0.0)
+  assert_eq(l_node1.location.y, -10.0)
+  let l_node2 = taffy.layout(node2)
+  assert_eq(l_node2.size.width, 50.0)
+  assert_eq(l_node2.size.height, 10.0)
+  assert_eq(l_node2.location.x, 0.0)
+  assert_eq(l_node2.location.y, -10.0)
+  let l_node3 = taffy.layout(node3)
+  assert_eq(l_node3.size.width, 50.0)
+  assert_eq(l_node3.size.height, 10.0)
+  assert_eq(l_node3.location.x, 0.0)
+  assert_eq(l_node3.location.y, -10.0)
 }
 
 ///|
@@ -8255,8 +8533,88 @@ test "upstream/generated/block/block_margin_y_sibling_collapse_negative_percenta
 
 ///|
 test "upstream/generated/block/block_margin_y_sibling_collapse_positive" {
-  // TODO: port from taffy-reference/tests/generated/block/block_margin_y_sibling_collapse_positive.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_margin_y_sibling_collapse_positive.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(10.0),
+        bottom=length(10.0),
+      ),
+    ),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(10.0),
+        bottom=length(10.0),
+      ),
+    ),
+  )
+  let node2 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(5.0),
+        bottom=length(5.0),
+      ),
+    ),
+  )
+  let node3 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(10.0),
+        bottom=length(10.0),
+      ),
+    ),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=auto())),
+    [node0, node1, node2, node3],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 50.0)
+  assert_eq(l_node.size.height, 90.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l_node0 = taffy.layout(node0)
+  assert_eq(l_node0.size.width, 50.0)
+  assert_eq(l_node0.size.height, 10.0)
+  assert_eq(l_node0.location.x, 0.0)
+  assert_eq(l_node0.location.y, 10.0)
+  let l_node1 = taffy.layout(node1)
+  assert_eq(l_node1.size.width, 50.0)
+  assert_eq(l_node1.size.height, 10.0)
+  assert_eq(l_node1.location.x, 0.0)
+  assert_eq(l_node1.location.y, 30.0)
+  let l_node2 = taffy.layout(node2)
+  assert_eq(l_node2.size.width, 50.0)
+  assert_eq(l_node2.size.height, 10.0)
+  assert_eq(l_node2.location.x, 0.0)
+  assert_eq(l_node2.location.y, 50.0)
+  let l_node3 = taffy.layout(node3)
+  assert_eq(l_node3.size.width, 50.0)
+  assert_eq(l_node3.size.height, 10.0)
+  assert_eq(l_node3.location.x, 0.0)
+  assert_eq(l_node3.location.y, 70.0)
 }
 
 ///|
@@ -8279,8 +8637,45 @@ test "upstream/generated/block/block_margin_y_sibling_collapse_positive_percenta
 
 ///|
 test "upstream/generated/block/block_margin_y_simple_negative" {
-  // TODO: port from taffy-reference/tests/generated/block/block_margin_y_simple_negative.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_margin_y_simple_negative.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(-10.0),
+        bottom=length(-10.0),
+      ),
+    ),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default().with_size(Size::new(width=auto(), height=length(10.0))),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=auto())),
+    [node0, node1],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 50.0)
+  assert_eq(l_node.size.height, 0.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l_node0 = taffy.layout(node0)
+  assert_eq(l_node0.size.width, 50.0)
+  assert_eq(l_node0.size.height, 10.0)
+  assert_eq(l_node0.location.x, 0.0)
+  assert_eq(l_node0.location.y, -10.0)
+  let l_node1 = taffy.layout(node1)
+  assert_eq(l_node1.size.width, 50.0)
+  assert_eq(l_node1.size.height, 10.0)
+  assert_eq(l_node1.location.x, 0.0)
+  assert_eq(l_node1.location.y, -10.0)
 }
 
 ///|
@@ -8297,8 +8692,45 @@ test "upstream/generated/block/block_margin_y_simple_negative_percentage_self" {
 
 ///|
 test "upstream/generated/block/block_margin_y_simple_positive" {
-  // TODO: port from taffy-reference/tests/generated/block/block_margin_y_simple_positive.rs
-  ()
+  // Ported from taffy-reference/tests/generated/block/block_margin_y_simple_positive.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_margin(
+      Rect::new(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(10.0),
+        bottom=length(10.0),
+      ),
+    ),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default().with_size(Size::new(width=auto(), height=length(10.0))),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_block())
+    .with_size(Size::new(width=length(50.0), height=auto())),
+    [node0, node1],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  let l_node = taffy.layout(node)
+  assert_eq(l_node.size.width, 50.0)
+  assert_eq(l_node.size.height, 40.0)
+  assert_eq(l_node.location.x, 0.0)
+  assert_eq(l_node.location.y, 0.0)
+  let l_node0 = taffy.layout(node0)
+  assert_eq(l_node0.size.width, 50.0)
+  assert_eq(l_node0.size.height, 10.0)
+  assert_eq(l_node0.location.x, 0.0)
+  assert_eq(l_node0.location.y, 10.0)
+  let l_node1 = taffy.layout(node1)
+  assert_eq(l_node1.size.width, 50.0)
+  assert_eq(l_node1.size.height, 10.0)
+  assert_eq(l_node1.location.x, 0.0)
+  assert_eq(l_node1.location.y, 30.0)
 }
 
 ///|

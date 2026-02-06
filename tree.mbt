@@ -48,6 +48,10 @@ priv struct NodeLayoutCacheEntry {
   size : Size[Double]
   effective_margin_top : Double
   effective_margin_bottom : Double
+  effective_margin_top_max_pos : Double
+  effective_margin_top_min_neg : Double
+  effective_margin_bottom_max_pos : Double
+  effective_margin_bottom_min_neg : Double
 }
 
 ///|
@@ -61,6 +65,10 @@ struct Node[C] {
   node_layout_cache : Array[NodeLayoutCacheEntry]
   mut effective_margin_top : Double
   mut effective_margin_bottom : Double
+  mut effective_margin_top_max_pos : Double
+  mut effective_margin_top_min_neg : Double
+  mut effective_margin_bottom_max_pos : Double
+  mut effective_margin_bottom_min_neg : Double
   mut alive : Bool
   mut dirty : Bool
 }
@@ -95,6 +103,10 @@ pub fn[C] TaffyTree::new_leaf(self : TaffyTree[C], style : Style) -> NodeId {
       node_layout_cache: [],
       effective_margin_top: 0.0,
       effective_margin_bottom: 0.0,
+      effective_margin_top_max_pos: 0.0,
+      effective_margin_top_min_neg: 0.0,
+      effective_margin_bottom_max_pos: 0.0,
+      effective_margin_bottom_min_neg: 0.0,
       alive: true,
       dirty: true,
     },
@@ -120,6 +132,10 @@ pub fn[C] TaffyTree::new_leaf_with_context(
       node_layout_cache: [],
       effective_margin_top: 0.0,
       effective_margin_bottom: 0.0,
+      effective_margin_top_max_pos: 0.0,
+      effective_margin_top_min_neg: 0.0,
+      effective_margin_bottom_max_pos: 0.0,
+      effective_margin_bottom_min_neg: 0.0,
       alive: true,
       dirty: true,
     },
@@ -145,6 +161,10 @@ pub fn[C] TaffyTree::new_with_children(
       node_layout_cache: [],
       effective_margin_top: 0.0,
       effective_margin_bottom: 0.0,
+      effective_margin_top_max_pos: 0.0,
+      effective_margin_top_min_neg: 0.0,
+      effective_margin_bottom_max_pos: 0.0,
+      effective_margin_bottom_min_neg: 0.0,
       alive: true,
       dirty: true,
     },
@@ -765,6 +785,60 @@ fn abs_double(v : Double) -> Double {
 }
 
 ///|
+fn margin_collapse_state_add_margin(
+  state : (Double, Double),
+  margin : Double,
+) -> (Double, Double) {
+  let mut max_pos = state.0
+  let mut min_neg = state.1
+  if margin > 0.0 {
+    if margin > max_pos {
+      max_pos = margin
+    } else {
+      ()
+    }
+  } else if margin < 0.0 {
+    if margin < min_neg {
+      min_neg = margin
+    } else {
+      ()
+    }
+  } else {
+    ()
+  }
+  (max_pos, min_neg)
+}
+
+///|
+fn margin_collapse_state_from(margin : Double) -> (Double, Double) {
+  margin_collapse_state_add_margin((0.0, 0.0), margin)
+}
+
+///|
+fn margin_collapse_state_value(state : (Double, Double)) -> Double {
+  state.0 + state.1
+}
+
+///|
+fn[C] set_effective_margin_states(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  top_state : (Double, Double),
+  bottom_state : (Double, Double),
+) -> Unit {
+  tree.nodes[node_id].effective_margin_top_max_pos = top_state.0
+  tree.nodes[node_id].effective_margin_top_min_neg = top_state.1
+  tree.nodes[node_id].effective_margin_bottom_max_pos = bottom_state.0
+  tree.nodes[node_id].effective_margin_bottom_min_neg = bottom_state.1
+  tree.nodes[node_id].effective_margin_top = margin_collapse_state_value(
+    top_state,
+  )
+  tree.nodes[node_id].effective_margin_bottom = margin_collapse_state_value(
+    bottom_state,
+  )
+}
+
+///|
 fn double_approx_equal(a : Double, b : Double) -> Bool {
   abs_double(a - b) <= 0.000001
 }
@@ -1264,6 +1338,10 @@ fn[C] compute_node_layout_with_measure(
         }
         tree.nodes[node_id].effective_margin_top = entry.effective_margin_top
         tree.nodes[node_id].effective_margin_bottom = entry.effective_margin_bottom
+        tree.nodes[node_id].effective_margin_top_max_pos = entry.effective_margin_top_max_pos
+        tree.nodes[node_id].effective_margin_top_min_neg = entry.effective_margin_top_min_neg
+        tree.nodes[node_id].effective_margin_bottom_max_pos = entry.effective_margin_bottom_max_pos
+        tree.nodes[node_id].effective_margin_bottom_min_neg = entry.effective_margin_bottom_min_neg
         return
       }
       None => ()
@@ -1336,6 +1414,10 @@ fn[C] compute_node_layout_with_measure(
       size: layout.size,
       effective_margin_top: tree.nodes[node_id].effective_margin_top,
       effective_margin_bottom: tree.nodes[node_id].effective_margin_bottom,
+      effective_margin_top_max_pos: tree.nodes[node_id].effective_margin_top_max_pos,
+      effective_margin_top_min_neg: tree.nodes[node_id].effective_margin_top_min_neg,
+      effective_margin_bottom_max_pos: tree.nodes[node_id].effective_margin_bottom_max_pos,
+      effective_margin_bottom_min_neg: tree.nodes[node_id].effective_margin_bottom_min_neg,
     })
   }
 }
@@ -1356,6 +1438,10 @@ fn[C] compute_hidden_layout(
   }
   tree.nodes[node_id].effective_margin_top = 0.0
   tree.nodes[node_id].effective_margin_bottom = 0.0
+  tree.nodes[node_id].effective_margin_top_max_pos = 0.0
+  tree.nodes[node_id].effective_margin_top_min_neg = 0.0
+  tree.nodes[node_id].effective_margin_bottom_max_pos = 0.0
+  tree.nodes[node_id].effective_margin_bottom_min_neg = 0.0
   for child_id in node.children {
     compute_hidden_layout(tree, child_id, absolute_origin)
   }
@@ -1574,8 +1660,12 @@ fn[C] compute_leaf_layout_with_measure(
     node.style.margin,
     available_space,
   )
-  tree.nodes[node_id].effective_margin_top = resolved_margin.top
-  tree.nodes[node_id].effective_margin_bottom = resolved_margin.bottom
+  set_effective_margin_states(
+    tree,
+    node_id,
+    margin_collapse_state_from(resolved_margin.top),
+    margin_collapse_state_from(resolved_margin.bottom),
+  )
 }
 
 ///|
@@ -4416,8 +4506,12 @@ fn[C] compute_grid_layout_with_measure(
     node.style.margin,
     available_space,
   )
-  tree.nodes[node_id].effective_margin_top = resolved_margin.top
-  tree.nodes[node_id].effective_margin_bottom = resolved_margin.bottom
+  set_effective_margin_states(
+    tree,
+    node_id,
+    margin_collapse_state_from(resolved_margin.top),
+    margin_collapse_state_from(resolved_margin.bottom),
+  )
 }
 
 ///|
@@ -4583,6 +4677,13 @@ fn[C] compute_block_layout_with_measure(
 
   fn collapse_state_from(margin : Double) -> (Double, Double) {
     collapse_state_add((0.0, 0.0), margin)
+  }
+
+  fn collapse_state_merge(
+    a : (Double, Double),
+    b : (Double, Double),
+  ) -> (Double, Double) {
+    (if a.0 > b.0 { a.0 } else { b.0 }, if a.1 < b.1 { a.1 } else { b.1 })
   }
 
   fn has_in_flow_children(
@@ -5671,36 +5772,39 @@ fn[C] compute_block_layout_with_measure(
       false,
     )
   }
-  let effective_margin_top = if collapse_top_with_child {
+  let effective_top_state = if collapse_top_with_child {
     let first_id = match first_in_flow_child {
       Some(v) => v
       None => node_id
     }
-    collapse_state_value(
-      collapse_state_add(
-        collapse_state_add((0.0, 0.0), own_margin_top),
-        tree.nodes[first_id].effective_margin_top,
+    collapse_state_merge(
+      collapse_state_from(own_margin_top),
+      (
+        tree.nodes[first_id].effective_margin_top_max_pos,
+        tree.nodes[first_id].effective_margin_top_min_neg,
       ),
     )
   } else {
-    own_margin_top
+    collapse_state_from(own_margin_top)
   }
-  let effective_margin_bottom = if collapse_bottom_with_child {
+  let effective_bottom_state = if collapse_bottom_with_child {
     let last_id = match last_in_flow_child {
       Some(v) => v
       None => node_id
     }
-    collapse_state_value(
-      collapse_state_add(
-        collapse_state_add((0.0, 0.0), own_margin_bottom),
-        tree.nodes[last_id].effective_margin_bottom,
+    collapse_state_merge(
+      collapse_state_from(own_margin_bottom),
+      (
+        tree.nodes[last_id].effective_margin_bottom_max_pos,
+        tree.nodes[last_id].effective_margin_bottom_min_neg,
       ),
     )
   } else {
-    own_margin_bottom
+    collapse_state_from(own_margin_bottom)
   }
-  tree.nodes[node_id].effective_margin_top = effective_margin_top
-  tree.nodes[node_id].effective_margin_bottom = effective_margin_bottom
+  set_effective_margin_states(
+    tree, node_id, effective_top_state, effective_bottom_state,
+  )
 }
 
 ///|
@@ -7352,6 +7456,10 @@ fn[C] compute_flex_layout_with_measure(
     node.style.margin,
     available_space,
   )
-  tree.nodes[node_id].effective_margin_top = resolved_margin.top
-  tree.nodes[node_id].effective_margin_bottom = resolved_margin.bottom
+  set_effective_margin_states(
+    tree,
+    node_id,
+    margin_collapse_state_from(resolved_margin.top),
+    margin_collapse_state_from(resolved_margin.bottom),
+  )
 }

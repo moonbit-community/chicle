@@ -15653,38 +15653,107 @@ test "upstream/generated/grid/grid_aspect_ratio_fill_child_max_height" {
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_aspect_ratio_fill_child_max_width" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_aspect_ratio_fill_child_max_width.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_aspect_ratio_fill_child_max_width.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_max_size(Size::new(width=auto(), height=length(20.0)))
+    .with_aspect_ratio(2.0),
+    TextMeasure::{
+      text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
+      writing_mode: Horizontal,
+    },
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(root, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, root, 100.0, 100.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 40.0, 20.0, 0.0, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_aspect_ratio_fill_child_min_height" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_aspect_ratio_fill_child_min_height.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_aspect_ratio_fill_child_min_height.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_min_size(Size::new(width=length(50.0), height=auto()))
+    .with_aspect_ratio(2.0),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 100.0, 100.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 100.0, 50.0, 0.0, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_aspect_ratio_fill_child_width" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_aspect_ratio_fill_child_width.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_aspect_ratio_fill_child_width.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=auto(), height=length(50.0)))
+    .with_aspect_ratio(2.0),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 100.0, 100.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 100.0, 50.0, 0.0, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_aspect_ratio_overridden_by_explicit_sizes" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_aspect_ratio_overridden_by_explicit_sizes.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_aspect_ratio_overridden_by_explicit_sizes.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_aspect_ratio(2.0),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 100.0, 100.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 50.0, 50.0, 0.0, 0.0)
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_aspect_ratio_overridden_by_explicit_sizes_flex" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_aspect_ratio_overridden_by_explicit_sizes_flex.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_aspect_ratio_overridden_by_explicit_sizes_flex.rs
+  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_aspect_ratio(2.0),
+  )
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    [node0],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_layout_xywh(taffy, root, 100.0, 100.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 50.0, 50.0, 0.0, 0.0)
 }
 
 ///|

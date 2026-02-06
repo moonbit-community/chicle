@@ -3401,7 +3401,7 @@ fn[C] compute_grid_layout_with_measure(
           Some(v) => v
           None => default_align_items
         }
-        let known_w = match justify {
+        let mut known_w = match justify {
           ItemsStretch =>
             if child.style.size.width is DimAuto && !has_auto_margin_x {
               Some(available_w_for_item)
@@ -3438,8 +3438,29 @@ fn[C] compute_grid_layout_with_measure(
               known_w is Some(_) &&
               known_h is None &&
               !has_auto_margin_y {
-              let stretched_width = tree.nodes[child_id].layout.size.width
-              known_h = Some((stretched_width / ratio).round())
+              let intrinsic_after_stretch = tree.nodes[child_id].layout.size
+              let max_height = resolve_optional_dimension(
+                child.style.max_size.height,
+                item_available.height,
+              )
+              match max_height {
+                Some(max_h) if intrinsic_after_stretch.height > max_h => {
+                  known_h = Some(max_h)
+                  known_w = Some((max_h * ratio).round())
+                }
+                _ => {
+                  let ratio_height = (intrinsic_after_stretch.width / ratio).round()
+                  if intrinsic_after_stretch.height > ratio_height {
+                    known_h = Some(ratio_height)
+                  } else if intrinsic_after_stretch.height < ratio_height {
+                    known_w = Some(
+                      (intrinsic_after_stretch.height * ratio).round(),
+                    )
+                  } else {
+                    ()
+                  }
+                }
+              }
               compute_node_layout_with_measure(
                 tree,
                 child_id,

@@ -15432,38 +15432,238 @@ test "upstream/generated/grid/grid_margins_percent_stretch" {
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_max_content_maximum_single_item" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_max_content_maximum_single_item.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_max_content_maximum_single_item.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(Style::default())
+  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH\u{200B}HH",
+    writing_mode: Horizontal,
+  })
+  let node2 = taffy.new_leaf(Style::default())
+  let node3 = taffy.new_leaf(Style::default())
+  let node4 = taffy.new_leaf(Style::default())
+  let node5 = taffy.new_leaf(Style::default())
+  let node6 = taffy.new_leaf(Style::default())
+  let node7 = taffy.new_leaf(Style::default())
+  let node8 = taffy.new_leaf(Style::default())
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([
+      length(40.0),
+      minmax(length(0.0), grid_max_content()),
+      length(40.0),
+    ]),
+    [node0, node1, node2, node3, node4, node5, node6, node7, node8],
+  )
+  taffy.compute_layout_with_measure(root, Size::max_content(), measure_text)
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 120.0)
+  assert_eq(root_layout.size.height, 120.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let nodes = [node0, node1, node2, node3, node4, node5, node6, node7, node8]
+  let expected_w = [40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0]
+  let expected_h = [40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0]
+  let expected_x = [0.0, 40.0, 80.0, 0.0, 40.0, 80.0, 0.0, 40.0, 80.0]
+  let expected_y = [0.0, 0.0, 0.0, 40.0, 40.0, 40.0, 80.0, 80.0, 80.0]
+  for i in 0..<9 {
+    let layout = taffy.layout(nodes[i])
+    assert_eq(layout.size.width, expected_w[i])
+    assert_eq(layout.size.height, expected_h[i])
+    assert_eq(layout.location.x, expected_x[i])
+    assert_eq(layout.location.y, expected_y[i])
+  }
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_max_content_single_item" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_max_content_single_item.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_max_content_single_item.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(Style::default())
+  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+    text_content: "HH\u{200B}HH",
+    writing_mode: Horizontal,
+  })
+  let node2 = taffy.new_leaf(Style::default())
+  let node3 = taffy.new_leaf(Style::default())
+  let node4 = taffy.new_leaf(Style::default())
+  let node5 = taffy.new_leaf(Style::default())
+  let node6 = taffy.new_leaf(Style::default())
+  let node7 = taffy.new_leaf(Style::default())
+  let node8 = taffy.new_leaf(Style::default())
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), grid_max_content(), length(40.0)]),
+    [node0, node1, node2, node3, node4, node5, node6, node7, node8],
+  )
+  taffy.compute_layout_with_measure(root, Size::max_content(), measure_text)
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 120.0)
+  assert_eq(root_layout.size.height, 120.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let nodes = [node0, node1, node2, node3, node4, node5, node6, node7, node8]
+  let expected_w = [40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0]
+  let expected_h = [40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0]
+  let expected_x = [0.0, 40.0, 80.0, 0.0, 40.0, 80.0, 0.0, 40.0, 80.0]
+  let expected_y = [0.0, 0.0, 0.0, 40.0, 40.0, 40.0, 80.0, 80.0, 80.0]
+  for i in 0..<9 {
+    let layout = taffy.layout(nodes[i])
+    assert_eq(layout.size.width, expected_w[i])
+    assert_eq(layout.size.height, expected_h[i])
+    assert_eq(layout.location.x, expected_x[i])
+    assert_eq(layout.location.y, expected_y[i])
+  }
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_max_content_single_item_margin_auto" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_max_content_single_item_margin_auto.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_max_content_single_item_margin_auto.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(Style::default())
+  let node1 = taffy.new_leaf_with_context(
+    Style::default().with_margin(
+      Rect::new(left=auto(), right=auto(), top=auto(), bottom=auto()),
+    ),
+    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+  )
+  let node2 = taffy.new_leaf(Style::default())
+  let node3 = taffy.new_leaf(Style::default())
+  let node4 = taffy.new_leaf(Style::default())
+  let node5 = taffy.new_leaf(Style::default())
+  let node6 = taffy.new_leaf(Style::default())
+  let node7 = taffy.new_leaf(Style::default())
+  let node8 = taffy.new_leaf(Style::default())
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), grid_max_content(), length(40.0)]),
+    [node0, node1, node2, node3, node4, node5, node6, node7, node8],
+  )
+  taffy.compute_layout_with_measure(root, Size::max_content(), measure_text)
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 120.0)
+  assert_eq(root_layout.size.height, 120.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let nodes = [node0, node1, node2, node3, node4, node5, node6, node7, node8]
+  let expected_w = [40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0]
+  let expected_h = [40.0, 10.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0]
+  let expected_x = [0.0, 40.0, 80.0, 0.0, 40.0, 80.0, 0.0, 40.0, 80.0]
+  let expected_y = [0.0, 15.0, 0.0, 40.0, 40.0, 40.0, 80.0, 80.0, 80.0]
+  for i in 0..<9 {
+    let layout = taffy.layout(nodes[i])
+    assert_eq(layout.size.width, expected_w[i])
+    assert_eq(layout.size.height, expected_h[i])
+    assert_eq(layout.location.x, expected_x[i])
+    assert_eq(layout.location.y, expected_y[i])
+  }
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_max_content_single_item_margin_fixed" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_max_content_single_item_margin_fixed.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_max_content_single_item_margin_fixed.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(Style::default())
+  let node1 = taffy.new_leaf_with_context(
+    Style::default().with_margin(
+      Rect::new(
+        left=length(20.0),
+        right=length(10.0),
+        top=length(5.0),
+        bottom=length(15.0),
+      ),
+    ),
+    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+  )
+  let node2 = taffy.new_leaf(Style::default())
+  let node3 = taffy.new_leaf(Style::default())
+  let node4 = taffy.new_leaf(Style::default())
+  let node5 = taffy.new_leaf(Style::default())
+  let node6 = taffy.new_leaf(Style::default())
+  let node7 = taffy.new_leaf(Style::default())
+  let node8 = taffy.new_leaf(Style::default())
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), grid_max_content(), length(40.0)]),
+    [node0, node1, node2, node3, node4, node5, node6, node7, node8],
+  )
+  taffy.compute_layout_with_measure(root, Size::max_content(), measure_text)
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 150.0)
+  assert_eq(root_layout.size.height, 120.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let nodes = [node0, node1, node2, node3, node4, node5, node6, node7, node8]
+  let expected_w = [40.0, 40.0, 40.0, 40.0, 70.0, 40.0, 40.0, 70.0, 40.0]
+  let expected_h = [40.0, 20.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0]
+  let expected_x = [0.0, 60.0, 110.0, 0.0, 40.0, 110.0, 0.0, 40.0, 110.0]
+  let expected_y = [0.0, 5.0, 0.0, 40.0, 40.0, 40.0, 80.0, 80.0, 80.0]
+  for i in 0..<9 {
+    let layout = taffy.layout(nodes[i])
+    assert_eq(layout.size.width, expected_w[i])
+    assert_eq(layout.size.height, expected_h[i])
+    assert_eq(layout.location.x, expected_x[i])
+    assert_eq(layout.location.y, expected_y[i])
+  }
 }
 
 ///|
-#skip
 test "upstream/generated/grid/grid_max_content_single_item_margin_percent" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_max_content_single_item_margin_percent.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_max_content_single_item_margin_percent.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let node0 = taffy.new_leaf(Style::default())
+  let node1 = taffy.new_leaf_with_context(
+    Style::default().with_margin(
+      Rect::new(
+        left=percent(0.2),
+        right=percent(0.1),
+        top=percent(0.05),
+        bottom=percent(0.15),
+      ),
+    ),
+    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+  )
+  let node2 = taffy.new_leaf(Style::default())
+  let node3 = taffy.new_leaf(Style::default())
+  let node4 = taffy.new_leaf(Style::default())
+  let node5 = taffy.new_leaf(Style::default())
+  let node6 = taffy.new_leaf(Style::default())
+  let node7 = taffy.new_leaf(Style::default())
+  let node8 = taffy.new_leaf(Style::default())
+  let root = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
+    .with_grid_template_columns([length(40.0), grid_max_content(), length(40.0)]),
+    [node0, node1, node2, node3, node4, node5, node6, node7, node8],
+  )
+  taffy.compute_layout_with_measure(root, Size::max_content(), measure_text)
+  let root_layout = taffy.layout(root)
+  assert_eq(root_layout.size.width, 120.0)
+  assert_eq(root_layout.size.height, 120.0)
+  assert_eq(root_layout.location.x, 0.0)
+  assert_eq(root_layout.location.y, 0.0)
+  let nodes = [node0, node1, node2, node3, node4, node5, node6, node7, node8]
+  let expected_w = [40.0, 28.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0]
+  let expected_h = [40.0, 32.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0]
+  let expected_x = [0.0, 48.0, 80.0, 0.0, 40.0, 80.0, 0.0, 40.0, 80.0]
+  let expected_y = [0.0, 2.0, 0.0, 40.0, 40.0, 40.0, 80.0, 80.0, 80.0]
+  for i in 0..<9 {
+    let layout = taffy.layout(nodes[i])
+    assert_eq(layout.size.width, expected_w[i])
+    assert_eq(layout.size.height, expected_h[i])
+    assert_eq(layout.location.x, expected_x[i])
+    assert_eq(layout.location.y, expected_y[i])
+  }
 }
 
 ///|

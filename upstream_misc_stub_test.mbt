@@ -25,11 +25,6 @@ struct MiscAspectRatioMeasure {
 }
 
 ///|
-struct MiscCountMeasure {
-  mut count : Int
-}
-
-///|
 fn[T] misc_unwrap_or(value : T?, fallback : T) -> T {
   match value {
     Some(v) => v
@@ -90,11 +85,11 @@ fn misc_count_measure(
   known_dimensions : Size[Double?],
   _available_space : Size[AvailableSpace],
   _node_id : NodeId,
-  node_context : MiscCountMeasure?,
+  node_context : Array[Int]?,
   _style : Style,
 ) -> Size[Double] {
   match node_context {
-    Some(ctx) => ctx.count = ctx.count + 1
+    Some(ctx) => ctx[0] = ctx[0] + 1
     None => ()
   }
   Size::new(
@@ -121,12 +116,11 @@ fn[C] misc_assert_layout_xywh(
 
 ///|
 test "upstream/caching/measure_count_flexbox" {
-  let taffy : TaffyTree[MiscCountMeasure] = TaffyTree::new()
-  let leaf = taffy.new_leaf_with_context(Style::default(), MiscCountMeasure::{
-    count: 0,
-  })
+  let taffy : TaffyTree[Array[Int]] = TaffyTree::new()
+  let leaf_counter = [0]
+  let leaf = taffy.new_leaf_with_context(Style::default(), leaf_counter)
   let mut node = taffy.new_with_children(Style::default(), [leaf])
-  for _ in 0..<10 {
+  for _ in 0..<100 {
     node = taffy.new_with_children(Style::default(), [node])
   }
   taffy.compute_layout_with_measure(
@@ -135,7 +129,7 @@ test "upstream/caching/measure_count_flexbox" {
     misc_count_measure,
   )
   match taffy.node_context(leaf) {
-    Some(ctx) => assert_eq(ctx.count > 0, true)
+    Some(ctx) => assert_eq(ctx[0], 4)
     None => panic()
   }
 }
@@ -743,54 +737,45 @@ test "upstream/relayout/relayout_is_stable_with_rounding" {
 ///|
 test "upstream/serde/serde_can_serialize" {
   let style = Style::default()
-  match style.display {
-    DisplayFlex => ()
-    _ => panic()
-  }
-  match style.position {
-    PosRelative => ()
-    _ => panic()
-  }
-  match style.flex_direction {
-    FlexRow => ()
-    _ => panic()
-  }
+  let _ = style.to_json().stringify()
+
 }
 
 ///|
 test "upstream/serde/serde_can_deserialize_partial_values" {
-  let style = Style::default()
-    .with_inset(
-      Rect::new(left=length(22.0), right=auto(), top=auto(), bottom=auto()),
-    )
-    .with_size(Size::new(width=percent(50.0), height=auto()))
-    .with_min_size(Size::new(width=auto(), height=length(10.0)))
-    .with_max_size(Size::new(width=auto(), height=auto()))
-    .with_margin(
-      Rect::new(
-        left=length(0.0),
-        right=length(99.0),
-        top=length(0.0),
-        bottom=length(99.0),
-      ),
-    )
-    .with_padding(
-      Rect::new(
-        left=length(99.0),
-        right=length(0.0),
-        top=length(0.0),
-        bottom=length(0.0),
-      ),
-    )
-    .with_border(
-      Rect::new(
-        left=length(0.0),
-        right=length(0.0),
-        top=length(0.0),
-        bottom=length(99.0),
-      ),
-    )
-    .with_gap(Size::new(width=length(99.0), height=length(0.0)))
+  let json_str =
+    #|{
+    #|  "inset": {
+    #|    "left": { "Length": 22 },
+    #|    "right": "Auto"
+    #|  },
+    #|  "size": {
+    #|    "width": { "Percent": 50 }
+    #|  },
+    #|  "min_size": {
+    #|    "height": { "Length": 10 }
+    #|  },
+    #|  "max_size": {
+    #|    "width": "Auto"
+    #|  },
+    #|  "margin": {
+    #|    "right": { "Length": 99.0 },
+    #|    "bottom": { "Length": 99.0 }
+    #|  },
+    #|  "padding": {
+    #|    "left": { "Length": 99.0 }
+    #|  },
+    #|  "border": {
+    #|    "bottom": { "Length": 99.0 }
+    #|  },
+    #|  "gap": {
+    #|    "width": { "Length": 99.0 }
+    #|  },
+    #|  "grid_row": { "start": "Auto" },
+    #|  "grid_column": { "end": "Auto" }
+    #|}
+  let json = @json.parse(json_str)
+  let style : Style = @json.from_json(json)
   match style.inset.left {
     DimLength(v) => assert_eq(v, 22.0)
     _ => panic()

@@ -1,6 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "Milky2018/moon_taffy"
 
+import {
+  "moonbitlang/core/json",
+}
+
 // Values
 pub fn align_content_center() -> AlignContent
 
@@ -177,6 +181,8 @@ pub enum Dimension {
   DimFitContent(Dimension)
   DimRepeat(GridTrackRepetition, Array[Dimension])
 }
+pub impl ToJson for Dimension
+pub impl @json.FromJson for Dimension
 
 pub enum Display {
   DisplayBlock
@@ -210,6 +216,8 @@ pub enum GridPlacement {
   PlaceLine(Int)
   PlaceSpan(Int)
 }
+pub impl ToJson for GridPlacement
+pub impl @json.FromJson for GridPlacement
 
 pub enum GridTrackRepetition {
   RepeatCount(Int)
@@ -335,6 +343,8 @@ pub fn Style::with_padding(Self, Rect[Dimension]) -> Self
 pub fn Style::with_position(Self, Position) -> Self
 pub fn Style::with_scrollbar_width(Self, Double) -> Self
 pub fn Style::with_size(Self, Size[Dimension]) -> Self
+pub impl ToJson for Style
+pub impl @json.FromJson for Style
 
 pub struct TaffyTree[C] {
   // private fields

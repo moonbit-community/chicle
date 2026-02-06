@@ -34,12 +34,31 @@ pub fn Layout::zero() -> Layout {
 }
 
 ///|
+priv struct LeafMeasureCacheEntry {
+  known_dimensions : Size[Double?]
+  available_space : Size[AvailableSpace]
+  measured : Size[Double]
+}
+
+///|
+priv struct NodeLayoutCacheEntry {
+  known_dimensions : Size[Double?]
+  available_space : Size[AvailableSpace]
+  location : Point[Double]
+  size : Size[Double]
+  effective_margin_top : Double
+  effective_margin_bottom : Double
+}
+
+///|
 struct Node[C] {
   mut style : Style
   children : Array[NodeId]
   mut parent : NodeId?
   mut layout : Layout
   mut context : C?
+  leaf_measure_cache : Array[LeafMeasureCacheEntry]
+  node_layout_cache : Array[NodeLayoutCacheEntry]
   mut effective_margin_top : Double
   mut effective_margin_bottom : Double
   mut alive : Bool
@@ -72,6 +91,8 @@ pub fn[C] TaffyTree::new_leaf(self : TaffyTree[C], style : Style) -> NodeId {
       parent: None,
       layout: Layout::zero(),
       context: None,
+      leaf_measure_cache: [],
+      node_layout_cache: [],
       effective_margin_top: 0.0,
       effective_margin_bottom: 0.0,
       alive: true,
@@ -95,6 +116,8 @@ pub fn[C] TaffyTree::new_leaf_with_context(
       parent: None,
       layout: Layout::zero(),
       context: Some(context),
+      leaf_measure_cache: [],
+      node_layout_cache: [],
       effective_margin_top: 0.0,
       effective_margin_bottom: 0.0,
       alive: true,
@@ -118,6 +141,8 @@ pub fn[C] TaffyTree::new_with_children(
       parent: None,
       layout: Layout::zero(),
       context: None,
+      leaf_measure_cache: [],
+      node_layout_cache: [],
       effective_margin_top: 0.0,
       effective_margin_bottom: 0.0,
       alive: true,
@@ -421,6 +446,8 @@ pub fn[C] TaffyTree::remove_subtree(
         kids.clear()
         self.nodes[cur].parent = None
         self.nodes[cur].context = None
+        self.nodes[cur].leaf_measure_cache.clear()
+        self.nodes[cur].node_layout_cache.clear()
         self.nodes[cur].layout = Layout::zero()
         self.nodes[cur].alive = false
       }
@@ -442,6 +469,8 @@ pub fn[C] TaffyTree::set_node_context(
     Some(_) =>
       if self.nodes[node].alive {
         self.nodes[node].context = Some(context)
+        self.nodes[node].leaf_measure_cache.clear()
+        self.nodes[node].node_layout_cache.clear()
         self.mark_dirty(node)
       } else {
         raise InvalidNodeId(node)
@@ -459,6 +488,8 @@ pub fn[C] TaffyTree::clear_node_context(
     Some(_) =>
       if self.nodes[node].alive {
         self.nodes[node].context = None
+        self.nodes[node].leaf_measure_cache.clear()
+        self.nodes[node].node_layout_cache.clear()
         self.mark_dirty(node)
       } else {
         raise InvalidNodeId(node)
@@ -527,6 +558,8 @@ pub fn[C] TaffyTree::set_style(
     Some(_) =>
       if self.nodes[node].alive {
         self.nodes[node].style = style
+        self.nodes[node].leaf_measure_cache.clear()
+        self.nodes[node].node_layout_cache.clear()
         self.mark_dirty(node)
       } else {
         raise InvalidNodeId(node)
@@ -571,6 +604,10 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
         ()
       }
     None => raise InvalidNodeId(root)
+  }
+  for i in 0..<self.nodes.length() {
+    self.nodes[i].leaf_measure_cache.clear()
+    self.nodes[i].node_layout_cache.clear()
   }
   compute_node_layout_with_measure(
     self,
@@ -725,6 +762,75 @@ fn abs_double(v : Double) -> Double {
   } else {
     v
   }
+}
+
+///|
+fn double_approx_equal(a : Double, b : Double) -> Bool {
+  abs_double(a - b) <= 0.000001
+}
+
+///|
+fn optional_double_equal(a : Double?, b : Double?) -> Bool {
+  match (a, b) {
+    (None, None) => true
+    (Some(x), Some(y)) => double_approx_equal(x, y)
+    _ => false
+  }
+}
+
+///|
+fn available_space_equal(a : AvailableSpace, b : AvailableSpace) -> Bool {
+  match (a, b) {
+    (AvailDefinite(x), AvailDefinite(y)) => double_approx_equal(x, y)
+    (AvailMinContent, AvailMinContent) => true
+    (AvailMaxContent, AvailMaxContent) => true
+    _ => false
+  }
+}
+
+///|
+fn known_dimensions_equal(a : Size[Double?], b : Size[Double?]) -> Bool {
+  optional_double_equal(a.width, b.width) &&
+  optional_double_equal(a.height, b.height)
+}
+
+///|
+fn available_size_equal(
+  a : Size[AvailableSpace],
+  b : Size[AvailableSpace],
+) -> Bool {
+  available_space_equal(a.width, b.width) &&
+  available_space_equal(a.height, b.height)
+}
+
+///|
+fn find_leaf_measure_cache(
+  cache : Array[LeafMeasureCacheEntry],
+  known_dimensions : Size[Double?],
+  available_space : Size[AvailableSpace],
+) -> Size[Double]? {
+  for entry in cache {
+    if known_dimensions_equal(entry.known_dimensions, known_dimensions) &&
+      available_size_equal(entry.available_space, available_space) {
+      return Some(entry.measured)
+    }
+  }
+  None
+}
+
+///|
+fn find_node_layout_cache(
+  cache : Array[NodeLayoutCacheEntry],
+  known_dimensions : Size[Double?],
+  available_space : Size[AvailableSpace],
+) -> NodeLayoutCacheEntry? {
+  for entry in cache {
+    if known_dimensions_equal(entry.known_dimensions, known_dimensions) &&
+      available_size_equal(entry.available_space, available_space) {
+      return Some(entry)
+    }
+  }
+  None
 }
 
 ///|
@@ -1142,6 +1248,27 @@ fn[C] compute_node_layout_with_measure(
     Some(n) => n
     None => raise InvalidNodeId(node_id)
   }
+  let can_use_layout_cache = double_approx_equal(absolute_origin.x, 0.0) &&
+    double_approx_equal(absolute_origin.y, 0.0)
+  if can_use_layout_cache {
+    match
+      find_node_layout_cache(
+        node.node_layout_cache,
+        known_dimensions,
+        available_space,
+      ) {
+      Some(entry) => {
+        tree.nodes[node_id].layout = Layout::{
+          location: entry.location,
+          size: entry.size,
+        }
+        tree.nodes[node_id].effective_margin_top = entry.effective_margin_top
+        tree.nodes[node_id].effective_margin_bottom = entry.effective_margin_bottom
+        return
+      }
+      None => ()
+    }
+  }
   match node.style.display {
     DisplayNone => compute_hidden_layout(tree, node_id, absolute_origin)
     DisplayGrid =>
@@ -1199,6 +1326,17 @@ fn[C] compute_node_layout_with_measure(
       }
     }
     PosAbsolute => ()
+  }
+  if can_use_layout_cache {
+    let layout = tree.nodes[node_id].layout
+    tree.nodes[node_id].node_layout_cache.push(NodeLayoutCacheEntry::{
+      known_dimensions,
+      available_space,
+      location: layout.location,
+      size: layout.size,
+      effective_margin_top: tree.nodes[node_id].effective_margin_top,
+      effective_margin_bottom: tree.nodes[node_id].effective_margin_bottom,
+    })
   }
 }
 
@@ -1309,13 +1447,29 @@ fn[C] compute_leaf_layout_with_measure(
       None => specified_height
     },
   )
-  let measured = measure_function(
-    measure_known_dimensions,
-    available_space,
-    node_id,
-    node.context,
-    node.style,
-  )
+  let measured = match
+    find_leaf_measure_cache(
+      node.leaf_measure_cache,
+      measure_known_dimensions,
+      available_space,
+    ) {
+    Some(v) => v
+    None => {
+      let m = measure_function(
+        measure_known_dimensions,
+        available_space,
+        node_id,
+        node.context,
+        node.style,
+      )
+      tree.nodes[node_id].leaf_measure_cache.push(LeafMeasureCacheEntry::{
+        known_dimensions: measure_known_dimensions,
+        available_space,
+        measured: m,
+      })
+      m
+    }
+  }
   let raw_width = match known_width {
     Some(w) => max_double(w, horiz_inset)
     None =>
@@ -5626,6 +5780,94 @@ fn[C] grid_item_baseline_offset_y(
 }
 
 ///|
+fn[C] resolve_flex_auto_min_main(
+  tree : TaffyTree[C],
+  child_id : NodeId,
+  is_col : Bool,
+  parent_available_for_children : Size[AvailableSpace],
+  main_axis_available : AvailableSpace,
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ],
+) -> Double raise TaffyError {
+  let child = match tree.nodes.get(child_id) {
+    Some(c) => c
+    None => raise InvalidNodeId(child_id)
+  }
+  let main_from_size = if is_col {
+    resolve_optional_dimension(child.style.size.height, main_axis_available)
+  } else {
+    resolve_optional_dimension(child.style.size.width, main_axis_available)
+  }
+  let max_from_style = if is_col {
+    resolve_optional_dimension(child.style.max_size.height, main_axis_available)
+  } else {
+    resolve_optional_dimension(child.style.max_size.width, main_axis_available)
+  }
+  let original_style = child.style
+  let original_layout = child.layout
+  let cleared_size = if is_col {
+    Size::new(width=original_style.size.width, height=DimAuto)
+  } else {
+    Size::new(width=DimAuto, height=original_style.size.height)
+  }
+  tree.nodes[child_id].style = { ..original_style, size: cleared_size }
+  let min_content_space = if is_col {
+    Size::new(width=parent_available_for_children.width, height=AvailMinContent)
+  } else {
+    Size::new(
+      width=AvailMinContent,
+      height=parent_available_for_children.height,
+    )
+  }
+  compute_node_layout_with_measure(
+    tree,
+    child_id,
+    Size::new(width=None, height=None),
+    min_content_space,
+    Point::zero(),
+    measure_function,
+    false,
+  )
+  let min_layout = tree.layout(child_id)
+  let min_content_main = if is_col {
+    min_layout.size.height
+  } else {
+    min_layout.size.width
+  }
+  tree.nodes[child_id].style = original_style
+  tree.nodes[child_id].layout = original_layout
+  let mut clamped = min_content_main
+  match main_from_size {
+    Some(v) => clamped = min_double(clamped, v)
+    None => ()
+  }
+  match max_from_style {
+    Some(v) => clamped = min_double(clamped, v)
+    None => ()
+  }
+  let resolved_padding = resolve_rect_width_basis(
+    original_style.padding,
+    parent_available_for_children,
+  )
+  let resolved_border = resolve_rect_width_basis(
+    original_style.border,
+    parent_available_for_children,
+  )
+  let padding_main_sum = if is_col {
+    resolved_padding.top + resolved_padding.bottom
+  } else {
+    resolved_padding.left + resolved_padding.right
+  }
+  let border_main_sum = if is_col {
+    resolved_border.top + resolved_border.bottom
+  } else {
+    resolved_border.left + resolved_border.right
+  }
+  max_double(clamped, padding_main_sum + border_main_sum)
+}
+
+///|
 fn[C] compute_flex_layout_with_measure(
   tree : TaffyTree[C],
   node_id : NodeId,
@@ -5920,84 +6162,14 @@ fn[C] compute_flex_layout_with_measure(
     } else {
       child.style.overflow.x
     }
-    let min_from_style = match min_from_style {
-      Some(v) => Some(v)
+    min_main_sizes[i] = match min_from_style {
+      Some(v) => max_double(v, 0.0)
       None =>
         match overflow_main {
-          OverflowVisible => None
-          _ => Some(0.0)
+          OverflowVisible => -1.0
+          _ => 0.0
         }
     }
-    let resolved_min_main = match min_from_style {
-      Some(v) => v
-      None => {
-        let original_style = tree.nodes[child_id].style
-        let original_layout = tree.nodes[child_id].layout
-        let cleared_size = if is_col {
-          Size::new(width=original_style.size.width, height=DimAuto)
-        } else {
-          Size::new(width=DimAuto, height=original_style.size.height)
-        }
-        tree.nodes[child_id].style = { ..original_style, size: cleared_size }
-        let min_content_space = if is_col {
-          Size::new(
-            width=parent_available_for_children.width,
-            height=AvailMinContent,
-          )
-        } else {
-          Size::new(
-            width=AvailMinContent,
-            height=parent_available_for_children.height,
-          )
-        }
-        compute_node_layout_with_measure(
-          tree,
-          child_id,
-          Size::new(width=None, height=None),
-          min_content_space,
-          Point::zero(),
-          measure_function,
-          false,
-        )
-        let min_layout = tree.layout(child_id)
-        let min_content_main = if is_col {
-          min_layout.size.height
-        } else {
-          min_layout.size.width
-        }
-        tree.nodes[child_id].style = original_style
-        tree.nodes[child_id].layout = original_layout
-        let mut clamped = min_content_main
-        match main_from_size {
-          Some(v) => clamped = min_double(clamped, v)
-          None => ()
-        }
-        match max_from_style {
-          Some(v) => clamped = min_double(clamped, v)
-          None => ()
-        }
-        let resolved_padding = resolve_rect_width_basis(
-          original_style.padding,
-          parent_available_for_children,
-        )
-        let resolved_border = resolve_rect_width_basis(
-          original_style.border,
-          parent_available_for_children,
-        )
-        let padding_main_sum = if is_col {
-          resolved_padding.top + resolved_padding.bottom
-        } else {
-          resolved_padding.left + resolved_padding.right
-        }
-        let border_main_sum = if is_col {
-          resolved_border.top + resolved_border.bottom
-        } else {
-          resolved_border.left + resolved_border.right
-        }
-        max_double(clamped, padding_main_sum + border_main_sum)
-      }
-    }
-    min_main_sizes[i] = max_double(resolved_min_main, 0.0)
   }
   if !is_col {
     let mut baseline_before_max = 0.0
@@ -6513,6 +6685,20 @@ fn[C] compute_flex_layout_with_measure(
               free_space * (scaled / sum_scaled_shrink)
           } else {
             final_main_sizes[i] = base_main
+          }
+        }
+      }
+      if free_space < 0.0 && sum_shrink > 0.0 && sum_scaled_shrink > 0.0 {
+        for i in 0..<flow_count {
+          if !frozen[i] && min_main_sizes[i] < 0.0 {
+            min_main_sizes[i] = resolve_flex_auto_min_main(
+              tree,
+              flow_children[i],
+              is_col,
+              parent_available_for_children,
+              main_available_pre,
+              measure_function,
+            )
           }
         }
       }

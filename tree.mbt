@@ -646,6 +646,18 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
         if not(self.nodes[cur].alive) {
           continue
         }
+        let layout = self.nodes[cur].layout
+        let rounded_left = layout.location.x.round()
+        let rounded_top = layout.location.y.round()
+        let rounded_right = (layout.location.x + layout.size.width).round()
+        let rounded_bottom = (layout.location.y + layout.size.height).round()
+        self.nodes[cur].layout = Layout::{
+          location: Point::new(x=rounded_left, y=rounded_top),
+          size: Size::new(
+            width=max_double(rounded_right - rounded_left, 0.0),
+            height=max_double(rounded_bottom - rounded_top, 0.0),
+          ),
+        }
         self.nodes[cur].dirty = false
         for child_id in self.nodes[cur].children {
           stack.push(child_id)
@@ -1352,6 +1364,7 @@ fn[C] compute_node_layout_with_measure(
     DisplayGrid =>
       compute_grid_layout_with_measure(
         tree, node_id, known_dimensions, available_space, absolute_origin, measure_function,
+        is_layout_root,
       )
     DisplayBlock =>
       if node.children.length() == 0 {
@@ -1492,14 +1505,25 @@ fn[C] compute_leaf_layout_with_measure(
     node.style.border,
     available_space,
   )
-  let horiz_inset = resolved_padding.left +
+  let scrollbar_w = node.style.scrollbar_width
+  let scrollbar_x = match node.style.overflow.x {
+    OverflowScroll => scrollbar_w
+    _ => 0.0
+  }
+  let scrollbar_y = match node.style.overflow.y {
+    OverflowScroll => scrollbar_w
+    _ => 0.0
+  }
+  let horiz_non_scroll_inset = resolved_padding.left +
     resolved_padding.right +
     resolved_border.left +
     resolved_border.right
-  let vert_inset = resolved_padding.top +
+  let vert_non_scroll_inset = resolved_padding.top +
     resolved_padding.bottom +
     resolved_border.top +
     resolved_border.bottom
+  let horiz_inset = horiz_non_scroll_inset + scrollbar_y
+  let vert_inset = vert_non_scroll_inset + scrollbar_x
   let mut specified_width = resolve_optional_dimension(
     node.style.size.width,
     available_space.width,
@@ -1557,18 +1581,18 @@ fn[C] compute_leaf_layout_with_measure(
     }
   }
   let raw_width = match known_width {
-    Some(w) => max_double(w, horiz_inset)
+    Some(w) => w
     None =>
       match specified_width {
-        Some(w) => max_double(w, horiz_inset)
+        Some(w) => w
         None => max_double(measured.width + horiz_inset, horiz_inset)
       }
   }
   let raw_height = match known_height {
-    Some(h) => max_double(h, vert_inset)
+    Some(h) => h
     None =>
       match specified_height {
-        Some(h) => max_double(h, vert_inset)
+        Some(h) => h
         None => max_double(measured.height + vert_inset, vert_inset)
       }
   }
@@ -1581,7 +1605,7 @@ fn[C] compute_leaf_layout_with_measure(
         node.style.max_size.width,
         available_space.width,
       ),
-      horiz_inset,
+      horiz_non_scroll_inset,
     ),
     height=max_double(
       clamp_dimension(
@@ -1590,7 +1614,7 @@ fn[C] compute_leaf_layout_with_measure(
         node.style.max_size.height,
         available_space.height,
       ),
-      vert_inset,
+      vert_non_scroll_inset,
     ),
   )
   // aspect-ratio: when width is auto and height is constrained by min/max,
@@ -1852,6 +1876,7 @@ fn[C] compute_grid_layout_with_measure(
   measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
     Double,
   ],
+  is_layout_root : Bool,
 ) -> Unit raise TaffyError {
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
@@ -1961,18 +1986,18 @@ fn[C] compute_grid_layout_with_measure(
     OverflowScroll => scrollbar_w
     _ => 0.0
   }
-  // Overflow::Scroll reserves scrollbar space inside the border box.
-  // Horizontal scrollbar consumes cross (vertical) space; vertical scrollbar consumes main (horizontal) space.
-  let horiz_inset = padding.left +
+  let horiz_non_scroll_inset = padding.left +
     padding.right +
     border.left +
-    border.right +
-    scrollbar_y
-  let vert_inset = padding.top +
+    border.right
+  let vert_non_scroll_inset = padding.top +
     padding.bottom +
     border.top +
-    border.bottom +
-    scrollbar_x
+    border.bottom
+  // Overflow::Scroll reserves scrollbar space inside the border box.
+  // Horizontal scrollbar consumes cross (vertical) space; vertical scrollbar consumes main (horizontal) space.
+  let horiz_inset = horiz_non_scroll_inset + scrollbar_y
+  let vert_inset = vert_non_scroll_inset + scrollbar_x
   let style_width = resolve_optional_dimension(
     node.style.size.width,
     available_space.width,
@@ -1998,11 +2023,14 @@ fn[C] compute_grid_layout_with_measure(
   let mut border_box_height = 0.0
   match specified_width {
     Some(w) => {
-      border_box_width = clamp_dimension(
-        max_double(w, horiz_inset),
-        node.style.min_size.width,
-        node.style.max_size.width,
-        available_space.width,
+      border_box_width = max_double(
+        clamp_dimension(
+          w,
+          node.style.min_size.width,
+          node.style.max_size.width,
+          available_space.width,
+        ),
+        horiz_non_scroll_inset,
       )
       content_width = max_double(border_box_width - horiz_inset, 0.0)
     }
@@ -2010,11 +2038,14 @@ fn[C] compute_grid_layout_with_measure(
   }
   match specified_height {
     Some(h) => {
-      border_box_height = clamp_dimension(
-        max_double(h, vert_inset),
-        node.style.min_size.height,
-        node.style.max_size.height,
-        available_space.height,
+      border_box_height = max_double(
+        clamp_dimension(
+          h,
+          node.style.min_size.height,
+          node.style.max_size.height,
+          available_space.height,
+        ),
+        vert_non_scroll_inset,
       )
       content_height = max_double(border_box_height - vert_inset, 0.0)
     }
@@ -2850,17 +2881,7 @@ fn[C] compute_grid_layout_with_measure(
     let min_col_raw = tree.nodes[child_id].layout.size.width
     let min_col = match (child.style.overflow.x, child.style.overflow.y) {
       (OverflowVisible, OverflowVisible) => min_col_raw
-      _ => {
-        let reduced = max_double(
-          min_col_raw - child.style.scrollbar_width * 2.0,
-          0.0,
-        )
-        if reduced < min_col_raw {
-          reduced
-        } else {
-          min_col_raw
-        }
-      }
+      _ => 0.0
     }
     let min_needed = max_double(
       min_col + resolved_margin.left + resolved_margin.right - gap_total,
@@ -3105,7 +3126,11 @@ fn[C] compute_grid_layout_with_measure(
       measure_function,
       false,
     )
-    let min_h = tree.nodes[child_id].layout.size.height
+    let min_h_raw = tree.nodes[child_id].layout.size.height
+    let min_h = match (child.style.overflow.x, child.style.overflow.y) {
+      (OverflowVisible, OverflowVisible) => min_h_raw
+      _ => 0.0
+    }
     let min_needed = max_double(
       min_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
       0.0,
@@ -3159,31 +3184,97 @@ fn[C] compute_grid_layout_with_measure(
 
   // Container sizing (border-box). If width/height are not specified, size to tracks.
   if specified_width is None {
-    let intrinsic_cols = match available_space.width {
-      AvailMaxContent => col_max_basis
-      AvailMinContent => col_min_basis
-      AvailDefinite(_) => used_cols
+    match (available_space.width, is_layout_root) {
+      (AvailDefinite(v), false) =>
+        border_box_width = max_double(
+          clamp_dimension(
+            v,
+            node.style.min_size.width,
+            node.style.max_size.width,
+            available_space.width,
+          ),
+          horiz_non_scroll_inset,
+        )
+      (AvailDefinite(_), true) => {
+        let intrinsic_cols = match available_space.width {
+          AvailMaxContent => col_max_basis
+          AvailMinContent => col_min_basis
+          AvailDefinite(_) => used_cols
+        }
+        border_box_width = max_double(
+          clamp_dimension(
+            max_double(intrinsic_cols + horiz_inset, horiz_inset),
+            node.style.min_size.width,
+            node.style.max_size.width,
+            available_space.width,
+          ),
+          horiz_non_scroll_inset,
+        )
+      }
+      _ => {
+        let intrinsic_cols = match available_space.width {
+          AvailMaxContent => col_max_basis
+          AvailMinContent => col_min_basis
+          AvailDefinite(_) => used_cols
+        }
+        border_box_width = max_double(
+          clamp_dimension(
+            max_double(intrinsic_cols + horiz_inset, horiz_inset),
+            node.style.min_size.width,
+            node.style.max_size.width,
+            available_space.width,
+          ),
+          horiz_non_scroll_inset,
+        )
+      }
     }
-    border_box_width = clamp_dimension(
-      max_double(intrinsic_cols + horiz_inset, horiz_inset),
-      node.style.min_size.width,
-      node.style.max_size.width,
-      available_space.width,
-    )
     content_width = max_double(border_box_width - horiz_inset, 0.0)
   }
   if specified_height is None {
-    let intrinsic_rows = match available_space.height {
-      AvailMaxContent => row_max_basis
-      AvailMinContent => row_min_basis
-      AvailDefinite(_) => used_rows
+    match (available_space.height, is_layout_root) {
+      (AvailDefinite(v), false) =>
+        border_box_height = max_double(
+          clamp_dimension(
+            v,
+            node.style.min_size.height,
+            node.style.max_size.height,
+            available_space.height,
+          ),
+          vert_non_scroll_inset,
+        )
+      (AvailDefinite(_), true) => {
+        let intrinsic_rows = match available_space.height {
+          AvailMaxContent => row_max_basis
+          AvailMinContent => row_min_basis
+          AvailDefinite(_) => used_rows
+        }
+        border_box_height = max_double(
+          clamp_dimension(
+            max_double(intrinsic_rows + vert_inset, vert_inset),
+            node.style.min_size.height,
+            node.style.max_size.height,
+            available_space.height,
+          ),
+          vert_non_scroll_inset,
+        )
+      }
+      _ => {
+        let intrinsic_rows = match available_space.height {
+          AvailMaxContent => row_max_basis
+          AvailMinContent => row_min_basis
+          AvailDefinite(_) => used_rows
+        }
+        border_box_height = max_double(
+          clamp_dimension(
+            max_double(intrinsic_rows + vert_inset, vert_inset),
+            node.style.min_size.height,
+            node.style.max_size.height,
+            available_space.height,
+          ),
+          vert_non_scroll_inset,
+        )
+      }
     }
-    border_box_height = clamp_dimension(
-      max_double(intrinsic_rows + vert_inset, vert_inset),
-      node.style.min_size.height,
-      node.style.max_size.height,
-      available_space.height,
-    )
     content_height = max_double(border_box_height - vert_inset, 0.0)
   }
 
@@ -3258,7 +3349,11 @@ fn[C] compute_grid_layout_with_measure(
         measure_function,
         false,
       )
-      let min_col = tree.nodes[child_id].layout.size.width
+      let min_col_raw = tree.nodes[child_id].layout.size.width
+      let min_col = match (child.style.overflow.x, child.style.overflow.y) {
+        (OverflowVisible, OverflowVisible) => min_col_raw
+        _ => 0.0
+      }
       let min_needed = max_double(
         min_col + resolved_margin.left + resolved_margin.right - gap_total,
         0.0,
@@ -3329,7 +3424,11 @@ fn[C] compute_grid_layout_with_measure(
         measure_function,
         false,
       )
-      let min_h = tree.nodes[child_id].layout.size.height
+      let min_h_raw = tree.nodes[child_id].layout.size.height
+      let min_h = match (child.style.overflow.x, child.style.overflow.y) {
+        (OverflowVisible, OverflowVisible) => min_h_raw
+        _ => 0.0
+      }
       let min_needed = max_double(
         min_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
         0.0,
@@ -4541,18 +4640,18 @@ fn[C] compute_block_layout_with_measure(
     OverflowScroll => scrollbar_w
     _ => 0.0
   }
-  // Overflow::Scroll reserves scrollbar space inside the border box.
-  // Horizontal scrollbar consumes cross (vertical) space; vertical scrollbar consumes main (horizontal) space.
-  let horiz_inset = padding.left +
+  let horiz_non_scroll_inset = padding.left +
     padding.right +
     border.left +
-    border.right +
-    scrollbar_y
-  let vert_inset = padding.top +
+    border.right
+  let vert_non_scroll_inset = padding.top +
     padding.bottom +
     border.top +
-    border.bottom +
-    scrollbar_x
+    border.bottom
+  // Overflow::Scroll reserves scrollbar space inside the border box.
+  // Horizontal scrollbar consumes cross (vertical) space; vertical scrollbar consumes main (horizontal) space.
+  let horiz_inset = horiz_non_scroll_inset + scrollbar_y
+  let vert_inset = vert_non_scroll_inset + scrollbar_x
   let style_width = resolve_optional_dimension(
     node.style.size.width,
     available_space.width,
@@ -4580,16 +4679,20 @@ fn[C] compute_block_layout_with_measure(
 
   // Minimal block sizing: border-box.
   let raw_width = match specified_width {
-    Some(w) => max_double(w, horiz_inset)
+    Some(w) => w
     None =>
       match available_space.width {
-        AvailDefinite(v) => max_double(v, horiz_inset)
+        AvailDefinite(v) => v
         _ => horiz_inset
       }
   }
   let raw_height = match specified_height {
-    Some(h) => max_double(h, vert_inset)
-    None => vert_inset
+    Some(h) => h
+    None =>
+      match available_space.height {
+        AvailDefinite(v) => v
+        _ => vert_inset
+      }
   }
   let border_box_width = max_double(
     clamp_dimension(
@@ -4598,7 +4701,7 @@ fn[C] compute_block_layout_with_measure(
       node.style.max_size.width,
       available_space.width,
     ),
-    horiz_inset,
+    horiz_non_scroll_inset,
   )
   let border_box_height = max_double(
     clamp_dimension(
@@ -4607,7 +4710,7 @@ fn[C] compute_block_layout_with_measure(
       node.style.max_size.height,
       available_space.height,
     ),
-    vert_inset,
+    vert_non_scroll_inset,
   )
   tree.nodes[node_id].layout = Layout::{
     location: absolute_origin,
@@ -5074,12 +5177,12 @@ fn[C] compute_block_layout_with_measure(
     false =>
       max_double(
         clamp_dimension(
-          max_double(horiz_inset + max_flow_child_width, horiz_inset),
+          horiz_inset + max_flow_child_width,
           node.style.min_size.width,
           node.style.max_size.width,
           available_space.width,
         ),
-        horiz_inset,
+        horiz_non_scroll_inset,
       )
   }
   let mut final_border_box_height = match specified_height {
@@ -5087,17 +5190,14 @@ fn[C] compute_block_layout_with_measure(
     None =>
       max_double(
         clamp_dimension(
-          max_double(
-            vert_inset +
-            flow_anchor_border_bottom +
-            collapse_state_value(flow_margin_collapse),
-            vert_inset,
-          ),
+          vert_inset +
+          flow_anchor_border_bottom +
+          collapse_state_value(flow_margin_collapse),
           node.style.min_size.height,
           node.style.max_size.height,
           available_space.height,
         ),
-        vert_inset,
+        vert_non_scroll_inset,
       )
   }
   // Taffy block layout computes container width first, then performs final in-flow layout with that width.
@@ -5367,17 +5467,14 @@ fn[C] compute_block_layout_with_measure(
       None =>
         max_double(
           clamp_dimension(
-            max_double(
-              vert_inset +
-              flow_anchor_border_bottom +
-              collapse_state_value(flow_margin_collapse),
-              vert_inset,
-            ),
+            vert_inset +
+            flow_anchor_border_bottom +
+            collapse_state_value(flow_margin_collapse),
             node.style.min_size.height,
             node.style.max_size.height,
             available_space.height,
           ),
-          vert_inset,
+          vert_non_scroll_inset,
         )
     }
   }
@@ -5391,11 +5488,11 @@ fn[C] compute_block_layout_with_measure(
 
   // Absolute children: positioned relative to the final padding box.
   let final_padding_box_width = max_double(
-    final_border_box_width - border.left - border.right,
+    final_border_box_width - border.left - border.right - scrollbar_y,
     0.0,
   )
   let final_padding_box_height = max_double(
-    final_border_box_height - border.top - border.bottom,
+    final_border_box_height - border.top - border.bottom - scrollbar_x,
     0.0,
   )
   let abs_available = Size::new(

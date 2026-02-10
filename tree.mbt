@@ -45,6 +45,7 @@ priv struct NodeLayoutCacheEntry {
   known_dimensions : Size[Double?]
   available_space : Size[AvailableSpace]
   absolute_origin : Point[Double]
+  is_layout_root : Bool
   location : Point[Double]
   size : Size[Double]
   effective_margin_top : Double
@@ -916,11 +917,13 @@ fn find_node_layout_cache(
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
+  is_layout_root : Bool,
 ) -> NodeLayoutCacheEntry? {
   for entry in cache {
     if known_dimensions_equal(entry.known_dimensions, known_dimensions) &&
       available_size_equal(entry.available_space, available_space) &&
-      point_equal(entry.absolute_origin, absolute_origin) {
+      point_equal(entry.absolute_origin, absolute_origin) &&
+      entry.is_layout_root == is_layout_root {
       return Some(entry)
     }
   }
@@ -1353,6 +1356,7 @@ fn[C] compute_node_layout_with_measure(
         known_dimensions,
         available_space,
         absolute_origin,
+        is_layout_root,
       ) {
       Some(entry) => {
         tree.nodes[node_id].layout = Layout::{
@@ -1401,33 +1405,37 @@ fn[C] compute_node_layout_with_measure(
   }
 
   // Position::Relative: apply inset as a final offset without affecting sibling layout.
-  match node.style.position {
-    PosRelative => {
-      let inset = node.style.inset
-      let dx = match
-        resolve_optional_dimension(inset.left, available_space.width) {
-        Some(v) => v
-        None =>
-          match resolve_optional_dimension(inset.right, available_space.width) {
-            Some(v) => -v
-            None => 0.0
-          }
+  // `display: none` nodes must remain at zero-size/zero-offset.
+  if !(node.style.display is DisplayNone) {
+    match node.style.position {
+      PosRelative => {
+        let inset = node.style.inset
+        let dx = match
+          resolve_optional_dimension(inset.left, available_space.width) {
+          Some(v) => v
+          None =>
+            match
+              resolve_optional_dimension(inset.right, available_space.width) {
+              Some(v) => -v
+              None => 0.0
+            }
+        }
+        let dy = match
+          resolve_optional_dimension(inset.top, available_space.height) {
+          Some(v) => v
+          None =>
+            match
+              resolve_optional_dimension(inset.bottom, available_space.height) {
+              Some(v) => -v
+              None => 0.0
+            }
+        }
+        if dx != 0.0 || dy != 0.0 {
+          offset_subtree(tree, node_id, dx, dy)
+        }
       }
-      let dy = match
-        resolve_optional_dimension(inset.top, available_space.height) {
-        Some(v) => v
-        None =>
-          match
-            resolve_optional_dimension(inset.bottom, available_space.height) {
-            Some(v) => -v
-            None => 0.0
-          }
-      }
-      if dx != 0.0 || dy != 0.0 {
-        offset_subtree(tree, node_id, dx, dy)
-      }
+      PosAbsolute => ()
     }
-    PosAbsolute => ()
   }
   if can_use_layout_cache {
     let layout = tree.nodes[node_id].layout
@@ -1435,6 +1443,7 @@ fn[C] compute_node_layout_with_measure(
       known_dimensions,
       available_space,
       absolute_origin,
+      is_layout_root,
       location: layout.location,
       size: layout.size,
       effective_margin_top: tree.nodes[node_id].effective_margin_top,
@@ -1491,6 +1500,26 @@ fn[C] offset_subtree(
   for child_id in node.children {
     offset_subtree(tree, child_id, dx, dy)
   }
+}
+
+///|
+fn[C] subtree_has_measure_context(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+) -> Bool raise TaffyError {
+  let node = match tree.nodes.get(node_id) {
+    Some(n) => n
+    None => raise InvalidNodeId(node_id)
+  }
+  if node.context is Some(_) {
+    return true
+  }
+  for child_id in node.children {
+    if subtree_has_measure_context(tree, child_id) {
+      return true
+    }
+  }
+  false
 }
 
 ///|
@@ -1668,6 +1697,7 @@ fn[C] compute_leaf_layout_with_measure(
     Some(ratio) =>
       if ratio > 0.0 {
         let width_is_auto = known_width is None && specified_width is None
+        let height_is_auto = known_height is None && specified_height is None
         let resolved_min_height = resolve_optional_dimension(
           node.style.min_size.height,
           available_space.height,
@@ -1706,18 +1736,42 @@ fn[C] compute_leaf_layout_with_measure(
         } else {
           ()
         }
-        let min_height = max_double(
-          (border_box_size.width / ratio).round(),
-          vert_inset,
-        )
-        if min_height > border_box_size.height {
-          border_box_size = Size::new(
-            width=border_box_size.width,
-            height=min_height,
+        if height_is_auto {
+          let min_height = max_double(
+            (border_box_size.width / ratio).round(),
+            vert_inset,
           )
+          if min_height > border_box_size.height {
+            border_box_size = Size::new(
+              width=border_box_size.width,
+              height=min_height,
+            )
+          } else {
+            ()
+          }
         } else {
           ()
         }
+        border_box_size = Size::new(
+          width=max_double(
+            clamp_dimension(
+              border_box_size.width,
+              node.style.min_size.width,
+              node.style.max_size.width,
+              available_space.width,
+            ),
+            horiz_non_scroll_inset,
+          ),
+          height=max_double(
+            clamp_dimension(
+              border_box_size.height,
+              node.style.min_size.height,
+              node.style.max_size.height,
+              available_space.height,
+            ),
+            vert_non_scroll_inset,
+          ),
+        )
       }
     None => ()
   }
@@ -1813,6 +1867,21 @@ fn resolve_available_for_percent(
     AvailDefinite(value)
   } else {
     AvailMaxContent
+  }
+}
+
+///|
+fn resolve_justify_start_main(
+  justify : AlignContent,
+  leftover_main : Double,
+  is_reverse : Bool,
+) -> Double {
+  match justify {
+    AlignCenter => leftover_main / 2.0
+    AlignStart => if is_reverse { leftover_main } else { 0.0 }
+    AlignEnd => if is_reverse { 0.0 } else { leftover_main }
+    AlignFlexEnd => leftover_main
+    _ => 0.0
   }
 }
 
@@ -6218,6 +6287,75 @@ fn[C] baseline_offset_y(
       if node.children.length() == 0 {
         node_layout.size.height
       } else {
+        if node.style.display is DisplayFlex &&
+          !is_column(node.style.flex_direction) {
+          let default_align = match node.style.align_items {
+            Some(v) => v
+            None => ItemsStretch
+          }
+          let mut first_line_top : Double? = None
+          for child_id in node.children {
+            let child = match tree.nodes.get(child_id) {
+              Some(c) => c
+              None => raise InvalidNodeId(child_id)
+            }
+            match (child.style.display, child.style.position) {
+              (DisplayNone, _) | (_, PosAbsolute) => ()
+              _ => {
+                let rel_top = child.layout.location.y - node_layout.location.y
+                first_line_top = match first_line_top {
+                  Some(v) => Some(min_double(v, rel_top))
+                  None => Some(rel_top)
+                }
+              }
+            }
+          }
+          match first_line_top {
+            Some(first_line_top) => {
+              let mut first_candidate : NodeId? = None
+              let mut baseline_candidate : NodeId? = None
+              for child_id in node.children {
+                let child = match tree.nodes.get(child_id) {
+                  Some(c) => c
+                  None => raise InvalidNodeId(child_id)
+                }
+                match (child.style.display, child.style.position) {
+                  (DisplayNone, _) | (_, PosAbsolute) => ()
+                  _ => {
+                    let rel_top = child.layout.location.y -
+                      node_layout.location.y
+                    if abs_double(rel_top - first_line_top) < 0.0001 {
+                      if first_candidate is None {
+                        first_candidate = Some(child_id)
+                      }
+                      let align = match child.style.align_self {
+                        Some(v) => v
+                        None => default_align
+                      }
+                      if baseline_candidate is None && align is ItemsBaseline {
+                        baseline_candidate = Some(child_id)
+                      }
+                    }
+                  }
+                }
+              }
+              let chosen = match baseline_candidate {
+                Some(id) => Some(id)
+                None => first_candidate
+              }
+              match chosen {
+                Some(chosen_id) => {
+                  let chosen_layout = tree.nodes[chosen_id].layout
+                  return chosen_layout.location.y -
+                    node_layout.location.y +
+                    baseline_offset_y(tree, chosen_id)
+                }
+                None => ()
+              }
+            }
+            None => ()
+          }
+        }
         for child_id in node.children {
           let child = match tree.nodes.get(child_id) {
             Some(c) => c
@@ -6230,9 +6368,23 @@ fn[C] baseline_offset_y(
                 PosAbsolute => ()
                 PosRelative => {
                   let child_layout = child.layout
+                  let child_margin_top = if node.style.display is DisplayFlex &&
+                    is_column(node.style.flex_direction) {
+                    match child.style.margin.top {
+                      DimPercent(_) =>
+                        resolve_dimension_width_basis(
+                          child.style.margin.top,
+                          node_layout.size.width,
+                        )
+                      _ => 0.0
+                    }
+                  } else {
+                    0.0
+                  }
                   return child_layout.location.y -
                     node_layout.location.y +
-                    baseline_offset_y(tree, child_id)
+                    baseline_offset_y(tree, child_id) -
+                    child_margin_top
                 }
               }
           }
@@ -6367,6 +6519,271 @@ fn[C] resolve_flex_auto_min_main(
 }
 
 ///|
+fn[C] resolve_wrap_line_main_sizes(
+  tree : TaffyTree[C],
+  flow_children : Array[NodeId],
+  indices : Array[Int],
+  is_col : Bool,
+  container_main : Double,
+  gap_main : Double,
+  base_sizes : Array[Size[Double]],
+  flex_grow : Array[Double],
+  flex_shrink : Array[Double],
+  margin_main_start : Array[Double],
+  margin_main_end : Array[Double],
+  min_main_sizes : Array[Double],
+  max_main_sizes : Array[Double?],
+  main_available_pre : AvailableSpace,
+  parent_available_for_children : Size[AvailableSpace],
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ],
+) -> Array[Double] raise TaffyError {
+  let flow_count = flow_children.length()
+  let count = indices.length()
+  let line_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
+  let line_frozen : Array[Bool] = Array::make(flow_count, false)
+  let line_violations : Array[Double] = Array::make(flow_count, 0.0)
+  for idx in indices {
+    line_main_sizes[idx] = get_main(base_sizes[idx], is_col)
+  }
+  let line_gap_main = if count > 1 {
+    gap_main * (count - 1).to_double()
+  } else {
+    0.0
+  }
+  let mut line_initial_used = line_gap_main
+  for idx in indices {
+    line_initial_used = line_initial_used +
+      margin_main_start[idx] +
+      margin_main_end[idx] +
+      line_main_sizes[idx]
+  }
+  let line_initial_free_space = container_main - line_initial_used
+  while true {
+    let mut all_line_frozen = true
+    for idx in indices {
+      if !line_frozen[idx] {
+        all_line_frozen = false
+      }
+    }
+    if all_line_frozen {
+      break
+    }
+    let mut used = line_gap_main
+    for idx in indices {
+      used = used +
+        margin_main_start[idx] +
+        margin_main_end[idx] +
+        (if line_frozen[idx] {
+          line_main_sizes[idx]
+        } else {
+          get_main(base_sizes[idx], is_col)
+        })
+    }
+    let free_space_raw = container_main - used
+    let mut sum_grow = 0.0
+    let mut sum_shrink = 0.0
+    let mut sum_scaled_shrink = 0.0
+    for idx in indices {
+      if !line_frozen[idx] {
+        sum_grow = sum_grow + flex_grow[idx]
+        sum_shrink = sum_shrink + flex_shrink[idx]
+        sum_scaled_shrink = sum_scaled_shrink +
+          get_main(base_sizes[idx], is_col) * flex_shrink[idx]
+      }
+    }
+    let free_space = if free_space_raw > 0.0 && sum_grow > 0.0 && sum_grow < 1.0 {
+      let scaled = line_initial_free_space * sum_grow
+      if abs_double(scaled) < abs_double(free_space_raw) {
+        scaled
+      } else {
+        free_space_raw
+      }
+    } else if free_space_raw < 0.0 && sum_shrink > 0.0 && sum_shrink < 1.0 {
+      let scaled = line_initial_free_space * sum_shrink
+      if abs_double(scaled) < abs_double(free_space_raw) {
+        scaled
+      } else {
+        free_space_raw
+      }
+    } else {
+      free_space_raw
+    }
+    for idx in indices {
+      if !line_frozen[idx] {
+        let base_main = get_main(base_sizes[idx], is_col)
+        if free_space > 0.0 && sum_grow > 0.0 {
+          line_main_sizes[idx] = base_main +
+            free_space * (flex_grow[idx] / sum_grow)
+        } else if free_space < 0.0 &&
+          sum_shrink > 0.0 &&
+          sum_scaled_shrink > 0.0 {
+          let scaled = base_main * flex_shrink[idx]
+          line_main_sizes[idx] = base_main +
+            free_space * (scaled / sum_scaled_shrink)
+        } else {
+          line_main_sizes[idx] = base_main
+        }
+      }
+    }
+    for idx in indices {
+      let child_for_min = match tree.nodes.get(flow_children[idx]) {
+        Some(c) => c
+        None => raise InvalidNodeId(flow_children[idx])
+      }
+      let has_definite_basis = resolve_optional_dimension(
+          child_for_min.style.flex_basis,
+          main_available_pre,
+        )
+        is Some(_)
+      let should_resolve_auto_min = free_space < 0.0 ||
+        has_definite_basis ||
+        (
+          double_approx_equal(free_space, 0.0) &&
+          child_for_min.context is Some(_) &&
+          main_available_pre is AvailMaxContent
+        )
+      if !line_frozen[idx] &&
+        min_main_sizes[idx] < 0.0 &&
+        should_resolve_auto_min {
+        let auto_min = resolve_flex_auto_min_main(
+          tree,
+          flow_children[idx],
+          is_col,
+          parent_available_for_children,
+          main_available_pre,
+          measure_function,
+        )
+        min_main_sizes[idx] = auto_min
+      }
+    }
+    let mut total_violation = 0.0
+    for idx in indices {
+      if !line_frozen[idx] {
+        let unclamped = line_main_sizes[idx]
+        let min_main = min_main_sizes[idx]
+        let max_main = max_main_sizes[idx]
+        let mut clamped = unclamped
+        if clamped < min_main {
+          clamped = min_main
+        }
+        match max_main {
+          Some(v) => if clamped > v { clamped = v }
+          None => ()
+        }
+        if clamped < 0.0 {
+          clamped = 0.0
+        }
+        line_violations[idx] = clamped - unclamped
+        line_main_sizes[idx] = clamped
+        total_violation = total_violation + line_violations[idx]
+      }
+    }
+    for idx in indices {
+      if !line_frozen[idx] {
+        if total_violation > 0.0 {
+          line_frozen[idx] = line_violations[idx] > 0.0
+        } else if total_violation < 0.0 {
+          line_frozen[idx] = line_violations[idx] < 0.0
+        } else {
+          line_frozen[idx] = true
+        }
+      }
+    }
+  }
+  line_main_sizes
+}
+
+///|
+fn compute_single_line_auto_intrinsic_main(
+  flow_count : Int,
+  gap_main : Double,
+  base_main_sizes : Array[Double],
+  preferred_main_sizes : Array[Double?],
+  min_main_sizes : Array[Double],
+  max_main_sizes : Array[Double?],
+  flex_grow : Array[Double],
+  flex_shrink : Array[Double],
+  margin_main_start : Array[Double],
+  margin_main_end : Array[Double],
+  content_main_sizes : Array[Double],
+) -> Double {
+  let mut intrinsic_main = if flow_count > 1 {
+    gap_main * (flow_count - 1).to_double()
+  } else {
+    0.0
+  }
+  for i in 0..<flow_count {
+    let flex_basis = base_main_sizes[i]
+    let resolved_min_main = max_double(
+      if min_main_sizes[i] < 0.0 {
+        0.0
+      } else {
+        min_main_sizes[i]
+      },
+      flex_basis,
+    )
+    let clamping_basis = match preferred_main_sizes[i] {
+      Some(pref) => max_double(flex_basis, pref)
+      None => flex_basis
+    }
+    let flex_basis_min = if flex_shrink[i] == 0.0 {
+      Some(clamping_basis)
+    } else {
+      None
+    }
+    let flex_basis_max = if flex_grow[i] == 0.0 {
+      Some(clamping_basis)
+    } else {
+      None
+    }
+    let min_main = max_double(
+      match flex_basis_min {
+        Some(v) => v
+        None => resolved_min_main
+      },
+      resolved_min_main,
+    )
+    let max_main = match (max_main_sizes[i], flex_basis_max) {
+      (Some(a), Some(b)) => Some(min_double(a, b))
+      (Some(a), None) => Some(a)
+      (None, Some(b)) => Some(b)
+      (None, None) => None
+    }
+    let contribution = match (preferred_main_sizes[i], max_main) {
+      (Some(pref), Some(max_v)) if max_v <= min_main || max_v <= pref => {
+        let mut v = pref
+        if v > max_v {
+          v = max_v
+        }
+        if v < min_main {
+          v = min_main
+        }
+        v
+      }
+      (_, Some(max_v)) if max_v <= min_main => min_main
+      _ => {
+        let mut v = content_main_sizes[i]
+        if v < min_main {
+          v = min_main
+        }
+        match max_main {
+          Some(max_v) => if v > max_v { v = max_v }
+          None => ()
+        }
+        v
+      }
+    }
+    intrinsic_main = intrinsic_main +
+      margin_main_start[i] +
+      contribution +
+      margin_main_end[i]
+  }
+  intrinsic_main
+}
+
+///|
 fn[C] compute_flex_layout_with_measure(
   tree : TaffyTree[C],
   node_id : NodeId,
@@ -6464,14 +6881,20 @@ fn[C] compute_flex_layout_with_measure(
   let margin_main_end : Array[Double] = Array::make(flow_count, 0.0)
   let margin_cross_start : Array[Double] = Array::make(flow_count, 0.0)
   let margin_cross_end : Array[Double] = Array::make(flow_count, 0.0)
+  let margin_main_start_auto : Array[Bool] = Array::make(flow_count, false)
+  let margin_main_end_auto : Array[Bool] = Array::make(flow_count, false)
+  let margin_cross_start_auto : Array[Bool] = Array::make(flow_count, false)
+  let margin_cross_end_auto : Array[Bool] = Array::make(flow_count, false)
   let align_for_flow : Array[AlignItems] = Array::make(
     flow_count, default_align_items,
   )
   let baseline_offsets : Array[Double] = Array::make(flow_count, 0.0)
   let base_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
+  let preferred_main_sizes : Array[Double?] = Array::make(flow_count, None)
   let main_size_is_known_constraint : Array[Bool] = Array::make(
     flow_count, false,
   )
+  let content_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
   let min_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
   let max_main_sizes : Array[Double?] = Array::make(flow_count, None)
   let mut total_base_main = 0.0
@@ -6537,6 +6960,45 @@ fn[C] compute_flex_layout_with_measure(
       child.style.margin,
       parent_available_for_children,
     )
+    let resolved_padding = resolve_rect_width_basis(
+      child.style.padding,
+      parent_available_for_children,
+    )
+    let resolved_border = resolve_rect_width_basis(
+      child.style.border,
+      parent_available_for_children,
+    )
+    let padding_border_main = if is_col {
+      resolved_padding.top +
+      resolved_padding.bottom +
+      resolved_border.top +
+      resolved_border.bottom
+    } else {
+      resolved_padding.left +
+      resolved_padding.right +
+      resolved_border.left +
+      resolved_border.right
+    }
+    let main_margin_start_auto = if is_col {
+      child.style.margin.top is DimAuto
+    } else {
+      child.style.margin.left is DimAuto
+    }
+    let main_margin_end_auto = if is_col {
+      child.style.margin.bottom is DimAuto
+    } else {
+      child.style.margin.right is DimAuto
+    }
+    let cross_margin_start_auto = if is_col {
+      child.style.margin.left is DimAuto
+    } else {
+      child.style.margin.top is DimAuto
+    }
+    let cross_margin_end_auto = if is_col {
+      child.style.margin.right is DimAuto
+    } else {
+      child.style.margin.bottom is DimAuto
+    }
     let main_margin_start = if is_col {
       resolved_margin.top
     } else {
@@ -6557,16 +7019,61 @@ fn[C] compute_flex_layout_with_measure(
     } else {
       resolved_margin.bottom
     }
+    let child_intrinsic_available = if is_col {
+      match (specified_width, child.style.size.width) {
+        (None, DimPercent(_)) =>
+          Size::new(
+            width=match parent_available_for_children.width {
+              AvailMinContent => AvailMinContent
+              _ => AvailMaxContent
+            },
+            height=intrinsic_available_for_children.height,
+          )
+        _ => intrinsic_available_for_children
+      }
+    } else {
+      intrinsic_available_for_children
+    }
+    let intrinsic_known_dimensions = if child.context is Some(_) &&
+      child.children.length() == 0 &&
+      align is ItemsStretch {
+      let intrinsic_cross_available = if is_col {
+        child_intrinsic_available.width
+      } else {
+        child_intrinsic_available.height
+      }
+      match intrinsic_cross_available {
+        AvailDefinite(v) => {
+          let stretched = max_double(
+            v - cross_margin_start - cross_margin_end,
+            0.0,
+          )
+          if is_col {
+            Size::new(width=Some(stretched), height=None)
+          } else {
+            Size::new(width=None, height=Some(stretched))
+          }
+        }
+        _ => Size::new(width=None, height=None)
+      }
+    } else {
+      Size::new(width=None, height=None)
+    }
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=None, height=None),
-      intrinsic_available_for_children,
+      intrinsic_known_dimensions,
+      child_intrinsic_available,
       Point::zero(),
       measure_function,
       false,
     )
     let child_layout = tree.layout(child_id)
+    content_main_sizes[i] = if is_col {
+      child_layout.size.height
+    } else {
+      child_layout.size.width
+    }
     let main_axis_available = main_available_pre
     let cross_axis_available = cross_available_pre
     let basis = resolve_optional_dimension(
@@ -6589,7 +7096,7 @@ fn[C] compute_flex_layout_with_measure(
         main_axis_available,
       )
     }
-    let main = match basis {
+    let mut main = match basis {
       Some(v) => v
       None =>
         match main_from_size {
@@ -6602,12 +7109,38 @@ fn[C] compute_flex_layout_with_measure(
             }
         }
     }
+    if basis is None &&
+      main_from_size is None &&
+      child.children.length() == 0 &&
+      child.context is None &&
+      child.style.aspect_ratio is None {
+      main = padding_border_main
+    }
+    if main < padding_border_main {
+      main = padding_border_main
+    }
     main_size_is_known_constraint[i] = basis is Some(_) ||
       main_from_size is Some(_)
     base_main_sizes[i] = main
+    preferred_main_sizes[i] = main_from_size
     max_main_sizes[i] = max_from_style
     let cross_from_size = if is_col {
-      resolve_optional_dimension(child.style.size.width, cross_axis_available)
+      match child.style.size.width {
+        DimPercent(_) =>
+          if specified_width is None {
+            None
+          } else {
+            resolve_optional_dimension(
+              child.style.size.width,
+              cross_axis_available,
+            )
+          }
+        _ =>
+          resolve_optional_dimension(
+            child.style.size.width,
+            cross_axis_available,
+          )
+      }
     } else {
       resolve_optional_dimension(child.style.size.height, cross_axis_available)
     }
@@ -6631,6 +7164,10 @@ fn[C] compute_flex_layout_with_measure(
     margin_main_end[i] = main_margin_end
     margin_cross_start[i] = cross_margin_start
     margin_cross_end[i] = cross_margin_end
+    margin_main_start_auto[i] = main_margin_start_auto
+    margin_main_end_auto[i] = main_margin_end_auto
+    margin_cross_start_auto[i] = cross_margin_start_auto
+    margin_cross_end_auto[i] = cross_margin_end_auto
     total_base_main = total_base_main + main
     total_base_margin_main = total_base_margin_main +
       main_margin_start +
@@ -6691,7 +7228,6 @@ fn[C] compute_flex_layout_with_measure(
     max_cross = max_double(max_cross, baseline_before_max + baseline_after_max)
   }
   let total_base_outer_main = total_base_main + total_base_margin_main
-
   // Container sizing (border-box)
   let raw_width = match specified_width {
     Some(w) => max_double(w, horiz_inset)
@@ -6737,7 +7273,13 @@ fn[C] compute_flex_layout_with_measure(
   let mut content_height = max_double(border_box_height - vert_inset, 0.0)
 
   // Resolve gaps again now that the container's content size is known
-  let main_available_final = if is_col {
+  let main_available_final = if flow_count > 1 {
+    if is_col {
+      AvailDefinite(content_height)
+    } else {
+      AvailDefinite(content_width)
+    }
+  } else if is_col {
     resolve_available_for_percent(height_def_for_percent, content_height)
   } else {
     resolve_available_for_percent(width_def_for_percent, content_width)
@@ -6769,6 +7311,7 @@ fn[C] compute_flex_layout_with_measure(
     FlexNoWrap => false
     _ => true
   }
+  let is_wrap_reverse = node.style.flex_wrap is FlexWrapReverse
   let main_is_definite = if is_col {
     specified_height is Some(_)
   } else {
@@ -6790,7 +7333,19 @@ fn[C] compute_flex_layout_with_measure(
     let mut current_baseline_before = 0.0
     let mut current_baseline_after = 0.0
     for i in 0..<flow_count {
-      let main = get_main(base_sizes[i], is_col)
+      let mut main = get_main(base_sizes[i], is_col)
+      let min_main_for_wrap = if min_main_sizes[i] < 0.0 {
+        0.0
+      } else {
+        min_main_sizes[i]
+      }
+      if main < min_main_for_wrap {
+        main = min_main_for_wrap
+      }
+      match max_main_sizes[i] {
+        Some(max_main) => if main > max_main { main = max_main }
+        None => ()
+      }
       let cross = get_cross(base_sizes[i], is_col)
       let outer_main = margin_main_start[i] + main + margin_main_end[i]
       let outer_cross = margin_cross_start[i] + cross + margin_cross_end[i]
@@ -6899,11 +7454,15 @@ fn[C] compute_flex_layout_with_measure(
       None => AlignStretch
     }
     let leftover_cross = container_cross - total_lines_cross
-    let leftover_cross = if leftover_cross > 0.0 { leftover_cross } else { 0.0 }
+    let distributable_cross = if leftover_cross > 0.0 {
+      leftover_cross
+    } else {
+      0.0
+    }
     let extra_per_line = match align_content {
       AlignStretch =>
         if line_count > 0 {
-          leftover_cross / line_count.to_double()
+          distributable_cross / line_count.to_double()
         } else {
           0.0
         }
@@ -6917,16 +7476,16 @@ fn[C] compute_flex_layout_with_measure(
       AlignFlexEnd | AlignEnd => start_cross = leftover_cross
       AlignSpaceBetween =>
         if line_count > 1 {
-          extra_gap_cross = leftover_cross / (line_count - 1).to_double()
+          extra_gap_cross = distributable_cross / (line_count - 1).to_double()
         }
       AlignSpaceAround =>
         if line_count > 0 {
-          extra_gap_cross = leftover_cross / line_count.to_double()
+          extra_gap_cross = distributable_cross / line_count.to_double()
           start_cross = extra_gap_cross / 2.0
         }
       AlignSpaceEvenly =>
         if line_count > 0 {
-          extra_gap_cross = leftover_cross / (line_count + 1).to_double()
+          extra_gap_cross = distributable_cross / (line_count + 1).to_double()
           start_cross = extra_gap_cross
         }
       _ => ()
@@ -6944,11 +7503,16 @@ fn[C] compute_flex_layout_with_measure(
         gap_cross +
         extra_gap_cross
     }
+    if is_wrap_reverse {
+      for li in 0..<line_count {
+        line_offsets[li] = container_cross -
+          line_offsets[li] -
+          line_cross_sizes[li]
+      }
+    }
     let child_available_for_final = Size::new(
-      width=resolve_available_for_percent(width_def_for_percent, content_width),
-      height=resolve_available_for_percent(
-        height_def_for_percent, content_height,
-      ),
+      width=AvailDefinite(content_width),
+      height=AvailDefinite(content_height),
     )
     for li in 0..<line_count {
       let indices = lines[li]
@@ -6956,9 +7520,14 @@ fn[C] compute_flex_layout_with_measure(
       let line_cross = line_cross_sizes[li]
       let line_offset = line_offsets[li]
       let baseline_before_max = line_baseline_befores[li]
+      let line_main_sizes = resolve_wrap_line_main_sizes(
+        tree, flow_children, indices, is_col, container_main, gap_main, base_sizes,
+        flex_grow, flex_shrink, margin_main_start, margin_main_end, min_main_sizes,
+        max_main_sizes, main_available_pre, parent_available_for_children, measure_function,
+      )
       let mut line_used = 0.0
       for idx in indices {
-        let main = get_main(base_sizes[idx], is_col)
+        let main = line_main_sizes[idx]
         line_used = line_used +
           margin_main_start[idx] +
           main +
@@ -6968,33 +7537,64 @@ fn[C] compute_flex_layout_with_measure(
         line_used = line_used + gap_main * (count - 1).to_double()
       }
       let line_leftover = container_main - line_used
-      let line_leftover = if line_leftover > 0.0 { line_leftover } else { 0.0 }
+      let auto_main_start_values : Array[Double] = Array::make(flow_count, 0.0)
+      let auto_main_end_values : Array[Double] = Array::make(flow_count, 0.0)
+      let mut line_leftover_for_justify = line_leftover
+      let mut main_auto_count = 0
+      for idx in indices {
+        if margin_main_start_auto[idx] {
+          main_auto_count = main_auto_count + 1
+        }
+        if margin_main_end_auto[idx] {
+          main_auto_count = main_auto_count + 1
+        }
+      }
+      if main_auto_count > 0 && line_leftover > 0.0 {
+        let share = line_leftover / main_auto_count.to_double()
+        for idx in indices {
+          if margin_main_start_auto[idx] {
+            auto_main_start_values[idx] = share
+          }
+          if margin_main_end_auto[idx] {
+            auto_main_end_values[idx] = share
+          }
+        }
+        line_leftover_for_justify = 0.0
+      }
+      let distributable_line_leftover = if line_leftover_for_justify > 0.0 {
+        line_leftover_for_justify
+      } else {
+        0.0
+      }
       let mut extra_between = 0.0
       let start_main = match justify {
-        AlignCenter => line_leftover / 2.0
-        AlignFlexEnd | AlignEnd => line_leftover
         AlignSpaceBetween =>
           if count > 1 {
-            extra_between = line_leftover / (count - 1).to_double()
+            extra_between = distributable_line_leftover /
+              (count - 1).to_double()
             0.0
           } else {
             0.0
           }
         AlignSpaceAround =>
           if count > 0 {
-            extra_between = line_leftover / count.to_double()
+            extra_between = distributable_line_leftover / count.to_double()
             extra_between / 2.0
           } else {
             0.0
           }
         AlignSpaceEvenly =>
           if count > 0 {
-            extra_between = line_leftover / (count + 1).to_double()
+            extra_between = distributable_line_leftover /
+              (count + 1).to_double()
             extra_between
           } else {
             0.0
           }
-        _ => 0.0
+        _ =>
+          resolve_justify_start_main(
+            justify, line_leftover_for_justify, is_reverse,
+          )
       }
       let actual_gap_main = gap_main + extra_between
       let mut main_cursor = if is_reverse {
@@ -7008,7 +7608,7 @@ fn[C] compute_flex_layout_with_measure(
           Some(c) => c
           None => raise InvalidNodeId(child_id)
         }
-        let main_size = get_main(base_sizes[idx], is_col)
+        let main_size = line_main_sizes[idx]
         let align = match child.style.align_self {
           Some(v) => v
           None =>
@@ -7018,51 +7618,141 @@ fn[C] compute_flex_layout_with_measure(
             }
         }
         let intrinsic_cross = get_cross(base_sizes[idx], is_col)
-        let available_cross_for_item = max_double(
-          line_cross - margin_cross_start[idx] - margin_cross_end[idx],
-          0.0,
-        )
+        let available_cross_for_item = line_cross -
+          margin_cross_start[idx] -
+          margin_cross_end[idx]
+        let stretch_cross_available = max_double(available_cross_for_item, 0.0)
         let cross_size_is_auto = if is_col {
           child.style.size.width is DimAuto
         } else {
           child.style.size.height is DimAuto
         }
-        let cross_size = match align {
+        let mut cross_size = match align {
           ItemsStretch =>
             if cross_size_is_auto {
-              available_cross_for_item
+              stretch_cross_available
             } else {
               intrinsic_cross
             }
-          _ => intrinsic_cross
+          _ =>
+            if cross_size_is_auto {
+              let child_wraps = match child.style.flex_wrap {
+                FlexNoWrap => false
+                _ => true
+              }
+              if child.children.length() > 0 && child_wraps {
+                min_double(intrinsic_cross, stretch_cross_available)
+              } else {
+                intrinsic_cross
+              }
+            } else {
+              intrinsic_cross
+            }
         }
-        let cross_pos_in_available = match align {
-          ItemsBaseline =>
-            if !is_col {
-              baseline_before_max -
-              margin_cross_start[idx] -
-              baseline_offsets[idx]
+        let cross_axis_available = if is_col {
+          child_available_for_final.width
+        } else {
+          child_available_for_final.height
+        }
+        let cross_min = if is_col {
+          resolve_optional_dimension(
+            child.style.min_size.width,
+            cross_axis_available,
+          )
+        } else {
+          resolve_optional_dimension(
+            child.style.min_size.height,
+            cross_axis_available,
+          )
+        }
+        let cross_max = if is_col {
+          resolve_optional_dimension(
+            child.style.max_size.width,
+            cross_axis_available,
+          )
+        } else {
+          resolve_optional_dimension(
+            child.style.max_size.height,
+            cross_axis_available,
+          )
+        }
+        match cross_min {
+          Some(v) => if cross_size < v { cross_size = v }
+          None => ()
+        }
+        match cross_max {
+          Some(v) => if cross_size > v { cross_size = v }
+          None => ()
+        }
+        if cross_size < 0.0 {
+          cross_size = 0.0
+        }
+        let mut auto_cross_start = 0.0
+        let mut auto_cross_count = 0
+        if margin_cross_start_auto[idx] {
+          auto_cross_count = auto_cross_count + 1
+        }
+        if margin_cross_end_auto[idx] {
+          auto_cross_count = auto_cross_count + 1
+        }
+        if auto_cross_count > 0 {
+          let remaining_cross = available_cross_for_item - cross_size
+          if auto_cross_count == 2 {
+            if remaining_cross > 0.0 {
+              auto_cross_start = remaining_cross / 2.0
+            } else {
+              auto_cross_start = 0.0
+            }
+          } else if margin_cross_start_auto[idx] {
+            auto_cross_start = if remaining_cross > 0.0 {
+              remaining_cross
             } else {
               0.0
             }
-          ItemsEnd | ItemsFlexEnd => available_cross_for_item - cross_size
-          ItemsCenter => (available_cross_for_item - cross_size) / 2.0
-          _ => 0.0
+          } else {
+            ()
+          }
+        }
+        let cross_pos_in_available = if auto_cross_count > 0 {
+          auto_cross_start
+        } else {
+          match align {
+            ItemsBaseline =>
+              if !is_col {
+                baseline_before_max -
+                margin_cross_start[idx] -
+                baseline_offsets[idx]
+              } else {
+                0.0
+              }
+            ItemsEnd | ItemsFlexEnd => available_cross_for_item - cross_size
+            ItemsCenter => (available_cross_for_item - cross_size) / 2.0
+            _ => 0.0
+          }
+        }
+        let cross_pos_in_available = if is_wrap_reverse {
+          available_cross_for_item - cross_size - cross_pos_in_available
+        } else {
+          cross_pos_in_available
         }
         let cross_offset = line_offset +
           margin_cross_start[idx] +
           cross_pos_in_available
+        let item_main_margin_start = margin_main_start[idx] +
+          auto_main_start_values[idx]
+        let item_main_margin_end = margin_main_end[idx] +
+          auto_main_end_values[idx]
         let main_pos = if is_reverse {
-          main_cursor = main_cursor - margin_main_end[idx] - main_size
-          let pos = main_cursor + margin_main_start[idx]
-          main_cursor = main_cursor - margin_main_start[idx] - actual_gap_main
+          main_cursor = main_cursor - item_main_margin_end - main_size
+          let pos = main_cursor + item_main_margin_start
+          main_cursor = main_cursor - item_main_margin_start - actual_gap_main
           pos
         } else {
-          let pos = main_cursor + margin_main_start[idx]
+          let pos = main_cursor + item_main_margin_start
           main_cursor = main_cursor +
-            margin_main_start[idx] +
+            item_main_margin_start +
             main_size +
-            margin_main_end[idx] +
+            item_main_margin_end +
             actual_gap_main
           pos
         }
@@ -7079,7 +7769,14 @@ fn[C] compute_flex_layout_with_measure(
             Some(cross_size)
           } else {
             match align {
-              ItemsStretch => Some(cross_size)
+              ItemsStretch =>
+                if cross_is_auto_container &&
+                  main_is_definite &&
+                  flow_count == 1 {
+                  None
+                } else {
+                  Some(cross_size)
+                }
               _ => None
             }
           }
@@ -7089,7 +7786,22 @@ fn[C] compute_flex_layout_with_measure(
             main_known
           }
         } else {
-          Some(if is_col { cross_size } else { main_size })
+          let main_changed = abs_double(main_size - base_main_sizes[idx]) >
+            0.0001
+          let child_wraps = match child.style.flex_wrap {
+            FlexNoWrap => false
+            _ => true
+          }
+          let allow_auto_main = child.children.length() > 0 &&
+            child_wraps &&
+            !main_size_is_known_constraint[idx] &&
+            !main_changed
+          let main_known = if allow_auto_main { None } else { Some(main_size) }
+          if is_col {
+            Some(cross_size)
+          } else {
+            main_known
+          }
         }
         let known_height = if has_measure_context {
           let main_changed = abs_double(main_size - base_main_sizes[idx]) >
@@ -7103,7 +7815,14 @@ fn[C] compute_flex_layout_with_measure(
             Some(cross_size)
           } else {
             match align {
-              ItemsStretch => Some(cross_size)
+              ItemsStretch =>
+                if cross_is_auto_container &&
+                  main_is_definite &&
+                  flow_count == 1 {
+                  None
+                } else {
+                  Some(cross_size)
+                }
               _ => None
             }
           }
@@ -7113,7 +7832,22 @@ fn[C] compute_flex_layout_with_measure(
             cross_known
           }
         } else {
-          Some(if is_col { main_size } else { cross_size })
+          let main_changed = abs_double(main_size - base_main_sizes[idx]) >
+            0.0001
+          let child_wraps = match child.style.flex_wrap {
+            FlexNoWrap => false
+            _ => true
+          }
+          let allow_auto_main = child.children.length() > 0 &&
+            child_wraps &&
+            !main_size_is_known_constraint[idx] &&
+            !main_changed
+          let main_known = if allow_auto_main { None } else { Some(main_size) }
+          if is_col {
+            main_known
+          } else {
+            Some(cross_size)
+          }
         }
         let child_origin = if is_col {
           Point::new(x=base_x + cross_offset, y=base_y + main_pos)
@@ -7138,11 +7872,58 @@ fn[C] compute_flex_layout_with_measure(
     } else {
       0.0
     }
+    if flow_count > 1 &&
+      !main_is_definite &&
+      !is_wrap &&
+      (match justify {
+        AlignFlexStart | AlignStart => true
+        _ => false
+      }) &&
+      !subtree_has_measure_context(tree, node_id) {
+      let intrinsic_main = compute_single_line_auto_intrinsic_main(
+        flow_count, gap_main_pre, base_main_sizes, preferred_main_sizes, min_main_sizes,
+        max_main_sizes, flex_grow, flex_shrink, margin_main_start, margin_main_end,
+        content_main_sizes,
+      )
+      if intrinsic_main > container_main {
+        if is_col {
+          border_box_height = clamp_dimension(
+            max_double(intrinsic_main + vert_inset, vert_inset),
+            node.style.min_size.height,
+            node.style.max_size.height,
+            available_space.height,
+          )
+          content_height = max_double(border_box_height - vert_inset, 0.0)
+          container_main = content_height
+        } else {
+          border_box_width = clamp_dimension(
+            max_double(intrinsic_main + horiz_inset, horiz_inset),
+            node.style.min_size.width,
+            node.style.max_size.width,
+            available_space.width,
+          )
+          content_width = max_double(border_box_width - horiz_inset, 0.0)
+          container_main = content_width
+        }
+        tree.nodes[node_id].layout = Layout::{
+          location: absolute_origin,
+          size: Size::new(width=border_box_width, height=border_box_height),
+        }
+      }
+    }
 
     // Flex grow/shrink (single-line, simplified)
     let final_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
     let frozen : Array[Bool] = Array::make(flow_count, false)
     let violations : Array[Double] = Array::make(flow_count, 0.0)
+    let mut initial_used = total_gap_main
+    for i in 0..<flow_count {
+      initial_used = initial_used +
+        margin_main_start[i] +
+        margin_main_end[i] +
+        base_main_sizes[i]
+    }
+    let initial_free_space = container_main - initial_used
     for i in 0..<flow_count {
       final_main_sizes[i] = base_main_sizes[i]
     }
@@ -7175,6 +7956,23 @@ fn[C] compute_flex_layout_with_measure(
             base_main_sizes[i] * flex_shrink[i]
         }
       }
+      let free_space = if free_space > 0.0 && sum_grow > 0.0 && sum_grow < 1.0 {
+        let scaled = initial_free_space * sum_grow
+        if abs_double(scaled) < abs_double(free_space) {
+          scaled
+        } else {
+          free_space
+        }
+      } else if free_space < 0.0 && sum_shrink > 0.0 && sum_shrink < 1.0 {
+        let scaled = initial_free_space * sum_shrink
+        if abs_double(scaled) < abs_double(free_space) {
+          scaled
+        } else {
+          free_space
+        }
+      } else {
+        free_space
+      }
       for i in 0..<flow_count {
         if !frozen[i] {
           let base_main = base_main_sizes[i]
@@ -7192,18 +7990,34 @@ fn[C] compute_flex_layout_with_measure(
           }
         }
       }
-      if free_space < 0.0 && sum_shrink > 0.0 && sum_scaled_shrink > 0.0 {
-        for i in 0..<flow_count {
-          if !frozen[i] && min_main_sizes[i] < 0.0 {
-            min_main_sizes[i] = resolve_flex_auto_min_main(
-              tree,
-              flow_children[i],
-              is_col,
-              parent_available_for_children,
-              main_available_pre,
-              measure_function,
-            )
-          }
+      for i in 0..<flow_count {
+        let child_for_min = match tree.nodes.get(flow_children[i]) {
+          Some(c) => c
+          None => raise InvalidNodeId(flow_children[i])
+        }
+        let has_definite_basis = resolve_optional_dimension(
+            child_for_min.style.flex_basis,
+            main_available_pre,
+          )
+          is Some(_)
+        let should_resolve_auto_min = free_space < 0.0 ||
+          has_definite_basis ||
+          (
+            double_approx_equal(free_space, 0.0) &&
+            child_for_min.context is Some(_) &&
+            main_available_pre is AvailMaxContent &&
+            cross_available_pre is AvailMaxContent
+          )
+        if !frozen[i] && min_main_sizes[i] < 0.0 && should_resolve_auto_min {
+          let auto_min = resolve_flex_auto_min_main(
+            tree,
+            flow_children[i],
+            is_col,
+            parent_available_for_children,
+            main_available_pre,
+            measure_function,
+          )
+          min_main_sizes[i] = auto_min
         }
       }
       let mut total_violation = 0.0
@@ -7250,40 +8064,64 @@ fn[C] compute_flex_layout_with_measure(
         margin_main_end[i]
     }
     let leftover = container_main - used_main - total_gap_main
-    let leftover = if leftover > 0.0 { leftover } else { 0.0 }
+    let auto_main_start_values : Array[Double] = Array::make(flow_count, 0.0)
+    let auto_main_end_values : Array[Double] = Array::make(flow_count, 0.0)
+    let mut leftover_for_justify = leftover
+    let mut main_auto_count = 0
+    for i in 0..<flow_count {
+      if margin_main_start_auto[i] {
+        main_auto_count = main_auto_count + 1
+      }
+      if margin_main_end_auto[i] {
+        main_auto_count = main_auto_count + 1
+      }
+    }
+    if main_auto_count > 0 && leftover > 0.0 {
+      let share = leftover / main_auto_count.to_double()
+      for i in 0..<flow_count {
+        if margin_main_start_auto[i] {
+          auto_main_start_values[i] = share
+        }
+        if margin_main_end_auto[i] {
+          auto_main_end_values[i] = share
+        }
+      }
+      leftover_for_justify = 0.0
+    }
+    let distributable_leftover = if leftover_for_justify > 0.0 {
+      leftover_for_justify
+    } else {
+      0.0
+    }
     let mut extra_between = 0.0
     let start_main = match justify {
-      AlignCenter => leftover / 2.0
-      AlignFlexEnd | AlignEnd => leftover
       AlignSpaceBetween =>
         if flow_count > 1 {
-          extra_between = leftover / (flow_count - 1).to_double()
+          extra_between = distributable_leftover / (flow_count - 1).to_double()
           0.0
         } else {
           0.0
         }
       AlignSpaceAround =>
         if flow_count > 0 {
-          extra_between = leftover / flow_count.to_double()
+          extra_between = distributable_leftover / flow_count.to_double()
           extra_between / 2.0
         } else {
           0.0
         }
       AlignSpaceEvenly =>
         if flow_count > 0 {
-          extra_between = leftover / (flow_count + 1).to_double()
+          extra_between = distributable_leftover / (flow_count + 1).to_double()
           extra_between
         } else {
           0.0
         }
-      _ => 0.0
+      _ => resolve_justify_start_main(justify, leftover_for_justify, is_reverse)
     }
     let actual_gap_main = gap_main + extra_between
     let child_available_for_final = Size::new(
-      width=resolve_available_for_percent(width_def_for_percent, content_width),
-      height=resolve_available_for_percent(
-        height_def_for_percent, content_height,
-      ),
+      width=AvailDefinite(content_width),
+      height=AvailDefinite(content_height),
     )
     let container_cross_for_placement = {
       let s = tree.nodes[node_id].layout.size
@@ -7333,49 +8171,136 @@ fn[C] compute_flex_layout_with_measure(
           }
       }
       let intrinsic_cross = get_cross(base_sizes[i], is_col)
-      let available_cross_for_item = max_double(
-        container_cross_for_placement -
+      let available_cross_for_item = container_cross_for_placement -
         margin_cross_start[i] -
-        margin_cross_end[i],
-        0.0,
-      )
+        margin_cross_end[i]
+      let stretch_cross_available = max_double(available_cross_for_item, 0.0)
       let cross_size_is_auto = if is_col {
         child.style.size.width is DimAuto
       } else {
         child.style.size.height is DimAuto
       }
-      let cross_size = match align {
+      let mut cross_size = match align {
         ItemsStretch =>
           if cross_size_is_auto {
-            available_cross_for_item
+            stretch_cross_available
           } else {
             intrinsic_cross
           }
-        _ => intrinsic_cross
+        _ =>
+          if cross_size_is_auto {
+            let child_wraps = match child.style.flex_wrap {
+              FlexNoWrap => false
+              _ => true
+            }
+            if child.children.length() > 0 && child_wraps {
+              min_double(intrinsic_cross, stretch_cross_available)
+            } else {
+              intrinsic_cross
+            }
+          } else {
+            intrinsic_cross
+          }
       }
-      let cross_pos_in_available = match align {
-        ItemsBaseline =>
-          if !is_col {
-            baseline_before_max - margin_cross_start[i] - baseline_offsets[i]
+      let cross_axis_available = if is_col {
+        child_available_for_final.width
+      } else {
+        child_available_for_final.height
+      }
+      let cross_min = if is_col {
+        resolve_optional_dimension(
+          child.style.min_size.width,
+          cross_axis_available,
+        )
+      } else {
+        resolve_optional_dimension(
+          child.style.min_size.height,
+          cross_axis_available,
+        )
+      }
+      let cross_max = if is_col {
+        resolve_optional_dimension(
+          child.style.max_size.width,
+          cross_axis_available,
+        )
+      } else {
+        resolve_optional_dimension(
+          child.style.max_size.height,
+          cross_axis_available,
+        )
+      }
+      match cross_min {
+        Some(v) => if cross_size < v { cross_size = v }
+        None => ()
+      }
+      match cross_max {
+        Some(v) => if cross_size > v { cross_size = v }
+        None => ()
+      }
+      if cross_size < 0.0 {
+        cross_size = 0.0
+      }
+      let mut auto_cross_start = 0.0
+      let mut auto_cross_count = 0
+      if margin_cross_start_auto[i] {
+        auto_cross_count = auto_cross_count + 1
+      }
+      if margin_cross_end_auto[i] {
+        auto_cross_count = auto_cross_count + 1
+      }
+      if auto_cross_count > 0 {
+        let remaining_cross = available_cross_for_item - cross_size
+        if auto_cross_count == 2 {
+          if remaining_cross > 0.0 {
+            auto_cross_start = remaining_cross / 2.0
+          } else {
+            auto_cross_start = 0.0
+          }
+        } else if margin_cross_start_auto[i] {
+          auto_cross_start = if remaining_cross > 0.0 {
+            remaining_cross
           } else {
             0.0
           }
-        ItemsEnd | ItemsFlexEnd => available_cross_for_item - cross_size
-        ItemsCenter => (available_cross_for_item - cross_size) / 2.0
-        _ => 0.0
+        } else {
+          ()
+        }
+      }
+      let cross_pos_in_available = if auto_cross_count > 0 {
+        auto_cross_start
+      } else {
+        match align {
+          ItemsBaseline =>
+            if !is_col {
+              baseline_before_max - margin_cross_start[i] - baseline_offsets[i]
+            } else {
+              0.0
+            }
+          ItemsEnd | ItemsFlexEnd => available_cross_for_item - cross_size
+          ItemsCenter => (available_cross_for_item - cross_size) / 2.0
+          _ => 0.0
+        }
+      }
+      let cross_pos_in_available = if is_wrap_reverse {
+        available_cross_for_item - cross_size - cross_pos_in_available
+      } else {
+        cross_pos_in_available
       }
       let cross_offset = margin_cross_start[i] + cross_pos_in_available
+      let item_main_margin_start = margin_main_start[i] +
+        auto_main_start_values[i]
+      let item_main_margin_end = margin_main_end[i] + auto_main_end_values[i]
       let main_pos = if is_reverse {
-        cursor = cursor - margin_main_end[i] - main_size
-        let pos = cursor + margin_main_start[i]
-        cursor = cursor - margin_main_start[i] - actual_gap_main
+        cursor = cursor - item_main_margin_end - main_size
+        let pos = cursor + item_main_margin_start
+        cursor = cursor - item_main_margin_start - actual_gap_main
         pos
       } else {
-        let pos = cursor + margin_main_start[i]
+        let pos = cursor + item_main_margin_start
         cursor = cursor +
-          margin_main_start[i] +
+          item_main_margin_start +
           main_size +
-          margin_main_end[i] +
+          item_main_margin_end +
           actual_gap_main
         pos
       }
@@ -7391,7 +8316,12 @@ fn[C] compute_flex_layout_with_measure(
           Some(cross_size)
         } else {
           match align {
-            ItemsStretch => Some(cross_size)
+            ItemsStretch =>
+              if cross_is_auto_container && main_is_definite && flow_count == 1 {
+                None
+              } else {
+                Some(cross_size)
+              }
             _ => None
           }
         }
@@ -7401,7 +8331,37 @@ fn[C] compute_flex_layout_with_measure(
           main_known
         }
       } else {
-        Some(if is_col { cross_size } else { main_size })
+        let main_changed = abs_double(main_size - base_main_sizes[i]) > 0.0001
+        let child_wraps = match child.style.flex_wrap {
+          FlexNoWrap => false
+          _ => true
+        }
+        let allow_auto_main = child.children.length() > 0 &&
+          child_wraps &&
+          !main_size_is_known_constraint[i] &&
+          !main_changed
+        let main_known = if allow_auto_main { None } else { Some(main_size) }
+        let allow_auto_cross = child.children.length() > 0 &&
+          child_wraps &&
+          cross_is_auto[i]
+        let cross_known = if !cross_is_auto[i] {
+          Some(cross_size)
+        } else {
+          match align {
+            ItemsStretch =>
+              if cross_is_auto_container && allow_auto_cross {
+                None
+              } else {
+                Some(cross_size)
+              }
+            _ => Some(cross_size)
+          }
+        }
+        if is_col {
+          cross_known
+        } else {
+          main_known
+        }
       }
       let known_height = if has_measure_context {
         let main_changed = abs_double(main_size - base_main_sizes[i]) > 0.0001
@@ -7414,7 +8374,12 @@ fn[C] compute_flex_layout_with_measure(
           Some(cross_size)
         } else {
           match align {
-            ItemsStretch => Some(cross_size)
+            ItemsStretch =>
+              if cross_is_auto_container && main_is_definite && flow_count == 1 {
+                None
+              } else {
+                Some(cross_size)
+              }
             _ => None
           }
         }
@@ -7424,7 +8389,37 @@ fn[C] compute_flex_layout_with_measure(
           cross_known
         }
       } else {
-        Some(if is_col { main_size } else { cross_size })
+        let main_changed = abs_double(main_size - base_main_sizes[i]) > 0.0001
+        let child_wraps = match child.style.flex_wrap {
+          FlexNoWrap => false
+          _ => true
+        }
+        let allow_auto_main = child.children.length() > 0 &&
+          child_wraps &&
+          !main_size_is_known_constraint[i] &&
+          !main_changed
+        let main_known = if allow_auto_main { None } else { Some(main_size) }
+        let allow_auto_cross = child.children.length() > 0 &&
+          child_wraps &&
+          cross_is_auto[i]
+        let cross_known = if !cross_is_auto[i] {
+          Some(cross_size)
+        } else {
+          match align {
+            ItemsStretch =>
+              if cross_is_auto_container && allow_auto_cross {
+                None
+              } else {
+                Some(cross_size)
+              }
+            _ => Some(cross_size)
+          }
+        }
+        if is_col {
+          main_known
+        } else {
+          cross_known
+        }
       }
       let child_origin = if is_col {
         Point::new(x=base_x + cross_offset, y=base_y + main_pos)
@@ -7440,6 +8435,370 @@ fn[C] compute_flex_layout_with_measure(
         measure_function,
         false,
       )
+    }
+    if cross_is_auto_container &&
+      flow_count > 1 &&
+      !subtree_has_measure_context(tree, node_id) {
+      let mut needed_cross = 0.0
+      for i in 0..<flow_count {
+        let child_layout = tree.layout(flow_children[i])
+        let cross_start = if is_col {
+          child_layout.location.x - base_x
+        } else {
+          child_layout.location.y - base_y
+        }
+        let cross_size = if is_col {
+          child_layout.size.width
+        } else {
+          child_layout.size.height
+        }
+        let end = cross_start + cross_size + margin_cross_end[i]
+        if end > needed_cross {
+          needed_cross = end
+        }
+      }
+      container_cross = needed_cross
+      if is_col {
+        border_box_width = clamp_dimension(
+          max_double(container_cross + horiz_inset, horiz_inset),
+          node.style.min_size.width,
+          node.style.max_size.width,
+          available_space.width,
+        )
+        content_width = max_double(border_box_width - horiz_inset, 0.0)
+      } else {
+        border_box_height = clamp_dimension(
+          max_double(container_cross + vert_inset, vert_inset),
+          node.style.min_size.height,
+          node.style.max_size.height,
+          available_space.height,
+        )
+        content_height = max_double(border_box_height - vert_inset, 0.0)
+      }
+      tree.nodes[node_id].layout = Layout::{
+        location: absolute_origin,
+        size: Size::new(width=border_box_width, height=border_box_height),
+      }
+    }
+  }
+
+  let justify_is_startish = match justify {
+    AlignFlexStart | AlignStart => true
+    _ => false
+  }
+  let align_items_for_resize = match node.style.align_items {
+    Some(v) => v
+    None => ItemsStretch
+  }
+  let cross_align_is_stretch = align_items_for_resize is ItemsStretch
+  let allow_auto_resize = !subtree_has_measure_context(tree, node_id)
+  if flow_count == 1 &&
+    (!main_is_definite || cross_is_auto_container) &&
+    justify_is_startish &&
+    cross_align_is_stretch {
+    let only_child = flow_children[0]
+    let child = match tree.nodes.get(only_child) {
+      Some(c) => c
+      None => raise InvalidNodeId(only_child)
+    }
+    let child_layout = tree.layout(only_child)
+    let child_main_size = if is_col {
+      child_layout.size.height
+    } else {
+      child_layout.size.width
+    }
+    let child_cross_size = if is_col {
+      child_layout.size.width
+    } else {
+      child_layout.size.height
+    }
+    let mut child_outer_main = margin_main_start[0] +
+      child_main_size +
+      margin_main_end[0]
+    let child_outer_cross = margin_cross_start[0] +
+      child_cross_size +
+      margin_cross_end[0]
+    let cross_axis_available_for_min = if is_col {
+      AvailDefinite(content_width)
+    } else {
+      AvailDefinite(content_height)
+    }
+    let cross_min_for_resize = if is_col {
+      resolve_optional_dimension(
+        child.style.min_size.width,
+        cross_axis_available_for_min,
+      )
+    } else {
+      resolve_optional_dimension(
+        child.style.min_size.height,
+        cross_axis_available_for_min,
+      )
+    }
+    let needs_main_resize_for_cross_min = match cross_min_for_resize {
+      Some(v) => v > container_cross + 0.0001
+      None => false
+    }
+    let needs_main_resize_for_measured_margin_reflow = child.context is Some(_) &&
+      (
+        margin_main_start[0] > 0.0 ||
+        margin_main_end[0] > 0.0 ||
+        margin_cross_start[0] > 0.0 ||
+        margin_cross_end[0] > 0.0
+      ) &&
+      abs_double(child_main_size - base_main_sizes[0]) > 0.0001
+    let child_basis_is_definite = resolve_optional_dimension(
+        child.style.flex_basis,
+        main_available_pre,
+      )
+      is Some(_)
+    let force_basisless_leaf_main = !is_col &&
+      child.children.length() == 0 &&
+      child.style.size.width is DimAuto &&
+      child.context is None &&
+      child_basis_is_definite &&
+      main_available_pre is AvailMaxContent
+    if force_basisless_leaf_main {
+      child_outer_main = margin_main_start[0] +
+        content_main_sizes[0] +
+        margin_main_end[0]
+    }
+    let mut resized = false
+    if !main_is_definite &&
+      (
+        allow_auto_resize ||
+        needs_main_resize_for_cross_min ||
+        needs_main_resize_for_measured_margin_reflow
+      ) {
+      container_main = child_outer_main
+      if is_col {
+        border_box_height = clamp_dimension(
+          max_double(container_main + vert_inset, vert_inset),
+          node.style.min_size.height,
+          node.style.max_size.height,
+          available_space.height,
+        )
+        content_height = max_double(border_box_height - vert_inset, 0.0)
+      } else {
+        border_box_width = clamp_dimension(
+          max_double(container_main + horiz_inset, horiz_inset),
+          node.style.min_size.width,
+          node.style.max_size.width,
+          available_space.width,
+        )
+        content_width = max_double(border_box_width - horiz_inset, 0.0)
+      }
+      resized = true
+    }
+    if cross_is_auto_container {
+      container_cross = child_outer_cross
+      if is_col {
+        border_box_width = clamp_dimension(
+          max_double(container_cross + horiz_inset, horiz_inset),
+          node.style.min_size.width,
+          node.style.max_size.width,
+          available_space.width,
+        )
+        content_width = max_double(border_box_width - horiz_inset, 0.0)
+      } else {
+        border_box_height = clamp_dimension(
+          max_double(container_cross + vert_inset, vert_inset),
+          node.style.min_size.height,
+          node.style.max_size.height,
+          available_space.height,
+        )
+        content_height = max_double(border_box_height - vert_inset, 0.0)
+      }
+      resized = true
+    }
+    if resized {
+      tree.nodes[node_id].layout = Layout::{
+        location: absolute_origin,
+        size: Size::new(width=border_box_width, height=border_box_height),
+      }
+      if force_basisless_leaf_main {
+        let child_available_for_final = Size::new(
+          width=AvailDefinite(content_width),
+          height=AvailDefinite(content_height),
+        )
+        let child_origin = Point::new(
+          x=base_x + margin_main_start[0],
+          y=base_y + margin_cross_start[0],
+        )
+        compute_node_layout_with_measure(
+          tree,
+          only_child,
+          Size::new(
+            width=Some(content_main_sizes[0]),
+            height=Some(child_cross_size),
+          ),
+          child_available_for_final,
+          child_origin,
+          measure_function,
+          false,
+        )
+      }
+    }
+  }
+  if flow_count > 1 &&
+    !main_is_definite &&
+    !is_wrap &&
+    abs_double(gap_main - gap_main_pre) < 0.0001 &&
+    justify_is_startish &&
+    allow_auto_resize {
+    let mut needed_main = 0.0
+    for i in 0..<flow_count {
+      let child_layout = tree.layout(flow_children[i])
+      let main_start = if is_col {
+        child_layout.location.y - base_y
+      } else {
+        child_layout.location.x - base_x
+      }
+      let main_size = if is_col {
+        child_layout.size.height
+      } else {
+        child_layout.size.width
+      }
+      let end = main_start + main_size + margin_main_end[i]
+      if end > needed_main {
+        needed_main = end
+      }
+    }
+    let mut intrinsic_needed_main = if flow_count > 1 {
+      gap_main_pre * (flow_count - 1).to_double()
+    } else {
+      0.0
+    }
+    for i in 0..<flow_count {
+      let flex_basis = base_main_sizes[i]
+      let resolved_min_main = if min_main_sizes[i] < 0.0 {
+        0.0
+      } else {
+        min_main_sizes[i]
+      }
+      let clamping_basis = match preferred_main_sizes[i] {
+        Some(pref) => max_double(flex_basis, pref)
+        None => flex_basis
+      }
+      let flex_basis_min = if flex_shrink[i] == 0.0 {
+        Some(clamping_basis)
+      } else {
+        None
+      }
+      let flex_basis_max = if flex_grow[i] == 0.0 {
+        Some(clamping_basis)
+      } else {
+        None
+      }
+      let min_main = max_double(
+        match flex_basis_min {
+          Some(v) => v
+          None => resolved_min_main
+        },
+        resolved_min_main,
+      )
+      let max_main = match (max_main_sizes[i], flex_basis_max) {
+        (Some(a), Some(b)) => Some(min_double(a, b))
+        (Some(a), None) => Some(a)
+        (None, Some(b)) => Some(b)
+        (None, None) => None
+      }
+      let content_contribution = match (preferred_main_sizes[i], max_main) {
+        (Some(pref), Some(max_v)) if max_v <= min_main || max_v <= pref => {
+          let mut v = pref
+          if v > max_v {
+            v = max_v
+          }
+          if v < min_main {
+            v = min_main
+          }
+          v
+        }
+        (_, Some(max_v)) if max_v <= min_main => min_main
+        _ => {
+          let mut v = content_main_sizes[i]
+          if v < min_main {
+            v = min_main
+          }
+          match max_main {
+            Some(max_v) => if v > max_v { v = max_v }
+            None => ()
+          }
+          v
+        }
+      }
+      intrinsic_needed_main = intrinsic_needed_main +
+        margin_main_start[i] +
+        content_contribution +
+        margin_main_end[i]
+    }
+    if intrinsic_needed_main > needed_main {
+      needed_main = intrinsic_needed_main
+    }
+    if is_col {
+      border_box_height = clamp_dimension(
+        max_double(needed_main + vert_inset, vert_inset),
+        node.style.min_size.height,
+        node.style.max_size.height,
+        available_space.height,
+      )
+      content_height = max_double(border_box_height - vert_inset, 0.0)
+      container_main = content_height
+    } else {
+      border_box_width = clamp_dimension(
+        max_double(needed_main + horiz_inset, horiz_inset),
+        node.style.min_size.width,
+        node.style.max_size.width,
+        available_space.width,
+      )
+      content_width = max_double(border_box_width - horiz_inset, 0.0)
+      container_main = content_width
+    }
+    tree.nodes[node_id].layout = Layout::{
+      location: absolute_origin,
+      size: Size::new(width=border_box_width, height=border_box_height),
+    }
+    if cross_is_auto_container {
+      let mut needed_cross = 0.0
+      for i in 0..<flow_count {
+        let child_layout = tree.layout(flow_children[i])
+        let cross_start = if is_col {
+          child_layout.location.x - base_x
+        } else {
+          child_layout.location.y - base_y
+        }
+        let cross_size = if is_col {
+          child_layout.size.width
+        } else {
+          child_layout.size.height
+        }
+        let end = cross_start + cross_size + margin_cross_end[i]
+        if end > needed_cross {
+          needed_cross = end
+        }
+      }
+      if is_col {
+        border_box_width = clamp_dimension(
+          max_double(needed_cross + horiz_inset, horiz_inset),
+          node.style.min_size.width,
+          node.style.max_size.width,
+          available_space.width,
+        )
+        content_width = max_double(border_box_width - horiz_inset, 0.0)
+        container_cross = content_width
+      } else {
+        border_box_height = clamp_dimension(
+          max_double(needed_cross + vert_inset, vert_inset),
+          node.style.min_size.height,
+          node.style.max_size.height,
+          available_space.height,
+        )
+        content_height = max_double(border_box_height - vert_inset, 0.0)
+        container_cross = content_height
+      }
+      tree.nodes[node_id].layout = Layout::{
+        location: absolute_origin,
+        size: Size::new(width=border_box_width, height=border_box_height),
+      }
     }
   }
 
@@ -7797,11 +9156,9 @@ fn[C] compute_flex_layout_with_measure(
     let outer_main = main_margin_start + main_size + main_margin_end
     let leftover_main = container_main - outer_main
     let leftover_main = if leftover_main > 0.0 { leftover_main } else { 0.0 }
-    let static_start_main = match justify {
-      AlignCenter => leftover_main / 2.0
-      AlignFlexEnd | AlignEnd => leftover_main
-      _ => 0.0
-    }
+    let static_start_main = resolve_justify_start_main(
+      justify, leftover_main, is_reverse,
+    )
     let static_main = static_start_main + main_margin_start
     let align = match child.style.align_self {
       Some(v) => v
@@ -7819,6 +9176,11 @@ fn[C] compute_flex_layout_with_measure(
       ItemsEnd | ItemsFlexEnd => available_cross_for_item - cross_size
       ItemsCenter => (available_cross_for_item - cross_size) / 2.0
       _ => 0.0
+    }
+    let cross_pos_in_available = if is_wrap_reverse {
+      available_cross_for_item - cross_size - cross_pos_in_available
+    } else {
+      cross_pos_in_available
     }
     let static_cross = cross_margin_start + cross_pos_in_available
     let x_in_padding = match left {
@@ -7862,7 +9224,7 @@ fn[C] compute_flex_layout_with_measure(
       child_id,
       Size::new(width=None, height=None),
       abs_available,
-      Point::new(x=base_x, y=base_y),
+      Point::zero(),
       measure_function,
       false,
     )

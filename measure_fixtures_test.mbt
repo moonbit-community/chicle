@@ -105,21 +105,49 @@ fn measure_text(
     min_inline
   }
   let block_size = unwrap_or_else(block_known, fn() {
-    let inline_line_length = to_int_floor(inline_size / h_width)
-    let mut line_count = 1
-    let mut current_line_length = 0
-    for seg in ctx.text_content.split(zws) {
-      let len = seg.length()
-      if current_line_length + len > inline_line_length {
-        if current_line_length > 0 {
-          line_count = line_count + 1
+    match _style.aspect_ratio {
+      Some(ratio) =>
+        if ratio > 0.0 {
+          if is_horizontal {
+            inline_size / ratio
+          } else {
+            inline_size * ratio
+          }
+        } else {
+          let inline_line_length = to_int_floor(inline_size / h_width)
+          let mut line_count = 1
+          let mut current_line_length = 0
+          for seg in ctx.text_content.split(zws) {
+            let len = seg.length()
+            if current_line_length + len > inline_line_length {
+              if current_line_length > 0 {
+                line_count = line_count + 1
+              }
+              current_line_length = len
+            } else {
+              current_line_length = current_line_length + len
+            }
+          }
+          line_count.to_double() * h_height
         }
-        current_line_length = len
-      } else {
-        current_line_length = current_line_length + len
+      None => {
+        let inline_line_length = to_int_floor(inline_size / h_width)
+        let mut line_count = 1
+        let mut current_line_length = 0
+        for seg in ctx.text_content.split(zws) {
+          let len = seg.length()
+          if current_line_length + len > inline_line_length {
+            if current_line_length > 0 {
+              line_count = line_count + 1
+            }
+            current_line_length = len
+          } else {
+            current_line_length = current_line_length + len
+          }
+        }
+        line_count.to_double() * h_height
       }
     }
-    line_count.to_double() * h_height
   })
   if is_horizontal {
     Size::new(width=inline_size, height=block_size)

@@ -44,6 +44,7 @@ priv struct LeafMeasureCacheEntry {
 priv struct NodeLayoutCacheEntry {
   known_dimensions : Size[Double?]
   available_space : Size[AvailableSpace]
+  absolute_origin : Point[Double]
   location : Point[Double]
   size : Size[Double]
   effective_margin_top : Double
@@ -890,6 +891,11 @@ fn available_size_equal(
 }
 
 ///|
+fn point_equal(a : Point[Double], b : Point[Double]) -> Bool {
+  double_approx_equal(a.x, b.x) && double_approx_equal(a.y, b.y)
+}
+
+///|
 fn find_leaf_measure_cache(
   cache : Array[LeafMeasureCacheEntry],
   known_dimensions : Size[Double?],
@@ -909,10 +915,12 @@ fn find_node_layout_cache(
   cache : Array[NodeLayoutCacheEntry],
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
+  absolute_origin : Point[Double],
 ) -> NodeLayoutCacheEntry? {
   for entry in cache {
     if known_dimensions_equal(entry.known_dimensions, known_dimensions) &&
-      available_size_equal(entry.available_space, available_space) {
+      available_size_equal(entry.available_space, available_space) &&
+      point_equal(entry.absolute_origin, absolute_origin) {
       return Some(entry)
     }
   }
@@ -1330,11 +1338,13 @@ fn[C] compute_node_layout_with_measure(
   ],
   is_layout_root : Bool,
 ) -> Unit raise TaffyError {
+  ignore(is_layout_root)
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
     None => raise InvalidNodeId(node_id)
   }
-  let can_use_layout_cache = double_approx_equal(absolute_origin.x, 0.0) &&
+  let can_use_layout_cache = node.children.length() <= 1 &&
+    double_approx_equal(absolute_origin.x, 0.0) &&
     double_approx_equal(absolute_origin.y, 0.0)
   if can_use_layout_cache {
     match
@@ -1342,6 +1352,7 @@ fn[C] compute_node_layout_with_measure(
         node.node_layout_cache,
         known_dimensions,
         available_space,
+        absolute_origin,
       ) {
       Some(entry) => {
         tree.nodes[node_id].layout = Layout::{
@@ -1423,6 +1434,7 @@ fn[C] compute_node_layout_with_measure(
     tree.nodes[node_id].node_layout_cache.push(NodeLayoutCacheEntry::{
       known_dimensions,
       available_space,
+      absolute_origin,
       location: layout.location,
       size: layout.size,
       effective_margin_top: tree.nodes[node_id].effective_margin_top,
@@ -1547,7 +1559,7 @@ fn[C] compute_leaf_layout_with_measure(
       }
     None => ()
   }
-  let measure_known_dimensions = Size::new(
+  let mut measure_known_dimensions = Size::new(
     width=match known_width {
       Some(w) => Some(w)
       None => specified_width
@@ -1557,24 +1569,57 @@ fn[C] compute_leaf_layout_with_measure(
       None => specified_height
     },
   )
+  let resolved_max_width = resolve_optional_dimension(
+    node.style.max_size.width,
+    available_space.width,
+  )
+  let resolved_max_height = resolve_optional_dimension(
+    node.style.max_size.height,
+    available_space.height,
+  )
+  fn clamp_opt_to_max(v : Double?, max_v : Double?) -> Double? {
+    match (v, max_v) {
+      (Some(v0), Some(max0)) => Some(if v0 > max0 { max0 } else { v0 })
+      _ => v
+    }
+  }
+  measure_known_dimensions = Size::new(
+    width=clamp_opt_to_max(measure_known_dimensions.width, resolved_max_width),
+    height=clamp_opt_to_max(
+      measure_known_dimensions.height,
+      resolved_max_height,
+    ),
+  )
+  let measure_available_space = Size::new(
+    width=match (available_space.width, resolved_max_width) {
+      (AvailDefinite(v), Some(max0)) =>
+        AvailDefinite(if v > max0 { max0 } else { v })
+      _ => available_space.width
+    },
+    height=match (available_space.height, resolved_max_height) {
+      (AvailDefinite(v), Some(max0)) =>
+        AvailDefinite(if v > max0 { max0 } else { v })
+      _ => available_space.height
+    },
+  )
   let measured = match
     find_leaf_measure_cache(
       node.leaf_measure_cache,
       measure_known_dimensions,
-      available_space,
+      measure_available_space,
     ) {
     Some(v) => v
     None => {
       let m = measure_function(
         measure_known_dimensions,
-        available_space,
+        measure_available_space,
         node_id,
         node.context,
         node.style,
       )
       tree.nodes[node_id].leaf_measure_cache.push(LeafMeasureCacheEntry::{
         known_dimensions: measure_known_dimensions,
-        available_space,
+        available_space: measure_available_space,
         measured: m,
       })
       m
@@ -1878,6 +1923,7 @@ fn[C] compute_grid_layout_with_measure(
   ],
   is_layout_root : Bool,
 ) -> Unit raise TaffyError {
+  ignore(is_layout_root)
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
     None => raise InvalidNodeId(node_id)
@@ -2834,6 +2880,177 @@ fn[C] compute_grid_layout_with_measure(
     }
   }
 
+  fn track_definite_len(track : Dimension) -> Double? {
+    match track {
+      DimLength(v) => Some(v)
+      DimMinMax(min_d, max_d) =>
+        match (min_d, max_d) {
+          (DimLength(a), DimLength(b)) if a == b => Some(a)
+          _ => None
+        }
+      _ => None
+    }
+  }
+
+  fn spanned_definite_len(
+    tracks : Array[Dimension],
+    start : Int,
+    span : Int,
+    gap : Double,
+  ) -> Double? {
+    if span <= 0 {
+      return Some(0.0)
+    }
+    let mut total = 0.0
+    for i in start..<(start + span) {
+      match track_definite_len(tracks[i]) {
+        Some(v) => total = total + v
+        None => return None
+      }
+    }
+    if span > 1 {
+      total = total + gap * (span - 1).to_double()
+    }
+    Some(total)
+  }
+
+  fn col_min_sizing_kind(track : Dimension) -> Int {
+    // 0 = fixed/other, 1 = min-content, 2 = max-content, 3 = auto
+    match track {
+      DimMinContent => 1
+      DimMaxContent => 2
+      DimAuto => 3
+      DimFitContent(_) => 3
+      DimMinMax(min_d, _) =>
+        match min_d {
+          DimMinContent => 1
+          DimMaxContent => 2
+          DimAuto => 3
+          DimFitContent(_) => 3
+          _ => 0
+        }
+      _ => 0
+    }
+  }
+
+  fn compute_intrinsic_bases_max_content(
+    tracks : Array[Dimension],
+    col_start : Array[Int],
+    col_span : Array[Int],
+    min_needed : Array[Double],
+    max_needed : Array[Double],
+    placed : Array[Bool],
+    percent_basis : Double?,
+  ) -> Array[Double] {
+    let count = tracks.length()
+    let bases : Array[Double] = Array::make(count, 0.0)
+    for i in 0..<count {
+      match tracks[i] {
+        DimLength(v) => bases[i] = v
+        DimPercent(p) =>
+          match percent_basis {
+            Some(b) => bases[i] = b * p
+            None => bases[i] = 0.0
+          }
+        DimMinMax(min_d, max_d) =>
+          // Handle simple fixed-length/percent minmax cases
+          match (min_d, max_d, percent_basis) {
+            (DimLength(a), DimLength(b), _) if a == b => bases[i] = a
+            (DimPercent(p), DimPercent(q), Some(b)) if p == q =>
+              bases[i] = b * p
+            _ => ()
+          }
+        _ => ()
+      }
+    }
+
+    fn distribute(
+      bases : Array[Double],
+      tracks : Array[Dimension],
+      start : Int,
+      span : Int,
+      space : Double,
+      should_affect : (Int, Dimension) -> Bool,
+    ) -> Unit {
+      if space <= 0.0 || span <= 0 {
+        return
+      }
+      let mut used = 0.0
+      for j in start..<(start + span) {
+        used = used + bases[j]
+      }
+      let extra = space - used
+      if extra <= 0.0 {
+        return
+      }
+      let mut count = 0
+      for j in start..<(start + span) {
+        if should_affect(j, tracks[j]) {
+          count = count + 1
+        }
+      }
+      if count <= 0 {
+        return
+      }
+      let share = extra / count.to_double()
+      for j in start..<(start + span) {
+        if should_affect(j, tracks[j]) {
+          bases[j] = bases[j] + share
+        }
+      }
+    }
+
+    let mut max_span = 1
+    for i in 0..<placed.length() {
+      if placed[i] && col_span[i] > max_span {
+        max_span = col_span[i]
+      }
+    }
+
+    // Distribute min-content contributions, then max-content contributions (max-content constraint quirk).
+    for span in 1..<(max_span + 1) {
+      for i in 0..<placed.length() {
+        if !placed[i] || col_span[i] != span {
+          continue
+        }
+        let s = col_start[i]
+        let sp = col_span[i]
+        let min_space = min_needed[i]
+        distribute(bases, tracks, s, sp, min_space, fn(_idx, track) {
+          let k = col_min_sizing_kind(track)
+          k == 1 || k == 2
+        })
+      }
+    }
+
+    for span in 1..<(max_span + 1) {
+      for i in 0..<placed.length() {
+        if !placed[i] || col_span[i] != span {
+          continue
+        }
+        let s = col_start[i]
+        let sp = col_span[i]
+        let max_space = max_needed[i]
+        let mut has_max_content = false
+        for j in s..<(s + sp) {
+          if col_min_sizing_kind(tracks[j]) == 2 {
+            has_max_content = true
+            break
+          }
+        }
+        let affect_kind = if has_max_content { 2 } else { 3 }
+        distribute(bases, tracks, s, sp, max_space, fn(_idx, track) {
+          col_min_sizing_kind(track) == affect_kind
+        })
+      }
+    }
+
+    bases
+  }
+
+  let col_item_min_needed : Array[Double] = Array::make(placement_count, 0.0)
+  let col_item_max_needed : Array[Double] = Array::make(placement_count, 0.0)
+
   for i in 0..<placement_count {
     if not(placed[i]) {
       continue
@@ -2845,14 +3062,24 @@ fn[C] compute_grid_layout_with_measure(
     }
     let c = placed_col[i]
     let col_span = placed_col_span[i]
+    let r = placed_row[i]
+    let row_span = placed_row_span[i]
     let gap_total = col_gap * (col_span - 1).to_double()
+    let contrib_available_height = match specified_height {
+      Some(_) => AvailDefinite(content_height)
+      None =>
+        match spanned_definite_len(row_tracks, r, row_span, row_gap) {
+          Some(v) => AvailDefinite(v)
+          None => AvailMaxContent
+        }
+    }
 
     // Max-content contribution in the column axis
     compute_node_layout_with_measure(
       tree,
       child_id,
       Size::new(width=None, height=None),
-      Size::new(width=AvailMaxContent, height=AvailMaxContent),
+      Size::new(width=AvailMaxContent, height=contrib_available_height),
       Point::zero(),
       measure_function,
       false,
@@ -2866,6 +3093,7 @@ fn[C] compute_grid_layout_with_measure(
       max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
       0.0,
     )
+    col_item_max_needed[i] = max_needed
     apply_col_contribution(col_tracks, c, col_span, max_needed, col_max_contrib)
 
     // Min-content contribution in the column axis
@@ -2873,7 +3101,7 @@ fn[C] compute_grid_layout_with_measure(
       tree,
       child_id,
       Size::new(width=None, height=None),
-      Size::new(width=AvailMinContent, height=AvailMaxContent),
+      Size::new(width=AvailMinContent, height=contrib_available_height),
       Point::zero(),
       measure_function,
       false,
@@ -2887,6 +3115,7 @@ fn[C] compute_grid_layout_with_measure(
       min_col + resolved_margin.left + resolved_margin.right - gap_total,
       0.0,
     )
+    col_item_min_needed[i] = min_needed
     apply_col_contribution(col_tracks, c, col_span, min_needed, col_min_contrib)
   }
   fn track_basis_fit_content(
@@ -3041,13 +3270,13 @@ fn[C] compute_grid_layout_with_measure(
     }
   }
 
-  let col_min_basis = axis_min_content_basis(
+  let mut col_min_basis = axis_min_content_basis(
     col_tracks, col_min_contrib, col_max_contrib, col_gap,
   )
-  let col_max_basis = axis_max_content_basis(
+  let mut col_max_basis = axis_max_content_basis(
     col_tracks, col_min_contrib, col_max_contrib, col_gap,
   )
-  let col_available = match specified_width {
+  let mut col_available = match specified_width {
     Some(_) => content_width
     None =>
       available_inset_or_basis(
@@ -3057,7 +3286,7 @@ fn[C] compute_grid_layout_with_measure(
         col_max_basis,
       )
   }
-  let col_available_base = col_available
+  let mut col_available_base = col_available
   let mut col_sizes : Array[Double] = compute_grid_track_sizes_with_contributions(
     col_tracks,
     col_available,
@@ -3066,6 +3295,65 @@ fn[C] compute_grid_layout_with_measure(
     col_max_contrib,
     specified_width is Some(_),
   )
+  let mut has_percent_col = false
+  let mut has_flex_col = false
+  let mut has_intrinsic_col = false
+  for t in col_tracks {
+    if col_min_sizing_kind(t) != 0 {
+      has_intrinsic_col = true
+    }
+    match t {
+      DimPercent(_) => has_percent_col = true
+      DimFr(_) => has_flex_col = true
+      DimMinMax(_, max_d) =>
+        match max_d {
+          DimFr(_) => has_flex_col = true
+          _ => ()
+        }
+      _ => ()
+    }
+  }
+  if specified_width is None &&
+    available_space.width is AvailMaxContent &&
+    has_percent_col &&
+    has_intrinsic_col &&
+    !has_flex_col {
+    // Match taffy 0.5 behavior: when sizing under a max-content constraint, percentage tracks
+    // initially resolve to 0, then are re-resolved against the computed content width and the
+    // intrinsic sizing pass is rerun once.
+    let bases1 = compute_intrinsic_bases_max_content(
+      col_tracks,
+      placed_col,
+      placed_col_span,
+      col_item_min_needed,
+      col_item_max_needed,
+      placed,
+      None,
+    )
+    let mut basis1 = 0.0
+    for v in bases1 {
+      basis1 = basis1 + v
+    }
+    let bases2 = compute_intrinsic_bases_max_content(
+      col_tracks,
+      placed_col,
+      placed_col_span,
+      col_item_min_needed,
+      col_item_max_needed,
+      placed,
+      Some(basis1),
+    )
+    col_sizes = bases2
+    col_available = basis1
+    col_available_base = col_available
+    let basis_with_gaps = basis1 + col_gap * (col_count - 1).to_double()
+    col_min_basis = basis_with_gaps
+    col_max_basis = basis_with_gaps
+  }
+  let default_justify_items_for_contrib = match node.style.justify_items {
+    Some(v) => v
+    None => ItemsStretch
+  }
 
   // Compute row contributions with the resolved column widths as a constraint.
   for i in 0..<placement_count {
@@ -3089,22 +3377,43 @@ fn[C] compute_grid_layout_with_measure(
       col_w = col_w + col_gap * (col_span - 1).to_double()
     }
     let row_gap_total = row_gap * (row_span - 1).to_double()
+    let resolved_margin = resolve_rect_width_basis(
+      child.style.margin,
+      Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
+    )
+    let margin_left_auto = child.style.margin.left is DimAuto
+    let margin_right_auto = child.style.margin.right is DimAuto
+    let has_auto_margin_x = margin_left_auto || margin_right_auto
+    let justify = match child.style.justify_self {
+      Some(v) => v
+      None => default_justify_items_for_contrib
+    }
+    let available_w_for_item = max_double(
+      col_w - resolved_margin.left - resolved_margin.right,
+      0.0,
+    )
+    let mut known_w_for_contrib = resolve_optional_dimension(
+      child.style.size.width,
+      AvailDefinite(col_w),
+    )
+    if known_w_for_contrib is None &&
+      child.style.size.width is DimAuto &&
+      justify is ItemsStretch &&
+      !has_auto_margin_x {
+      known_w_for_contrib = Some(available_w_for_item)
+    }
 
     // Max-content contribution in the row axis under the column width constraint.
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=Some(col_w), height=None),
+      Size::new(width=known_w_for_contrib, height=None),
       Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
       Point::zero(),
       measure_function,
       false,
     )
     let max_h = tree.nodes[child_id].layout.size.height
-    let resolved_margin = resolve_rect_width_basis(
-      child.style.margin,
-      Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
-    )
     let max_needed = max_double(
       max_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
       0.0,
@@ -3120,7 +3429,7 @@ fn[C] compute_grid_layout_with_measure(
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=Some(col_w), height=None),
+      Size::new(width=known_w_for_contrib, height=None),
       Size::new(width=AvailDefinite(col_w), height=AvailMinContent),
       Point::zero(),
       measure_function,
@@ -3184,97 +3493,39 @@ fn[C] compute_grid_layout_with_measure(
 
   // Container sizing (border-box). If width/height are not specified, size to tracks.
   if specified_width is None {
-    match (available_space.width, is_layout_root) {
-      (AvailDefinite(v), false) =>
-        border_box_width = max_double(
-          clamp_dimension(
-            v,
-            node.style.min_size.width,
-            node.style.max_size.width,
-            available_space.width,
-          ),
-          horiz_non_scroll_inset,
-        )
-      (AvailDefinite(_), true) => {
-        let intrinsic_cols = match available_space.width {
-          AvailMaxContent => col_max_basis
-          AvailMinContent => col_min_basis
-          AvailDefinite(_) => used_cols
-        }
-        border_box_width = max_double(
-          clamp_dimension(
-            max_double(intrinsic_cols + horiz_inset, horiz_inset),
-            node.style.min_size.width,
-            node.style.max_size.width,
-            available_space.width,
-          ),
-          horiz_non_scroll_inset,
-        )
-      }
-      _ => {
-        let intrinsic_cols = match available_space.width {
-          AvailMaxContent => col_max_basis
-          AvailMinContent => col_min_basis
-          AvailDefinite(_) => used_cols
-        }
-        border_box_width = max_double(
-          clamp_dimension(
-            max_double(intrinsic_cols + horiz_inset, horiz_inset),
-            node.style.min_size.width,
-            node.style.max_size.width,
-            available_space.width,
-          ),
-          horiz_non_scroll_inset,
-        )
-      }
+    // Don't force-fill definite available space for auto-sized containers.
+    // Stretch behavior should be expressed via `known_dimensions` from the parent.
+    let intrinsic_cols = match available_space.width {
+      AvailMaxContent => col_max_basis
+      AvailMinContent => col_min_basis
+      AvailDefinite(_) => used_cols
     }
+    border_box_width = max_double(
+      clamp_dimension(
+        max_double(intrinsic_cols + horiz_inset, horiz_inset),
+        node.style.min_size.width,
+        node.style.max_size.width,
+        available_space.width,
+      ),
+      horiz_non_scroll_inset,
+    )
     content_width = max_double(border_box_width - horiz_inset, 0.0)
   }
   if specified_height is None {
-    match (available_space.height, is_layout_root) {
-      (AvailDefinite(v), false) =>
-        border_box_height = max_double(
-          clamp_dimension(
-            v,
-            node.style.min_size.height,
-            node.style.max_size.height,
-            available_space.height,
-          ),
-          vert_non_scroll_inset,
-        )
-      (AvailDefinite(_), true) => {
-        let intrinsic_rows = match available_space.height {
-          AvailMaxContent => row_max_basis
-          AvailMinContent => row_min_basis
-          AvailDefinite(_) => used_rows
-        }
-        border_box_height = max_double(
-          clamp_dimension(
-            max_double(intrinsic_rows + vert_inset, vert_inset),
-            node.style.min_size.height,
-            node.style.max_size.height,
-            available_space.height,
-          ),
-          vert_non_scroll_inset,
-        )
-      }
-      _ => {
-        let intrinsic_rows = match available_space.height {
-          AvailMaxContent => row_max_basis
-          AvailMinContent => row_min_basis
-          AvailDefinite(_) => used_rows
-        }
-        border_box_height = max_double(
-          clamp_dimension(
-            max_double(intrinsic_rows + vert_inset, vert_inset),
-            node.style.min_size.height,
-            node.style.max_size.height,
-            available_space.height,
-          ),
-          vert_non_scroll_inset,
-        )
-      }
+    let intrinsic_rows = match available_space.height {
+      AvailMaxContent => row_max_basis
+      AvailMinContent => row_min_basis
+      AvailDefinite(_) => used_rows
     }
+    border_box_height = max_double(
+      clamp_dimension(
+        max_double(intrinsic_rows + vert_inset, vert_inset),
+        node.style.min_size.height,
+        node.style.max_size.height,
+        available_space.height,
+      ),
+      vert_non_scroll_inset,
+    )
     content_height = max_double(border_box_height - vert_inset, 0.0)
   }
 
@@ -3298,6 +3549,10 @@ fn[C] compute_grid_layout_with_measure(
     None => ()
   }
   if rerun_track_sizing {
+    let rerun_col_contrib_available_height = match specified_height {
+      Some(_) => AvailDefinite(content_height)
+      None => AvailMaxContent
+    }
     // Recompute contributions with the updated gap values.
     for i in 0..<col_count {
       col_min_contrib[i] = 0.0
@@ -3323,7 +3578,10 @@ fn[C] compute_grid_layout_with_measure(
         tree,
         child_id,
         Size::new(width=None, height=None),
-        Size::new(width=AvailMaxContent, height=AvailMaxContent),
+        Size::new(
+          width=AvailMaxContent,
+          height=rerun_col_contrib_available_height,
+        ),
         Point::zero(),
         measure_function,
         false,
@@ -3344,7 +3602,10 @@ fn[C] compute_grid_layout_with_measure(
         tree,
         child_id,
         Size::new(width=None, height=None),
-        Size::new(width=AvailMinContent, height=AvailMaxContent),
+        Size::new(
+          width=AvailMinContent,
+          height=rerun_col_contrib_available_height,
+        ),
         Point::zero(),
         measure_function,
         false,
@@ -3391,20 +3652,41 @@ fn[C] compute_grid_layout_with_measure(
         col_w = col_w + col_gap * (col_span - 1).to_double()
       }
       let row_gap_total = row_gap * (row_span - 1).to_double()
+      let resolved_margin = resolve_rect_width_basis(
+        child.style.margin,
+        Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
+      )
+      let margin_left_auto = child.style.margin.left is DimAuto
+      let margin_right_auto = child.style.margin.right is DimAuto
+      let has_auto_margin_x = margin_left_auto || margin_right_auto
+      let justify = match child.style.justify_self {
+        Some(v) => v
+        None => default_justify_items_for_contrib
+      }
+      let available_w_for_item = max_double(
+        col_w - resolved_margin.left - resolved_margin.right,
+        0.0,
+      )
+      let mut known_w_for_contrib = resolve_optional_dimension(
+        child.style.size.width,
+        AvailDefinite(col_w),
+      )
+      if known_w_for_contrib is None &&
+        child.style.size.width is DimAuto &&
+        justify is ItemsStretch &&
+        !has_auto_margin_x {
+        known_w_for_contrib = Some(available_w_for_item)
+      }
       compute_node_layout_with_measure(
         tree,
         child_id,
-        Size::new(width=Some(col_w), height=None),
+        Size::new(width=known_w_for_contrib, height=None),
         Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
         Point::zero(),
         measure_function,
         false,
       )
       let max_h = tree.nodes[child_id].layout.size.height
-      let resolved_margin = resolve_rect_width_basis(
-        child.style.margin,
-        Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
-      )
       let max_needed = max_double(
         max_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
         0.0,
@@ -3418,7 +3700,7 @@ fn[C] compute_grid_layout_with_measure(
       compute_node_layout_with_measure(
         tree,
         child_id,
-        Size::new(width=Some(col_w), height=None),
+        Size::new(width=known_w_for_contrib, height=None),
         Size::new(width=AvailDefinite(col_w), height=AvailMinContent),
         Point::zero(),
         measure_function,
@@ -3801,6 +4083,12 @@ fn[C] compute_grid_layout_with_measure(
         }
       _ => None
     }
+    // Percent sizes resolve against the containing block size (the grid area), not the
+    // remaining space after subtracting margins.
+    let known_w = match (known_w, child.style.size.width) {
+      (None, DimPercent(p)) => Some(cell_w * p)
+      _ => known_w
+    }
     compute_node_layout_with_measure(
       tree,
       child_id,
@@ -3963,13 +4251,23 @@ fn[C] compute_grid_layout_with_measure(
             }
           _ => None
         }
+        // Percent sizes resolve against the containing block size (the grid area), not the
+        // remaining space after subtracting margins.
+        match (known_w, child.style.size.width) {
+          (None, DimPercent(p)) => known_w = Some(cell_w * p)
+          _ => ()
+        }
+        match (known_h, child.style.size.height) {
+          (None, DimPercent(p)) => known_h = Some(cell_h * p)
+          _ => ()
+        }
 
         // First pass: compute the item's intrinsic size within the cell constraints.
         compute_node_layout_with_measure(
           tree,
           child_id,
           Size::new(width=known_w, height=known_h),
-          item_available,
+          child_available,
           Point::zero(),
           measure_function,
           false,
@@ -4007,7 +4305,7 @@ fn[C] compute_grid_layout_with_measure(
                 tree,
                 child_id,
                 Size::new(width=known_w, height=known_h),
-                item_available,
+                child_available,
                 Point::zero(),
                 measure_function,
                 false,
@@ -4070,7 +4368,7 @@ fn[C] compute_grid_layout_with_measure(
           tree,
           child_id,
           Size::new(width=known_w, height=known_h),
-          item_available,
+          child_available,
           Point::new(
             x=(base_x + x + margin_left + offset_x).round(),
             y=(base_y + y + margin_top + offset_y).round(),
@@ -6724,9 +7022,14 @@ fn[C] compute_flex_layout_with_measure(
           line_cross - margin_cross_start[idx] - margin_cross_end[idx],
           0.0,
         )
+        let cross_size_is_auto = if is_col {
+          child.style.size.width is DimAuto
+        } else {
+          child.style.size.height is DimAuto
+        }
         let cross_size = match align {
           ItemsStretch =>
-            if cross_is_auto[idx] {
+            if cross_size_is_auto {
               available_cross_for_item
             } else {
               intrinsic_cross
@@ -6982,6 +7285,14 @@ fn[C] compute_flex_layout_with_measure(
         height_def_for_percent, content_height,
       ),
     )
+    let container_cross_for_placement = {
+      let s = tree.nodes[node_id].layout.size
+      if is_col {
+        max_double(s.width - horiz_inset, 0.0)
+      } else {
+        max_double(s.height - vert_inset, 0.0)
+      }
+    }
     let mut baseline_before_max = 0.0
     if !is_col {
       let mut baseline_after_max = 0.0
@@ -7023,12 +7334,19 @@ fn[C] compute_flex_layout_with_measure(
       }
       let intrinsic_cross = get_cross(base_sizes[i], is_col)
       let available_cross_for_item = max_double(
-        container_cross - margin_cross_start[i] - margin_cross_end[i],
+        container_cross_for_placement -
+        margin_cross_start[i] -
+        margin_cross_end[i],
         0.0,
       )
+      let cross_size_is_auto = if is_col {
+        child.style.size.width is DimAuto
+      } else {
+        child.style.size.height is DimAuto
+      }
       let cross_size = match align {
         ItemsStretch =>
-          if cross_is_auto[i] {
+          if cross_size_is_auto {
             available_cross_for_item
           } else {
             intrinsic_cross

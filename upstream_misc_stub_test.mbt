@@ -738,7 +738,6 @@ test "upstream/relayout/relayout_is_stable_with_rounding" {
 test "upstream/serde/serde_can_serialize" {
   let style = Style::default()
   let _ = style.to_json().stringify()
-
 }
 
 ///|

@@ -66,8 +66,8 @@ def main() -> None:
             test_id = f"upstream/{rs_path.stem}/{name}"
             misc_blocks.append(mbt_block(test_id, rel.as_posix()))
 
-    (REPO_ROOT / "upstream_generated_stub_test.mbt").write_text("".join(generated_blocks), "utf-8")
-    (REPO_ROOT / "upstream_misc_stub_test.mbt").write_text("".join(misc_blocks), "utf-8")
+    (REPO_ROOT / "src" / "upstream_generated_stub_test.mbt").write_text("".join(generated_blocks), "utf-8")
+    (REPO_ROOT / "src" / "upstream_misc_stub_test.mbt").write_text("".join(misc_blocks), "utf-8")
 
     print(f"wrote {len(generated_blocks)} generated stubs")
     print(f"wrote {len(misc_blocks)} misc stubs")
@@ -75,4 +75,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

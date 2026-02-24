@@ -1,3 +1,4 @@
 import {
   "moonbitlang/core/json",
+  "Milky2018/moon_taffy/style" @style,
 }

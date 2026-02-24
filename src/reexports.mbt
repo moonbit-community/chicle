@@ -1,0 +1,88 @@
+// Copyright 2025 International Digital Economy Academy
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+///|
+pub type Point[T] = @style.Point[T]
+
+///|
+pub type Size[T] = @style.Size[T]
+
+///|
+pub type Rect[T] = @style.Rect[T]
+
+///|
+pub type Line[T] = @style.Line[T]
+
+///|
+pub type AvailableSpace = @style.AvailableSpace
+
+///|
+pub type GridTrackRepetition = @style.GridTrackRepetition
+
+///|
+pub type GridAutoFlow = @style.GridAutoFlow
+
+///|
+pub type GridPlacement = @style.GridPlacement
+
+///|
+pub type Dimension = @style.Dimension
+
+///|
+pub type Display = @style.Display
+
+///|
+pub type Position = @style.Position
+
+///|
+pub type Overflow = @style.Overflow
+
+///|
+pub type FlexDirection = @style.FlexDirection
+
+///|
+pub type FlexWrap = @style.FlexWrap
+
+///|
+pub type AlignItems = @style.AlignItems
+
+///|
+pub type JustifyItems = @style.JustifyItems
+
+///|
+pub type AlignSelf = @style.AlignSelf
+
+///|
+pub type JustifySelf = @style.JustifySelf
+
+///|
+pub type AlignContent = @style.AlignContent
+
+///|
+pub type JustifyContent = @style.JustifyContent
+
+///|
+pub type Style = @style.Style
+
+///|
+pub type NodeId = @style.NodeId
+
+///|
+pub type Layout = @style.Layout
+
+///|
+pub type TaffyError = @style.TaffyError
+
+///|
+pub type TaffyTree[C] = @style.TaffyTree[C]

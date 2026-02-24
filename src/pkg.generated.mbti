@@ -2,375 +2,192 @@
 package "Milky2018/moon_taffy"
 
 import {
-  "moonbitlang/core/json",
+  "Milky2018/moon_taffy/style",
 }
 
 // Values
-pub fn align_content_center() -> AlignContent
+pub fn align_content_center() -> @style.AlignContent
 
-pub fn align_content_end() -> AlignContent
+pub fn align_content_end() -> @style.AlignContent
 
-pub fn align_content_flex_end() -> AlignContent
+pub fn align_content_flex_end() -> @style.AlignContent
 
-pub fn align_content_flex_start() -> AlignContent
+pub fn align_content_flex_start() -> @style.AlignContent
 
-pub fn align_content_space_around() -> AlignContent
+pub fn align_content_space_around() -> @style.AlignContent
 
-pub fn align_content_space_between() -> AlignContent
+pub fn align_content_space_between() -> @style.AlignContent
 
-pub fn align_content_space_evenly() -> AlignContent
+pub fn align_content_space_evenly() -> @style.AlignContent
 
-pub fn align_content_start() -> AlignContent
+pub fn align_content_start() -> @style.AlignContent
 
-pub fn align_content_stretch() -> AlignContent
+pub fn align_content_stretch() -> @style.AlignContent
 
-pub fn align_items_baseline() -> AlignItems
+pub fn align_items_baseline() -> @style.AlignItems
 
-pub fn align_items_center() -> AlignItems
+pub fn align_items_center() -> @style.AlignItems
 
-pub fn align_items_end() -> AlignItems
+pub fn align_items_end() -> @style.AlignItems
 
-pub fn align_items_flex_end() -> AlignItems
+pub fn align_items_flex_end() -> @style.AlignItems
 
-pub fn align_items_flex_start() -> AlignItems
+pub fn align_items_flex_start() -> @style.AlignItems
 
-pub fn align_items_start() -> AlignItems
+pub fn align_items_start() -> @style.AlignItems
 
-pub fn align_items_stretch() -> AlignItems
+pub fn align_items_stretch() -> @style.AlignItems
 
-pub fn auto() -> Dimension
+pub fn auto() -> @style.Dimension
 
-pub fn available_space_definite(Double) -> AvailableSpace
+pub fn available_space_definite(Double) -> @style.AvailableSpace
 
-pub fn display_block() -> Display
+pub fn display_block() -> @style.Display
 
-pub fn display_flex() -> Display
+pub fn display_flex() -> @style.Display
 
-pub fn display_grid() -> Display
+pub fn display_grid() -> @style.Display
 
-pub fn display_none() -> Display
+pub fn display_none() -> @style.Display
 
-pub fn fit_content(Dimension) -> Dimension
+pub fn fit_content(@style.Dimension) -> @style.Dimension
 
-pub fn flex_direction_column() -> FlexDirection
+pub fn flex_direction_column() -> @style.FlexDirection
 
-pub fn flex_direction_column_reverse() -> FlexDirection
+pub fn flex_direction_column_reverse() -> @style.FlexDirection
 
-pub fn flex_direction_row() -> FlexDirection
+pub fn flex_direction_row() -> @style.FlexDirection
 
-pub fn flex_direction_row_reverse() -> FlexDirection
+pub fn flex_direction_row_reverse() -> @style.FlexDirection
 
-pub fn flex_wrap_no_wrap() -> FlexWrap
+pub fn flex_wrap_no_wrap() -> @style.FlexWrap
 
-pub fn flex_wrap_wrap() -> FlexWrap
+pub fn flex_wrap_wrap() -> @style.FlexWrap
 
-pub fn flex_wrap_wrap_reverse() -> FlexWrap
+pub fn flex_wrap_wrap_reverse() -> @style.FlexWrap
 
-pub fn fr(Double) -> Dimension
+pub fn fr(Double) -> @style.Dimension
 
-pub fn grid_auto_flow_column() -> GridAutoFlow
+pub fn grid_auto_flow_column() -> @style.GridAutoFlow
 
-pub fn grid_auto_flow_column_dense() -> GridAutoFlow
+pub fn grid_auto_flow_column_dense() -> @style.GridAutoFlow
 
-pub fn grid_auto_flow_row() -> GridAutoFlow
+pub fn grid_auto_flow_row() -> @style.GridAutoFlow
 
-pub fn grid_auto_flow_row_dense() -> GridAutoFlow
+pub fn grid_auto_flow_row_dense() -> @style.GridAutoFlow
 
-pub fn grid_max_content() -> Dimension
+pub fn grid_max_content() -> @style.Dimension
 
-pub fn grid_min_content() -> Dimension
+pub fn grid_min_content() -> @style.Dimension
 
-pub fn justify_content_center() -> AlignContent
+pub fn justify_content_center() -> @style.AlignContent
 
-pub fn justify_content_end() -> AlignContent
+pub fn justify_content_end() -> @style.AlignContent
 
-pub fn justify_content_flex_end() -> AlignContent
+pub fn justify_content_flex_end() -> @style.AlignContent
 
-pub fn justify_content_flex_start() -> AlignContent
+pub fn justify_content_flex_start() -> @style.AlignContent
 
-pub fn justify_content_space_around() -> AlignContent
+pub fn justify_content_space_around() -> @style.AlignContent
 
-pub fn justify_content_space_between() -> AlignContent
+pub fn justify_content_space_between() -> @style.AlignContent
 
-pub fn justify_content_space_evenly() -> AlignContent
+pub fn justify_content_space_evenly() -> @style.AlignContent
 
-pub fn justify_content_start() -> AlignContent
+pub fn justify_content_start() -> @style.AlignContent
 
-pub fn justify_content_stretch() -> AlignContent
+pub fn justify_content_stretch() -> @style.AlignContent
 
-pub fn length(Double) -> Dimension
+pub fn length(Double) -> @style.Dimension
 
-pub fn line(Int) -> GridPlacement
+pub fn line(Int) -> @style.GridPlacement
 
-pub fn max_content() -> AvailableSpace
+pub fn max_content() -> @style.AvailableSpace
 
-pub fn min_content() -> AvailableSpace
+pub fn min_content() -> @style.AvailableSpace
 
-pub fn minmax(Dimension, Dimension) -> Dimension
+pub fn minmax(@style.Dimension, @style.Dimension) -> @style.Dimension
 
-pub fn overflow_clip() -> Overflow
+pub fn overflow_clip() -> @style.Overflow
 
-pub fn overflow_hidden() -> Overflow
+pub fn overflow_hidden() -> @style.Overflow
 
-pub fn overflow_scroll() -> Overflow
+pub fn overflow_scroll() -> @style.Overflow
 
-pub fn overflow_visible() -> Overflow
+pub fn overflow_visible() -> @style.Overflow
 
-pub fn percent(Double) -> Dimension
+pub fn percent(Double) -> @style.Dimension
 
-pub fn place_auto() -> GridPlacement
+pub fn place_auto() -> @style.GridPlacement
 
-pub fn position_absolute() -> Position
+pub fn position_absolute() -> @style.Position
 
-pub fn position_relative() -> Position
+pub fn position_relative() -> @style.Position
 
-pub fn repeat(GridTrackRepetition, Array[Dimension]) -> Dimension
+pub fn repeat(@style.GridTrackRepetition, Array[@style.Dimension]) -> @style.Dimension
 
-pub fn repeat_auto_fill() -> GridTrackRepetition
+pub fn repeat_auto_fill() -> @style.GridTrackRepetition
 
-pub fn repeat_auto_fit() -> GridTrackRepetition
+pub fn repeat_auto_fit() -> @style.GridTrackRepetition
 
-pub fn repeat_count(Int) -> GridTrackRepetition
+pub fn repeat_count(Int) -> @style.GridTrackRepetition
 
-pub fn span(Int) -> GridPlacement
+pub fn span(Int) -> @style.GridPlacement
 
 // Errors
-type TaffyError
 
 // Types and methods
-#alias(JustifyContent)
-pub enum AlignContent {
-  AlignStart
-  AlignEnd
-  AlignFlexStart
-  AlignFlexEnd
-  AlignCenter
-  AlignStretch
-  AlignSpaceBetween
-  AlignSpaceEvenly
-  AlignSpaceAround
-}
-
-#alias(AlignSelf)
-#alias(JustifyItems)
-#alias(JustifySelf)
-pub enum AlignItems {
-  ItemsStart
-  ItemsEnd
-  ItemsFlexStart
-  ItemsFlexEnd
-  ItemsCenter
-  ItemsBaseline
-  ItemsStretch
-}
-
-pub enum AvailableSpace {
-  AvailDefinite(Double)
-  AvailMinContent
-  AvailMaxContent
-}
-
-pub enum Dimension {
-  DimAuto
-  DimLength(Double)
-  DimPercent(Double)
-  DimFr(Double)
-  DimMinMax(Dimension, Dimension)
-  DimMinContent
-  DimMaxContent
-  DimFitContent(Dimension)
-  DimRepeat(GridTrackRepetition, Array[Dimension])
-}
-pub impl ToJson for Dimension
-pub impl @json.FromJson for Dimension
-
-pub enum Display {
-  DisplayBlock
-  DisplayFlex
-  DisplayGrid
-  DisplayNone
-}
-
-pub enum FlexDirection {
-  FlexRow
-  FlexRowReverse
-  FlexColumn
-  FlexColumnReverse
-}
-
-pub enum FlexWrap {
-  FlexNoWrap
-  FlexWrap
-  FlexWrapReverse
-}
-
-pub enum GridAutoFlow {
-  Row
-  Column
-  RowDense
-  ColumnDense
-}
-
-pub enum GridPlacement {
-  PlaceAuto
-  PlaceLine(Int)
-  PlaceSpan(Int)
-}
-pub impl ToJson for GridPlacement
-pub impl @json.FromJson for GridPlacement
-
-pub enum GridTrackRepetition {
-  RepeatCount(Int)
-  RepeatAutoFill
-  RepeatAutoFit
-}
-
-pub struct Layout {
-  location : Point[Double]
-  size : Size[Double]
-}
-pub fn Layout::zero() -> Self
-
-pub struct Line[T] {
-  start : T
-  end : T
-}
-pub fn[T] Line::new(start~ : T, end~ : T) -> Self[T]
-
-type Node[C]
-
-pub enum Overflow {
-  OverflowVisible
-  OverflowClip
-  OverflowHidden
-  OverflowScroll
-}
-
-pub struct Point[T] {
-  x : T
-  y : T
-}
-pub fn[T] Point::new(x~ : T, y~ : T) -> Self[T]
-pub fn Point::zero() -> Self[Double]
-
-pub enum Position {
-  PosRelative
-  PosAbsolute
-}
-
-pub struct Rect[T] {
-  left : T
-  right : T
-  top : T
-  bottom : T
-}
-pub fn[T] Rect::new(left~ : T, right~ : T, top~ : T, bottom~ : T) -> Self[T]
-
-pub struct Size[T] {
-  width : T
-  height : T
-}
-pub fn Size::max_content() -> Self[AvailableSpace]
-pub fn[T] Size::new(width~ : T, height~ : T) -> Self[T]
-pub fn Size::zero() -> Self[Double]
-
-pub struct Style {
-  display : Display
-  overflow : Point[Overflow]
-  scrollbar_width : Double
-  position : Position
-  inset : Rect[Dimension]
-  size : Size[Dimension]
-  min_size : Size[Dimension]
-  max_size : Size[Dimension]
-  aspect_ratio : Double?
-  margin : Rect[Dimension]
-  padding : Rect[Dimension]
-  border : Rect[Dimension]
-  align_items : AlignItems?
-  align_self : AlignItems?
-  justify_items : AlignItems?
-  justify_self : AlignItems?
-  align_content : AlignContent?
-  justify_content : AlignContent?
-  gap : Size[Dimension]
-  flex_direction : FlexDirection
-  flex_wrap : FlexWrap
-  flex_basis : Dimension
-  flex_grow : Double
-  flex_shrink : Double
-  grid_template_rows : Array[Dimension]
-  grid_template_columns : Array[Dimension]
-  grid_auto_rows : Array[Dimension]
-  grid_auto_columns : Array[Dimension]
-  grid_auto_flow : GridAutoFlow
-  grid_row : Line[GridPlacement]
-  grid_column : Line[GridPlacement]
-  grid_row_start : Int?
-  grid_column_start : Int?
-}
-pub fn Style::default() -> Self
-pub fn Style::with_align_content(Self, AlignContent) -> Self
-pub fn Style::with_align_items(Self, AlignItems) -> Self
-pub fn Style::with_align_self(Self, AlignItems) -> Self
-pub fn Style::with_aspect_ratio(Self, Double) -> Self
-pub fn Style::with_border(Self, Rect[Dimension]) -> Self
-pub fn Style::with_display(Self, Display) -> Self
-pub fn Style::with_flex_basis(Self, Dimension) -> Self
-pub fn Style::with_flex_direction(Self, FlexDirection) -> Self
-pub fn Style::with_flex_grow(Self, Double) -> Self
-pub fn Style::with_flex_shrink(Self, Double) -> Self
-pub fn Style::with_flex_wrap(Self, FlexWrap) -> Self
-pub fn Style::with_gap(Self, Size[Dimension]) -> Self
-pub fn Style::with_grid_auto_columns(Self, Array[Dimension]) -> Self
-pub fn Style::with_grid_auto_flow(Self, GridAutoFlow) -> Self
-pub fn Style::with_grid_auto_rows(Self, Array[Dimension]) -> Self
-pub fn Style::with_grid_column(Self, Line[GridPlacement]) -> Self
-pub fn Style::with_grid_column_start(Self, Int) -> Self
-pub fn Style::with_grid_row(Self, Line[GridPlacement]) -> Self
-pub fn Style::with_grid_row_start(Self, Int) -> Self
-pub fn Style::with_grid_template_columns(Self, Array[Dimension]) -> Self
-pub fn Style::with_grid_template_rows(Self, Array[Dimension]) -> Self
-pub fn Style::with_inset(Self, Rect[Dimension]) -> Self
-pub fn Style::with_justify_content(Self, AlignContent) -> Self
-pub fn Style::with_justify_items(Self, AlignItems) -> Self
-pub fn Style::with_justify_self(Self, AlignItems) -> Self
-pub fn Style::with_margin(Self, Rect[Dimension]) -> Self
-pub fn Style::with_max_size(Self, Size[Dimension]) -> Self
-pub fn Style::with_min_size(Self, Size[Dimension]) -> Self
-pub fn Style::with_overflow(Self, Point[Overflow]) -> Self
-pub fn Style::with_padding(Self, Rect[Dimension]) -> Self
-pub fn Style::with_position(Self, Position) -> Self
-pub fn Style::with_scrollbar_width(Self, Double) -> Self
-pub fn Style::with_size(Self, Size[Dimension]) -> Self
-pub impl ToJson for Style
-pub impl @json.FromJson for Style
-
-pub struct TaffyTree[C] {
-  // private fields
-}
-pub fn[C] TaffyTree::add_child(Self[C], Int, Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::clear_node_context(Self[C], Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::compute_layout(Self[C], Int, Size[AvailableSpace]) -> Unit raise TaffyError
-pub fn[C] TaffyTree::compute_layout_with_measure(Self[C], Int, Size[AvailableSpace], (Size[Double?], Size[AvailableSpace], Int, C?, Style) -> Size[Double]) -> Unit raise TaffyError
-pub fn[C] TaffyTree::dirty(Self[C], Int) -> Bool raise TaffyError
-pub fn[C] TaffyTree::layout(Self[C], Int) -> Layout raise TaffyError
-pub fn[C] TaffyTree::mark_dirty(Self[C], Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::new() -> Self[C]
-pub fn[C] TaffyTree::new_leaf(Self[C], Style) -> Int
-pub fn[C] TaffyTree::new_leaf_with_context(Self[C], Style, C) -> Int
-pub fn[C] TaffyTree::new_with_children(Self[C], Style, Array[Int]) -> Int
-pub fn[C] TaffyTree::node_context(Self[C], Int) -> C? raise TaffyError
-pub fn[C] TaffyTree::remove(Self[C], Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::remove_child(Self[C], Int, Int) -> Int raise TaffyError
-pub fn[C] TaffyTree::remove_subtree(Self[C], Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::set_children(Self[C], Int, Array[Int]) -> Unit raise TaffyError
-pub fn[C] TaffyTree::set_node_context(Self[C], Int, C) -> Unit raise TaffyError
-pub fn[C] TaffyTree::set_style(Self[C], Int, Style) -> Unit raise TaffyError
-pub fn[C] TaffyTree::with_capacity(Int) -> Self[C]
 
 // Type aliases
+pub using @style {type AlignContent}
+
+pub using @style {type AlignItems}
+
+pub using @style {type AlignItems as AlignSelf}
+
+pub using @style {type AvailableSpace}
+
+pub using @style {type Dimension}
+
+pub using @style {type Display}
+
+pub using @style {type FlexDirection}
+
+pub using @style {type FlexWrap}
+
+pub using @style {type GridAutoFlow}
+
+pub using @style {type GridPlacement}
+
+pub using @style {type GridTrackRepetition}
+
+pub using @style {type AlignContent as JustifyContent}
+
+pub using @style {type AlignItems as JustifyItems}
+
+pub using @style {type AlignItems as JustifySelf}
+
+pub using @style {type Layout}
+
+pub using @style {type Line}
+
 pub type NodeId = Int
+
+pub using @style {type Overflow}
+
+pub using @style {type Point}
+
+pub using @style {type Position}
+
+pub using @style {type Rect}
+
+pub using @style {type Size}
+
+pub using @style {type Style}
+
+pub using @style {type TaffyError}
+
+pub using @style {type TaffyTree}
 
 // Traits
 

@@ -14,57 +14,57 @@
 
 ///|
 pub fn length(value : Double) -> Dimension {
-  @style.length(value)
+  DimLength(value)
 }
 
 ///|
 pub fn percent(value : Double) -> Dimension {
-  @style.percent(value)
+  DimPercent(value)
 }
 
 ///|
 pub fn auto() -> Dimension {
-  @style.auto()
+  DimAuto
 }
 
 ///|
 pub fn fr(value : Double) -> Dimension {
-  @style.fr(value)
+  DimFr(value)
 }
 
 ///|
 pub fn minmax(min : Dimension, max : Dimension) -> Dimension {
-  @style.minmax(min, max)
+  DimMinMax(min, max)
 }
 
 ///|
 pub fn grid_min_content() -> Dimension {
-  @style.grid_min_content()
+  DimMinContent
 }
 
 ///|
 pub fn grid_max_content() -> Dimension {
-  @style.grid_max_content()
+  DimMaxContent
 }
 
 ///|
 pub fn fit_content(limit : Dimension) -> Dimension {
-  @style.fit_content(limit)
+  DimFitContent(limit)
 }
 
 ///|
 pub fn repeat_count(count : Int) -> GridTrackRepetition {
-  @style.repeat_count(count)
+  RepeatCount(count)
 }
 
 ///|
 pub fn repeat_auto_fill() -> GridTrackRepetition {
-  @style.repeat_auto_fill()
+  RepeatAutoFill
 }
 
 ///|
 pub fn repeat_auto_fit() -> GridTrackRepetition {
-  @style.repeat_auto_fit()
+  RepeatAutoFit
 }
 
 ///|
@@ -72,265 +72,270 @@ pub fn repeat(
   repetition : GridTrackRepetition,
   tracks : Array[Dimension],
 ) -> Dimension {
-  @style.repeat(repetition, tracks)
+  DimRepeat(repetition, tracks)
 }
 
 ///|
 pub fn grid_auto_flow_row() -> GridAutoFlow {
-  @style.grid_auto_flow_row()
+  Row
 }
 
 ///|
 pub fn grid_auto_flow_column() -> GridAutoFlow {
-  @style.grid_auto_flow_column()
+  Column
 }
 
 ///|
 pub fn grid_auto_flow_row_dense() -> GridAutoFlow {
-  @style.grid_auto_flow_row_dense()
+  RowDense
 }
 
 ///|
 pub fn grid_auto_flow_column_dense() -> GridAutoFlow {
-  @style.grid_auto_flow_column_dense()
+  ColumnDense
 }
 
 ///|
 pub fn place_auto() -> GridPlacement {
-  @style.place_auto()
+  PlaceAuto
 }
 
 ///|
 pub fn line(value : Int) -> GridPlacement {
-  @style.line(value)
+  PlaceLine(value)
 }
 
 ///|
 pub fn span(value : Int) -> GridPlacement {
-  @style.span(value)
+  PlaceSpan(value)
 }
 
 ///|
 pub fn available_space_definite(value : Double) -> AvailableSpace {
-  @style.available_space_definite(value)
+  AvailDefinite(value)
 }
 
 ///|
 pub fn max_content() -> AvailableSpace {
-  @style.max_content()
+  AvailMaxContent
 }
 
 ///|
 pub fn min_content() -> AvailableSpace {
-  @style.min_content()
+  AvailMinContent
 }
 
 ///|
 pub fn display_flex() -> Display {
-  @style.display_flex()
+  DisplayFlex
 }
 
 ///|
 pub fn display_grid() -> Display {
-  @style.display_grid()
+  DisplayGrid
 }
 
 ///|
 pub fn display_block() -> Display {
-  @style.display_block()
+  DisplayBlock
 }
 
 ///|
 pub fn display_none() -> Display {
-  @style.display_none()
+  DisplayNone
 }
 
 ///|
 pub fn position_relative() -> Position {
-  @style.position_relative()
+  PosRelative
 }
 
 ///|
 pub fn position_absolute() -> Position {
-  @style.position_absolute()
+  PosAbsolute
 }
 
 ///|
 pub fn overflow_visible() -> Overflow {
-  @style.overflow_visible()
+  OverflowVisible
 }
 
 ///|
 pub fn overflow_clip() -> Overflow {
-  @style.overflow_clip()
+  OverflowClip
 }
 
 ///|
 pub fn overflow_hidden() -> Overflow {
-  @style.overflow_hidden()
+  OverflowHidden
 }
 
 ///|
 pub fn overflow_scroll() -> Overflow {
-  @style.overflow_scroll()
+  OverflowScroll
 }
 
 ///|
 pub fn flex_direction_row() -> FlexDirection {
-  @style.flex_direction_row()
+  FlexRow
 }
 
 ///|
 pub fn flex_direction_column() -> FlexDirection {
-  @style.flex_direction_column()
+  FlexColumn
 }
 
 ///|
 pub fn flex_direction_row_reverse() -> FlexDirection {
-  @style.flex_direction_row_reverse()
+  FlexRowReverse
 }
 
 ///|
 pub fn flex_direction_column_reverse() -> FlexDirection {
-  @style.flex_direction_column_reverse()
+  FlexColumnReverse
 }
 
 ///|
 pub fn flex_wrap_no_wrap() -> FlexWrap {
-  @style.flex_wrap_no_wrap()
+  FlexNoWrap
 }
 
 ///|
 pub fn flex_wrap_wrap() -> FlexWrap {
-  @style.flex_wrap_wrap()
+  FlexWrap
 }
 
 ///|
 pub fn flex_wrap_wrap_reverse() -> FlexWrap {
-  @style.flex_wrap_wrap_reverse()
+  FlexWrapReverse
 }
 
 ///|
 pub fn align_items_start() -> AlignItems {
-  @style.align_items_start()
+  ItemsStart
 }
 
 ///|
 pub fn align_items_end() -> AlignItems {
-  @style.align_items_end()
+  ItemsEnd
 }
 
 ///|
 pub fn align_items_flex_start() -> AlignItems {
-  @style.align_items_flex_start()
+  ItemsFlexStart
 }
 
 ///|
 pub fn align_items_flex_end() -> AlignItems {
-  @style.align_items_flex_end()
+  ItemsFlexEnd
 }
 
 ///|
 pub fn align_items_center() -> AlignItems {
-  @style.align_items_center()
+  ItemsCenter
 }
 
 ///|
 pub fn align_items_baseline() -> AlignItems {
-  @style.align_items_baseline()
+  ItemsBaseline
 }
 
 ///|
 pub fn align_items_stretch() -> AlignItems {
-  @style.align_items_stretch()
+  ItemsStretch
 }
 
 ///|
 pub fn align_content_start() -> AlignContent {
-  @style.align_content_start()
+  AlignStart
 }
 
 ///|
 pub fn align_content_end() -> AlignContent {
-  @style.align_content_end()
+  AlignEnd
 }
 
 ///|
 pub fn align_content_flex_start() -> AlignContent {
-  @style.align_content_flex_start()
+  AlignFlexStart
 }
 
 ///|
 pub fn align_content_flex_end() -> AlignContent {
-  @style.align_content_flex_end()
+  AlignFlexEnd
 }
 
 ///|
 pub fn align_content_center() -> AlignContent {
-  @style.align_content_center()
+  AlignCenter
 }
 
 ///|
 pub fn align_content_stretch() -> AlignContent {
-  @style.align_content_stretch()
+  AlignStretch
 }
 
 ///|
 pub fn align_content_space_between() -> AlignContent {
-  @style.align_content_space_between()
+  AlignSpaceBetween
 }
 
 ///|
 pub fn align_content_space_evenly() -> AlignContent {
-  @style.align_content_space_evenly()
+  AlignSpaceEvenly
 }
 
 ///|
 pub fn align_content_space_around() -> AlignContent {
-  @style.align_content_space_around()
+  AlignSpaceAround
 }
 
 ///|
 pub fn justify_content_flex_start() -> JustifyContent {
-  @style.justify_content_flex_start()
+  AlignFlexStart
 }
 
 ///|
 pub fn justify_content_center() -> JustifyContent {
-  @style.justify_content_center()
+  AlignCenter
 }
 
 ///|
 pub fn justify_content_flex_end() -> JustifyContent {
-  @style.justify_content_flex_end()
+  AlignFlexEnd
 }
 
 ///|
 pub fn justify_content_start() -> JustifyContent {
-  @style.justify_content_start()
+  AlignStart
 }
 
 ///|
 pub fn justify_content_end() -> JustifyContent {
-  @style.justify_content_end()
+  AlignEnd
 }
 
 ///|
 pub fn justify_content_stretch() -> JustifyContent {
-  @style.justify_content_stretch()
+  AlignStretch
 }
 
 ///|
 pub fn justify_content_space_between() -> JustifyContent {
-  @style.justify_content_space_between()
+  AlignSpaceBetween
 }
 
 ///|
 pub fn justify_content_space_evenly() -> JustifyContent {
-  @style.justify_content_space_evenly()
+  AlignSpaceEvenly
 }
 
 ///|
 pub fn justify_content_space_around() -> JustifyContent {
-  @style.justify_content_space_around()
+  AlignSpaceAround
+}
+
+///|
+pub fn Size::max_content() -> Size[AvailableSpace] {
+  Size::new(width=AvailMaxContent, height=AvailMaxContent)
 }

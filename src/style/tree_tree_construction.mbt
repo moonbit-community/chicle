@@ -20,7 +20,7 @@ pub fn[C] TaffyTree::new() -> TaffyTree[C] {
 ///|
 pub fn[C] TaffyTree::with_capacity(_capacity : Int) -> TaffyTree[C] {
   // Array capacity is backend-dependent; keep API surface but ignore the hint for now.
-  TaffyTree::new()
+  TaffyTree()
 }
 
 ///|

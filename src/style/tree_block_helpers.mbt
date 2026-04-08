@@ -101,7 +101,7 @@ fn[C] can_collapse_through_child(
     (OverflowVisible, OverflowVisible) => true
     _ => false
   }
-  if not(overflow_visible) {
+  if !overflow_visible {
     return false
   } else {
     ()

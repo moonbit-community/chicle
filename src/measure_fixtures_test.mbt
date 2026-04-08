@@ -72,7 +72,7 @@ fn measure_text(
     }
     max_line_length = max_line_length + len
   }
-  if not(saw_any) {
+  if !saw_any {
     return Size::zero()
   }
   let inline_known = if is_horizontal {

@@ -183,7 +183,7 @@ fn[C] compute_block_layout_with_measure(
         }
     }
   }
-  let collapse_with_children = not(is_layout_root) &&
+  let collapse_with_children = !is_layout_root &&
     parent_overflow_visible &&
     specified_height is None
   let first_child_allows_parent_child_collapse = match first_in_flow_child {
@@ -507,7 +507,7 @@ fn[C] compute_block_layout_with_measure(
   // Taffy block layout computes container width first, then performs final in-flow layout with that width.
   // When this container's width is auto, do a second layout pass so that in-flow children can stretch
   // (e.g. auto-width block children) and so that absolute children's static y positions are correct.
-  if not(width_definite) {
+  if !width_definite {
     let final_content_width_for_flow = max_double(
       final_border_box_width - horiz_inset,
       0.0,

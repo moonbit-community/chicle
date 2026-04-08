@@ -279,7 +279,7 @@ fn apply_col_contribution(
   for offset in 0..<span {
     let idx = start + offset
     let track = col_tracks[idx]
-    if not(track is DimFr(_)) {
+    if !(track is DimFr(_)) {
       all_fr = false
     }
     let weight = fr_track_weight(track)

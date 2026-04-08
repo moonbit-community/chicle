@@ -21,7 +21,7 @@ pub fn[C] TaffyTree::node_context(
     Some(n) => n
     None => raise InvalidNodeId(node)
   }
-  if not(node_ref.alive) {
+  if !node_ref.alive {
     raise InvalidNodeId(node)
   }
   node_ref.context
@@ -36,7 +36,7 @@ pub fn[C] TaffyTree::layout(
     Some(n) => n
     None => raise InvalidNodeId(node)
   }
-  if not(node_ref.alive) {
+  if !node_ref.alive {
     raise InvalidNodeId(node)
   }
   let layout = node_ref.layout
@@ -47,7 +47,7 @@ pub fn[C] TaffyTree::layout(
         Some(p) => p
         None => raise InvalidNodeId(parent_id)
       }
-      if not(parent.alive) {
+      if !parent.alive {
         raise InvalidNodeId(parent_id)
       }
       let parent_layout = parent.layout
@@ -92,7 +92,7 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
 ) -> Unit raise TaffyError {
   match self.nodes.get(root) {
     Some(_) =>
-      if not(self.nodes[root].alive) {
+      if !self.nodes[root].alive {
         raise InvalidNodeId(root)
       } else {
         ()
@@ -117,7 +117,7 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
     match stack.pop() {
       None => break
       Some(cur) => {
-        if not(self.nodes[cur].alive) {
+        if !self.nodes[cur].alive {
           continue
         }
         let layout = self.nodes[cur].layout

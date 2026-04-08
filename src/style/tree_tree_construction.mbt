@@ -106,7 +106,7 @@ pub fn[C] TaffyTree::new_with_children(
   for child_id in children {
     match self.nodes.get(child_id) {
       Some(_) => {
-        if not(self.nodes[child_id].alive) {
+        if !self.nodes[child_id].alive {
           continue
         }
         match self.nodes[child_id].parent {

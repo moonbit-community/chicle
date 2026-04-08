@@ -26,10 +26,10 @@ pub fn[C] TaffyTree::add_child(
     Some(_) => ()
     None => raise InvalidNodeId(child)
   }
-  if not(self.nodes[parent].alive) {
+  if !self.nodes[parent].alive {
     raise InvalidNodeId(parent)
   }
-  if not(self.nodes[child].alive) {
+  if !self.nodes[child].alive {
     raise InvalidNodeId(child)
   }
   if parent == child {
@@ -77,7 +77,7 @@ pub fn[C] TaffyTree::set_children(
     Some(_) => ()
     None => raise InvalidNodeId(parent)
   }
-  if not(self.nodes[parent].alive) {
+  if !self.nodes[parent].alive {
     raise InvalidNodeId(parent)
   }
   // Validate nodes and reject cycles.
@@ -86,7 +86,7 @@ pub fn[C] TaffyTree::set_children(
       Some(_) => ()
       None => raise InvalidNodeId(child_id)
     }
-    if not(self.nodes[child_id].alive) {
+    if !self.nodes[child_id].alive {
       raise InvalidNodeId(child_id)
     }
     if child_id == parent {
@@ -146,10 +146,10 @@ pub fn[C] TaffyTree::remove_child(
     Some(_) => ()
     None => raise InvalidNodeId(child)
   }
-  if not(self.nodes[parent].alive) {
+  if !self.nodes[parent].alive {
     raise InvalidNodeId(parent)
   }
-  if not(self.nodes[child].alive) {
+  if !self.nodes[child].alive {
     raise InvalidNodeId(child)
   }
   let siblings = self.nodes[parent].children
@@ -173,7 +173,7 @@ pub fn[C] TaffyTree::mark_dirty(
     Some(_) => ()
     None => raise InvalidNodeId(node)
   }
-  if not(self.nodes[node].alive) {
+  if !self.nodes[node].alive {
     raise InvalidNodeId(node)
   }
   let mut cur : NodeId? = Some(node)
@@ -213,7 +213,7 @@ pub fn[C] TaffyTree::remove(
     Some(_) => ()
     None => raise InvalidNodeId(node)
   }
-  if not(self.nodes[node].alive) {
+  if !self.nodes[node].alive {
     raise InvalidNodeId(node)
   }
   // Detach from parent.
@@ -251,7 +251,7 @@ pub fn[C] TaffyTree::remove_subtree(
     Some(_) => ()
     None => raise InvalidNodeId(node)
   }
-  if not(self.nodes[node].alive) {
+  if !self.nodes[node].alive {
     raise InvalidNodeId(node)
   }
   // Detach root of subtree from its parent.
@@ -272,7 +272,7 @@ pub fn[C] TaffyTree::remove_subtree(
     match stack.pop() {
       None => break
       Some(cur) => {
-        if not(self.nodes[cur].alive) {
+        if !self.nodes[cur].alive {
           continue
         }
         let kids = self.nodes[cur].children

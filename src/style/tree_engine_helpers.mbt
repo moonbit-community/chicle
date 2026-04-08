@@ -126,7 +126,7 @@ fn expand_grid_template_axis(
     first : Bool,
   ) -> (Double, Bool) {
     let mut u = used
-    if not(first) {
+    if !first {
       u = u + gap
     }
     u = u + resolve_track_dimension(track, content_size)
@@ -163,14 +163,14 @@ fn expand_grid_template_axis(
               let mut u_try = used
               let mut first_try = first
               for t in tracks {
-                if not(first_try) {
+                if !first_try {
                   u_try = u_try + gap
                 }
                 u_try = u_try + resolve_track_dimension(t, content_size)
                 first_try = false
               }
               let fits = u_try <= content_size + 0.000001
-              if reps > 0 && not(fits) {
+              if reps > 0 && !fits {
                 break
               }
               // Always append at least once.
@@ -178,12 +178,12 @@ fn expand_grid_template_axis(
                 let r = push_track(expanded, t, content_size, gap, used, first)
                 used = r.0
                 first = r.1
-                if not(is_auto_fit) {
+                if !is_auto_fit {
                   non_auto_fit_count = non_auto_fit_count + 1
                 }
               }
               reps = reps + 1
-              if not(fits) {
+              if !fits {
                 break
               }
             }

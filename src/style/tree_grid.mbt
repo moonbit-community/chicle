@@ -461,7 +461,7 @@ fn[C] compute_grid_layout_with_measure(
             match fixed_col {
               Some(c0) =>
                 while true {
-                  if not(dense) && sec == cursor_sec && c0 < cursor_prim {
+                  if !dense && sec == cursor_sec && c0 < cursor_prim {
                     sec = sec + 1
                   }
                   ensure_rows(
@@ -487,7 +487,7 @@ fn[C] compute_grid_layout_with_measure(
                       negative_cols, explicit_row_count, explicit_col_count, i, sec,
                       c0, row_span, col_span,
                     )
-                    if not(dense) {
+                    if !dense {
                       cursor_sec = sec
                       cursor_prim = c0 + col_span
                       if cursor_prim >= col_tracks.length() {
@@ -533,7 +533,7 @@ fn[C] compute_grid_layout_with_measure(
                         negative_cols, explicit_row_count, explicit_col_count, i,
                         sec, prim, row_span, col_span,
                       )
-                      if not(dense) {
+                      if !dense {
                         cursor_sec = sec
                         cursor_prim = prim + col_span
                         if cursor_prim >= col_tracks.length() {
@@ -563,7 +563,7 @@ fn[C] compute_grid_layout_with_measure(
             match fixed_row {
               Some(r0) =>
                 while true {
-                  if not(dense) && sec == cursor_sec && r0 < cursor_prim {
+                  if !dense && sec == cursor_sec && r0 < cursor_prim {
                     sec = sec + 1
                   }
                   ensure_cols(
@@ -589,7 +589,7 @@ fn[C] compute_grid_layout_with_measure(
                       negative_cols, explicit_row_count, explicit_col_count, i, r0,
                       sec, row_span, col_span,
                     )
-                    if not(dense) {
+                    if !dense {
                       cursor_sec = sec
                       cursor_prim = r0 + row_span
                       if cursor_prim >= row_tracks.length() {
@@ -635,7 +635,7 @@ fn[C] compute_grid_layout_with_measure(
                         negative_cols, explicit_row_count, explicit_col_count, i,
                         prim, sec, row_span, col_span,
                       )
-                      if not(dense) {
+                      if !dense {
                         cursor_sec = sec
                         cursor_prim = prim + row_span
                         if cursor_prim >= row_tracks.length() {
@@ -677,7 +677,7 @@ fn[C] compute_grid_layout_with_measure(
   let col_item_max_needed : Array[Double] = Array::make(placement_count, 0.0)
 
   for i in 0..<placement_count {
-    if not(placed[i]) {
+    if !placed[i] {
       continue
     }
     let child_id = node.children[i]
@@ -831,7 +831,7 @@ fn[C] compute_grid_layout_with_measure(
 
   // Compute row contributions with the resolved column widths as a constraint.
   for i in 0..<placement_count {
-    if not(placed[i]) {
+    if !placed[i] {
       continue
     }
     let child_id = node.children[i]
@@ -1037,7 +1037,7 @@ fn[C] compute_grid_layout_with_measure(
       row_max_contrib[i] = 0.0
     }
     for i in 0..<placement_count {
-      if not(placed[i]) {
+      if !placed[i] {
         continue
       }
       let child_id = node.children[i]
@@ -1106,7 +1106,7 @@ fn[C] compute_grid_layout_with_measure(
       specified_width is Some(_),
     )
     for i in 0..<placement_count {
-      if not(placed[i]) {
+      if !placed[i] {
         continue
       }
       let child_id = node.children[i]
@@ -1239,7 +1239,7 @@ fn[C] compute_grid_layout_with_measure(
     let mut max_row_used = 0
     let mut max_col_used = 0
     for i in 0..<placement_count {
-      if not(placed[i]) {
+      if !placed[i] {
         continue
       }
       let row = placed_row[i]
@@ -1442,7 +1442,7 @@ fn[C] compute_grid_layout_with_measure(
   let row_baseline_after_max : Array[Double] = Array::make(row_count, 0.0)
   let item_baseline_offsets : Array[Double] = Array::make(placement_count, 0.0)
   for i in 0..<placement_count {
-    if not(placed[i]) {
+    if !placed[i] {
       continue
     }
     let child_id = node.children[i]
@@ -1604,7 +1604,7 @@ fn[C] compute_grid_layout_with_measure(
     match child.style.display {
       DisplayNone => compute_hidden_layout(tree, child_id, Point::zero())
       _ => {
-        if not(placed[i]) {
+        if !placed[i] {
           continue
         } else {
           ()

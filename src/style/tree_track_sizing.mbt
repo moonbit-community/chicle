@@ -200,7 +200,7 @@ fn compute_grid_track_sizes_with_contributions(
 
   // Intrinsic sizing for flexible tracks: derive a flex fraction from content contributions.
   // This matches taffy 0.5 behavior for `fr` tracks under indefinite available space.
-  if not(expand_to_fill) {
+  if !expand_to_fill {
     let mut flex_fraction = 0.0
     for i in 0..<count {
       let w = fr_weights[i]
@@ -325,7 +325,7 @@ fn compute_grid_track_sizes_with_contributions(
             next_unresolved.push(idx)
           }
         }
-        if not(froze_any) {
+        if !froze_any {
           let total_fr_space = if unresolved_sum < 1.0 {
             remaining_for_fr * unresolved_sum
           } else {

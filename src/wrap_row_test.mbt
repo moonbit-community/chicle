@@ -14,31 +14,23 @@
 
 ///|
 test "wrap_row (upstream: generated/flex/wrap_row.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node0 = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(31.0), height=length(30.0)),
-    ),
+    Style::default().with_size(Size(width=length(31.0), height=length(30.0))),
   )
   let node1 = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(32.0), height=length(30.0)),
-    ),
+    Style::default().with_size(Size(width=length(32.0), height=length(30.0))),
   )
   let node2 = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(33.0), height=length(30.0)),
-    ),
+    Style::default().with_size(Size(width=length(33.0), height=length(30.0))),
   )
   let node3 = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(34.0), height=length(30.0)),
-    ),
+    Style::default().with_size(Size(width=length(34.0), height=length(30.0))),
   )
   let root = taffy.new_with_children(
     Style::default()
     .with_flex_wrap(flex_wrap_wrap())
-    .with_size(Size::new(width=length(100.0), height=auto())),
+    .with_size(Size(width=length(100.0), height=auto())),
     [node0, node1, node2, node3],
   )
   taffy.compute_layout(root, Size::max_content())

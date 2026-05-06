@@ -14,23 +14,21 @@
 
 ///|
 test "flex_shrink_flex_grow_row (upstream: generated/flex/flex_shrink_flex_grow_row.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node0 = taffy.new_leaf(
     Style::default()
     .with_flex_grow(0.0)
     .with_flex_shrink(1.0)
-    .with_size(Size::new(width=length(500.0), height=length(100.0))),
+    .with_size(Size(width=length(500.0), height=length(100.0))),
   )
   let node1 = taffy.new_leaf(
     Style::default()
     .with_flex_grow(0.0)
     .with_flex_shrink(1.0)
-    .with_size(Size::new(width=length(500.0), height=length(100.0))),
+    .with_size(Size(width=length(500.0), height=length(100.0))),
   )
   let node = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(500.0), height=length(500.0)),
-    ),
+    Style::default().with_size(Size(width=length(500.0), height=length(500.0))),
     [node0, node1],
   )
   fn zero_measure(

@@ -124,7 +124,7 @@ fn resolve_rect_width_basis(
     AvailDefinite(v) => v
     _ => 0.0
   }
-  Rect::new(
+  Rect(
     left=resolve_dimension_width_basis(rect.left, basis_width),
     right=resolve_dimension_width_basis(rect.right, basis_width),
     top=resolve_dimension_width_basis(rect.top, basis_width),

@@ -14,7 +14,7 @@
 
 ///|
 test "upstream/generated/grid/grid_fr_fixed_size_no_content_proportions" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node0 = taffy.new_leaf(Style::default())
   let node1 = taffy.new_leaf(Style::default())
   let node2 = taffy.new_leaf(Style::default())
@@ -22,7 +22,7 @@ test "upstream/generated/grid/grid_fr_fixed_size_no_content_proportions" {
     .with_display(display_grid())
     .with_grid_template_rows([length(40.0)])
     .with_grid_template_columns([fr(1.0), fr(2.0), fr(3.0)])
-    .with_size(Size::new(width=length(200.0), height=auto()))
+    .with_size(Size(width=length(200.0), height=auto()))
   let root = taffy.new_with_children(root_style, [node0, node1, node2])
   taffy.compute_layout(root, Size::max_content())
   let root_layout = taffy.layout(root)

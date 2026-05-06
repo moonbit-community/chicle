@@ -14,13 +14,13 @@
 
 ///|
 test "absolute_child_with_main_margin (upstream: generated/flex/absolute_child_with_main_margin.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let child = taffy.new_leaf(
     Style::default()
     .with_position(position_absolute())
-    .with_size(Size::new(width=length(9.0), height=length(9.0)))
+    .with_size(Size(width=length(9.0), height=length(9.0)))
     .with_margin(
-      Rect::new(
+      Rect(
         left=length(7.0),
         right=length(0.0),
         top=length(0.0),
@@ -29,9 +29,7 @@ test "absolute_child_with_main_margin (upstream: generated/flex/absolute_child_w
     ),
   )
   let root = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(20.0), height=length(37.0)),
-    ),
+    Style::default().with_size(Size(width=length(20.0), height=length(37.0))),
     [child],
   )
   taffy.compute_layout(root, Size::max_content())

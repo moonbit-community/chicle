@@ -41,7 +41,7 @@ fn check_cell(
 
 ///|
 test "grid_justify_content_space_between (upstream: generated/grid/grid_justify_content_space_between.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let nodes = mk_9_nodes(taffy)
   let root = taffy.new_with_children(
     Style::default()
@@ -49,7 +49,7 @@ test "grid_justify_content_space_between (upstream: generated/grid/grid_justify_
     .with_justify_content(justify_content_space_between())
     .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
     .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    .with_size(Size(width=length(200.0), height=length(200.0))),
     nodes,
   )
   taffy.compute_layout(root, Size::max_content())
@@ -63,7 +63,7 @@ test "grid_justify_content_space_between (upstream: generated/grid/grid_justify_
 
 ///|
 test "grid_justify_content_space_evenly (upstream: generated/grid/grid_justify_content_space_evenly.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let nodes = mk_9_nodes(taffy)
   let root = taffy.new_with_children(
     Style::default()
@@ -71,7 +71,7 @@ test "grid_justify_content_space_evenly (upstream: generated/grid/grid_justify_c
     .with_justify_content(justify_content_space_evenly())
     .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
     .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    .with_size(Size(width=length(200.0), height=length(200.0))),
     nodes,
   )
   taffy.compute_layout(root, Size::max_content())
@@ -85,7 +85,7 @@ test "grid_justify_content_space_evenly (upstream: generated/grid/grid_justify_c
 
 ///|
 test "grid_align_content_space_between (upstream: generated/grid/grid_align_content_space_between.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let nodes = mk_9_nodes(taffy)
   let root = taffy.new_with_children(
     Style::default()
@@ -93,7 +93,7 @@ test "grid_align_content_space_between (upstream: generated/grid/grid_align_cont
     .with_align_content(align_content_space_between())
     .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
     .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    .with_size(Size(width=length(200.0), height=length(200.0))),
     nodes,
   )
   taffy.compute_layout(root, Size::max_content())
@@ -104,7 +104,7 @@ test "grid_align_content_space_between (upstream: generated/grid/grid_align_cont
 
 ///|
 test "grid_align_content_space_evenly (upstream: generated/grid/grid_align_content_space_evenly.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let nodes = mk_9_nodes(taffy)
   let root = taffy.new_with_children(
     Style::default()
@@ -112,7 +112,7 @@ test "grid_align_content_space_evenly (upstream: generated/grid/grid_align_conte
     .with_align_content(align_content_space_evenly())
     .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
     .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    .with_size(Size(width=length(200.0), height=length(200.0))),
     nodes,
   )
   taffy.compute_layout(root, Size::max_content())
@@ -123,25 +123,25 @@ test "grid_align_content_space_evenly (upstream: generated/grid/grid_align_conte
 
 ///|
 test "grid_justify_content_center_negative_space_gap (upstream: generated/grid/grid_justify_content_center_negative_space_gap.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let leafs = mk_9_nodes(taffy)
   let inner = taffy.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_align_content(align_content_center())
     .with_justify_content(justify_content_center())
-    .with_gap(Size::new(width=length(10.0), height=length(10.0)))
+    .with_gap(Size(width=length(10.0), height=length(10.0)))
     .with_grid_template_rows([length(20.0), length(20.0), length(20.0)])
     .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    .with_size(Size(width=length(120.0), height=length(120.0))),
     leafs,
   )
   let root = taffy.new_with_children(
     Style::default()
     .with_display(display_grid())
-    .with_size(Size::new(width=length(240.0), height=length(240.0)))
+    .with_size(Size(width=length(240.0), height=length(240.0)))
     .with_border(
-      Rect::new(
+      Rect(
         left=length(60.0),
         right=length(60.0),
         top=length(60.0),
@@ -165,25 +165,25 @@ test "grid_justify_content_center_negative_space_gap (upstream: generated/grid/g
 
 ///|
 test "grid_align_content_center_negative_space_gap (upstream: generated/grid/grid_align_content_center_negative_space_gap.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let leafs = mk_9_nodes(taffy)
   let inner = taffy.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_align_content(align_content_center())
     .with_justify_content(justify_content_center())
-    .with_gap(Size::new(width=length(10.0), height=length(10.0)))
+    .with_gap(Size(width=length(10.0), height=length(10.0)))
     .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
     .with_grid_template_columns([length(20.0), length(20.0), length(20.0)])
-    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    .with_size(Size(width=length(120.0), height=length(120.0))),
     leafs,
   )
   let root = taffy.new_with_children(
     Style::default()
     .with_display(display_grid())
-    .with_size(Size::new(width=length(240.0), height=length(240.0)))
+    .with_size(Size(width=length(240.0), height=length(240.0)))
     .with_border(
-      Rect::new(
+      Rect(
         left=length(60.0),
         right=length(60.0),
         top=length(60.0),

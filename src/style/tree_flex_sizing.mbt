@@ -40,23 +40,20 @@ fn[C] resolve_flex_auto_min_main(
   let original_style = child.style
   let original_layout = child.layout
   let cleared_size = if is_col {
-    Size::new(width=original_style.size.width, height=DimAuto)
+    Size(width=original_style.size.width, height=DimAuto)
   } else {
-    Size::new(width=DimAuto, height=original_style.size.height)
+    Size(width=DimAuto, height=original_style.size.height)
   }
   tree.nodes[child_id].style = { ..original_style, size: cleared_size }
   let min_content_space = if is_col {
-    Size::new(width=parent_available_for_children.width, height=AvailMinContent)
+    Size(width=parent_available_for_children.width, height=AvailMinContent)
   } else {
-    Size::new(
-      width=AvailMinContent,
-      height=parent_available_for_children.height,
-    )
+    Size(width=AvailMinContent, height=parent_available_for_children.height)
   }
   compute_node_layout_with_measure(
     tree,
     child_id,
-    Size::new(width=None, height=None),
+    Size(width=None, height=None),
     min_content_space,
     Point::zero(),
     measure_function,

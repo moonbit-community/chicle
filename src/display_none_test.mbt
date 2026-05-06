@@ -16,11 +16,11 @@
 test "toggle_root_display_none" {
   let hidden_style = Style::default()
     .with_display(display_none())
-    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+    .with_size(Size(width=length(100.0), height=length(100.0)))
   let flex_style = Style::default()
     .with_display(display_flex())
-    .with_size(Size::new(width=length(100.0), height=length(100.0)))
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+    .with_size(Size(width=length(100.0), height=length(100.0)))
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node = taffy.new_leaf(hidden_style)
   taffy.compute_layout(node, Size::max_content())
   let layout = taffy.layout(node)
@@ -46,13 +46,13 @@ test "toggle_root_display_none" {
 
 ///|
 test "toggle_root_display_none_with_children" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let child_style = Style::default().with_size(
-    Size::new(width=length(800.0), height=length(100.0)),
+    Size(width=length(800.0), height=length(100.0)),
   )
   let child = taffy.new_leaf(child_style)
   let parent_style = Style::default().with_size(
-    Size::new(width=length(800.0), height=length(100.0)),
+    Size(width=length(800.0), height=length(100.0)),
   )
   let parent = taffy.new_with_children(parent_style, [child])
   let root = taffy.new_with_children(Style::default(), [parent])

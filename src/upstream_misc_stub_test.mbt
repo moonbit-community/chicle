@@ -44,7 +44,7 @@ fn misc_fixed_measure(
     Some(v) => v
     None => MiscFixedMeasure::{ width: 0.0, height: 0.0 }
   }
-  Size::new(
+  Size(
     width=misc_unwrap_or(known_dimensions.width, ctx.width),
     height=misc_unwrap_or(known_dimensions.height, ctx.height),
   )
@@ -64,7 +64,7 @@ fn misc_aspect_ratio_measure(
   }
   let width = misc_unwrap_or(known_dimensions.width, ctx.width)
   let height = misc_unwrap_or(known_dimensions.height, width * ctx.height_ratio)
-  Size::new(width~, height~)
+  Size(width~, height~)
 }
 
 ///|
@@ -77,7 +77,7 @@ fn misc_square_measure(
 ) -> Size[Double] {
   let height = misc_unwrap_or(known_dimensions.height, 50.0)
   let width = misc_unwrap_or(known_dimensions.width, height)
-  Size::new(width~, height~)
+  Size(width~, height~)
 }
 
 ///|
@@ -92,7 +92,7 @@ fn misc_count_measure(
     Some(ctx) => ctx[0] = ctx[0] + 1
     None => ()
   }
-  Size::new(
+  Size(
     width=misc_unwrap_or(known_dimensions.width, 50.0),
     height=misc_unwrap_or(known_dimensions.height, 50.0),
   )
@@ -116,7 +116,7 @@ fn[C] misc_assert_layout_xywh(
 
 ///|
 test "upstream/caching/measure_count_flexbox" {
-  let taffy : TaffyTree[Array[Int]] = TaffyTree::new()
+  let taffy : TaffyTree[Array[Int]] = TaffyTree()
   let leaf_counter = [0]
   let leaf = taffy.new_leaf_with_context(Style::default(), leaf_counter)
   let mut node = taffy.new_with_children(Style::default(), [leaf])
@@ -136,7 +136,7 @@ test "upstream/caching/measure_count_flexbox" {
 
 ///|
 test "upstream/measure/measure_root" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let node = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
     width: 100.0,
     height: 100.0,
@@ -152,7 +152,7 @@ test "upstream/measure/measure_root" {
 
 ///|
 test "upstream/measure/measure_child" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let child = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
     width: 100.0,
     height: 100.0,
@@ -171,13 +171,13 @@ test "upstream/measure/measure_child" {
 
 ///|
 test "upstream/measure/measure_child_constraint" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let child = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
     width: 100.0,
     height: 100.0,
   })
   let node = taffy.new_with_children(
-    Style::default().with_size(Size::new(width=length(50.0), height=auto())),
+    Style::default().with_size(Size(width=length(50.0), height=auto())),
     [child],
   )
   taffy.compute_layout_with_measure(
@@ -193,16 +193,16 @@ test "upstream/measure/measure_child_constraint" {
 
 ///|
 test "upstream/measure/measure_child_constraint_padding_parent" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let child = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
     width: 100.0,
     height: 100.0,
   })
   let node = taffy.new_with_children(
     Style::default()
-    .with_size(Size::new(width=length(50.0), height=auto()))
+    .with_size(Size(width=length(50.0), height=auto()))
     .with_padding(
-      Rect::new(
+      Rect(
         left=length(10.0),
         right=length(10.0),
         top=length(10.0),
@@ -222,18 +222,16 @@ test "upstream/measure/measure_child_constraint_padding_parent" {
 
 ///|
 test "upstream/measure/measure_child_with_flex_grow" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let child0 = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(50.0), height=length(50.0)),
-    ),
+    Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
   )
   let child1 = taffy.new_leaf_with_context(
     Style::default().with_flex_grow(1.0),
     MiscFixedMeasure::{ width: 10.0, height: 50.0 },
   )
   let node = taffy.new_with_children(
-    Style::default().with_size(Size::new(width=length(100.0), height=auto())),
+    Style::default().with_size(Size(width=length(100.0), height=auto())),
     [child0, child1],
   )
   taffy.compute_layout_with_measure(
@@ -247,10 +245,10 @@ test "upstream/measure/measure_child_with_flex_grow" {
 
 ///|
 test "upstream/measure/measure_child_with_flex_shrink" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let child0 = taffy.new_leaf(
     Style::default()
-    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_size(Size(width=length(50.0), height=length(50.0)))
     .with_flex_shrink(0.0),
   )
   let child1 = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
@@ -258,7 +256,7 @@ test "upstream/measure/measure_child_with_flex_shrink" {
     height: 50.0,
   })
   let node = taffy.new_with_children(
-    Style::default().with_size(Size::new(width=length(100.0), height=auto())),
+    Style::default().with_size(Size(width=length(100.0), height=auto())),
     [child0, child1],
   )
   taffy.compute_layout_with_measure(
@@ -272,11 +270,9 @@ test "upstream/measure/measure_child_with_flex_shrink" {
 
 ///|
 test "upstream/measure/remeasure_child_after_growing" {
-  let taffy : TaffyTree[MiscAspectRatioMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscAspectRatioMeasure] = TaffyTree()
   let child0 = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(50.0), height=length(50.0)),
-    ),
+    Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
   )
   let child1 = taffy.new_leaf_with_context(
     Style::default().with_flex_grow(1.0),
@@ -284,7 +280,7 @@ test "upstream/measure/remeasure_child_after_growing" {
   )
   let node = taffy.new_with_children(
     Style::default()
-    .with_size(Size::new(width=length(100.0), height=auto()))
+    .with_size(Size(width=length(100.0), height=auto()))
     .with_align_items(align_items_start()),
     [child0, child1],
   )
@@ -299,10 +295,10 @@ test "upstream/measure/remeasure_child_after_growing" {
 
 ///|
 test "upstream/measure/remeasure_child_after_shrinking" {
-  let taffy : TaffyTree[MiscAspectRatioMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscAspectRatioMeasure] = TaffyTree()
   let child0 = taffy.new_leaf(
     Style::default()
-    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_size(Size(width=length(50.0), height=length(50.0)))
     .with_flex_shrink(0.0),
   )
   let child1 = taffy.new_leaf_with_context(Style::default(), MiscAspectRatioMeasure::{
@@ -311,7 +307,7 @@ test "upstream/measure/remeasure_child_after_shrinking" {
   })
   let node = taffy.new_with_children(
     Style::default()
-    .with_size(Size::new(width=length(100.0), height=auto()))
+    .with_size(Size(width=length(100.0), height=auto()))
     .with_align_items(align_items_start()),
     [child0, child1],
   )
@@ -326,12 +322,10 @@ test "upstream/measure/remeasure_child_after_shrinking" {
 
 ///|
 test "upstream/measure/remeasure_child_after_stretching" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let child = taffy.new_leaf_with_context(Style::default(), ())
   let node = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(100.0), height=length(100.0)),
-    ),
+    Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
     [child],
   )
   taffy.compute_layout_with_measure(
@@ -345,9 +339,9 @@ test "upstream/measure/remeasure_child_after_stretching" {
 
 ///|
 test "upstream/measure/width_overrides_measure" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let child = taffy.new_leaf_with_context(
-    Style::default().with_size(Size::new(width=length(50.0), height=auto())),
+    Style::default().with_size(Size(width=length(50.0), height=auto())),
     MiscFixedMeasure::{ width: 100.0, height: 100.0 },
   )
   let node = taffy.new_with_children(Style::default(), [child])
@@ -362,9 +356,9 @@ test "upstream/measure/width_overrides_measure" {
 
 ///|
 test "upstream/measure/height_overrides_measure" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let child = taffy.new_leaf_with_context(
-    Style::default().with_size(Size::new(width=auto(), height=length(50.0))),
+    Style::default().with_size(Size(width=auto(), height=length(50.0))),
     MiscFixedMeasure::{ width: 100.0, height: 100.0 },
   )
   let node = taffy.new_with_children(Style::default(), [child])
@@ -379,7 +373,7 @@ test "upstream/measure/height_overrides_measure" {
 
 ///|
 test "upstream/measure/flex_basis_overrides_measure" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let child0 = taffy.new_leaf(
     Style::default().with_flex_basis(length(50.0)).with_flex_grow(1.0),
   )
@@ -388,9 +382,7 @@ test "upstream/measure/flex_basis_overrides_measure" {
     MiscFixedMeasure::{ width: 100.0, height: 100.0 },
   )
   let node = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(200.0), height=length(100.0)),
-    ),
+    Style::default().with_size(Size(width=length(200.0), height=length(100.0))),
     [child0, child1],
   )
   taffy.compute_layout_with_measure(
@@ -406,15 +398,13 @@ test "upstream/measure/flex_basis_overrides_measure" {
 
 ///|
 test "upstream/measure/stretch_overrides_measure" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let child = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{
     width: 50.0,
     height: 50.0,
   })
   let node = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(100.0), height=length(100.0)),
-    ),
+    Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
     [child],
   )
   taffy.compute_layout_with_measure(
@@ -428,15 +418,13 @@ test "upstream/measure/stretch_overrides_measure" {
 
 ///|
 test "upstream/measure/measure_absolute_child" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let child = taffy.new_leaf_with_context(
     Style::default().with_position(position_absolute()),
     MiscFixedMeasure::{ width: 50.0, height: 50.0 },
   )
   let node = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(100.0), height=length(100.0)),
-    ),
+    Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
     [child],
   )
   taffy.compute_layout_with_measure(
@@ -450,12 +438,10 @@ test "upstream/measure/measure_absolute_child" {
 
 ///|
 test "upstream/measure/ignore_invalid_measure" {
-  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let child = taffy.new_leaf(Style::default().with_flex_grow(1.0))
   let node = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(100.0), height=length(100.0)),
-    ),
+    Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
     [child],
   )
   taffy.compute_layout_with_measure(
@@ -469,16 +455,16 @@ test "upstream/measure/ignore_invalid_measure" {
 
 ///|
 test "upstream/min_max_overrides/min_overrides_max" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let child = taffy.new_leaf(
     Style::default()
-    .with_size(Size::new(width=length(50.0), height=length(50.0)))
-    .with_min_size(Size::new(width=length(100.0), height=length(100.0)))
-    .with_max_size(Size::new(width=length(10.0), height=length(10.0))),
+    .with_size(Size(width=length(50.0), height=length(50.0)))
+    .with_min_size(Size(width=length(100.0), height=length(100.0)))
+    .with_max_size(Size(width=length(10.0), height=length(10.0))),
   )
   taffy.compute_layout(
     child,
-    Size::new(
+    Size(
       width=available_space_definite(100.0),
       height=available_space_definite(100.0),
     ),
@@ -490,15 +476,15 @@ test "upstream/min_max_overrides/min_overrides_max" {
 
 ///|
 test "upstream/min_max_overrides/max_overrides_size" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let child = taffy.new_leaf(
     Style::default()
-    .with_size(Size::new(width=length(50.0), height=length(50.0)))
-    .with_max_size(Size::new(width=length(10.0), height=length(10.0))),
+    .with_size(Size(width=length(50.0), height=length(50.0)))
+    .with_max_size(Size(width=length(10.0), height=length(10.0))),
   )
   taffy.compute_layout(
     child,
-    Size::new(
+    Size(
       width=available_space_definite(100.0),
       height=available_space_definite(100.0),
     ),
@@ -510,15 +496,15 @@ test "upstream/min_max_overrides/max_overrides_size" {
 
 ///|
 test "upstream/min_max_overrides/min_overrides_size" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let child = taffy.new_leaf(
     Style::default()
-    .with_size(Size::new(width=length(50.0), height=length(50.0)))
-    .with_min_size(Size::new(width=length(100.0), height=length(100.0))),
+    .with_size(Size(width=length(50.0), height=length(50.0)))
+    .with_min_size(Size(width=length(100.0), height=length(100.0))),
   )
   taffy.compute_layout(
     child,
-    Size::new(
+    Size(
       width=available_space_definite(100.0),
       height=available_space_definite(100.0),
     ),
@@ -530,25 +516,21 @@ test "upstream/min_max_overrides/min_overrides_size" {
 
 ///|
 test "upstream/relayout/relayout" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node1 = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(8.0), height=length(80.0)),
-    ),
+    Style::default().with_size(Size(width=length(8.0), height=length(80.0))),
   )
   let node0 = taffy.new_with_children(
     Style::default()
     .with_align_self(align_items_center())
-    .with_size(Size::new(width=auto(), height=auto())),
+    .with_size(Size(width=auto(), height=auto())),
     [node1],
   )
   let node = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=percent(1.0), height=percent(1.0)),
-    ),
+    Style::default().with_size(Size(width=percent(1.0), height=percent(1.0))),
     [node0],
   )
-  let available = Size::new(
+  let available : Size[AvailableSpace] = Size(
     width=available_space_definite(100.0),
     height=available_space_definite(100.0),
   )
@@ -574,11 +556,11 @@ test "upstream/relayout/relayout" {
 test "upstream/relayout/toggle_flex_child_display_none" {
   let hidden_style = Style::default()
     .with_display(display_none())
-    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+    .with_size(Size(width=length(100.0), height=length(100.0)))
   let flex_style = Style::default()
     .with_display(display_flex())
-    .with_size(Size::new(width=length(100.0), height=length(100.0)))
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+    .with_size(Size(width=length(100.0), height=length(100.0)))
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node = taffy.new_leaf(hidden_style)
   let root = taffy.new_with_children(flex_style, [node])
   taffy.compute_layout(root, Size::max_content())
@@ -587,7 +569,7 @@ test "upstream/relayout/toggle_flex_child_display_none" {
     node,
     Style::default()
     .with_display(display_flex())
-    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    .with_size(Size(width=length(100.0), height=length(100.0))),
   )
   taffy.compute_layout(root, Size::max_content())
   misc_assert_layout_xywh(taffy, node, 0.0, 0.0, 100.0, 100.0)
@@ -595,7 +577,7 @@ test "upstream/relayout/toggle_flex_child_display_none" {
     node,
     Style::default()
     .with_display(display_none())
-    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    .with_size(Size(width=length(100.0), height=length(100.0))),
   )
   taffy.compute_layout(root, Size::max_content())
   misc_assert_layout_xywh(taffy, node, 0.0, 0.0, 0.0, 0.0)
@@ -605,11 +587,11 @@ test "upstream/relayout/toggle_flex_child_display_none" {
 test "upstream/relayout/toggle_flex_container_display_none" {
   let hidden_style = Style::default()
     .with_display(display_none())
-    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+    .with_size(Size(width=length(100.0), height=length(100.0)))
   let flex_style = Style::default()
     .with_display(display_flex())
-    .with_size(Size::new(width=length(100.0), height=length(100.0)))
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+    .with_size(Size(width=length(100.0), height=length(100.0)))
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node = taffy.new_leaf(hidden_style)
   let root = taffy.new_with_children(hidden_style, [node])
   taffy.compute_layout(root, Size::max_content())
@@ -626,11 +608,11 @@ test "upstream/relayout/toggle_flex_container_display_none" {
 test "upstream/relayout/toggle_grid_child_display_none" {
   let hidden_style = Style::default()
     .with_display(display_none())
-    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+    .with_size(Size(width=length(100.0), height=length(100.0)))
   let grid_style = Style::default()
     .with_display(display_grid())
-    .with_size(Size::new(width=length(100.0), height=length(100.0)))
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+    .with_size(Size(width=length(100.0), height=length(100.0)))
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node = taffy.new_leaf(hidden_style)
   let root = taffy.new_with_children(grid_style, [node])
   taffy.compute_layout(root, Size::max_content())
@@ -639,7 +621,7 @@ test "upstream/relayout/toggle_grid_child_display_none" {
     node,
     Style::default()
     .with_display(display_grid())
-    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    .with_size(Size(width=length(100.0), height=length(100.0))),
   )
   taffy.compute_layout(root, Size::max_content())
   misc_assert_layout_xywh(taffy, node, 0.0, 0.0, 100.0, 100.0)
@@ -647,7 +629,7 @@ test "upstream/relayout/toggle_grid_child_display_none" {
     node,
     Style::default()
     .with_display(display_none())
-    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    .with_size(Size(width=length(100.0), height=length(100.0))),
   )
   taffy.compute_layout(root, Size::max_content())
   misc_assert_layout_xywh(taffy, node, 0.0, 0.0, 0.0, 0.0)
@@ -657,11 +639,11 @@ test "upstream/relayout/toggle_grid_child_display_none" {
 test "upstream/relayout/toggle_grid_container_display_none" {
   let hidden_style = Style::default()
     .with_display(display_none())
-    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+    .with_size(Size(width=length(100.0), height=length(100.0)))
   let grid_style = Style::default()
     .with_display(display_grid())
-    .with_size(Size::new(width=length(100.0), height=length(100.0)))
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+    .with_size(Size(width=length(100.0), height=length(100.0)))
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node = taffy.new_leaf(hidden_style)
   let root = taffy.new_with_children(hidden_style, [node])
   taffy.compute_layout(root, Size::max_content())
@@ -676,29 +658,25 @@ test "upstream/relayout/toggle_grid_container_display_none" {
 
 ///|
 test "upstream/relayout/relayout_is_stable_with_rounding" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let inner = taffy.new_leaf(
-    Style::default().with_min_size(
-      Size::new(width=length(300.0), height=auto()),
-    ),
+    Style::default().with_min_size(Size(width=length(300.0), height=auto())),
   )
   let wrapper = taffy.new_with_children(
     Style::default()
-    .with_size(Size::new(width=length(150.0), height=auto()))
+    .with_size(Size(width=length(150.0), height=auto()))
     .with_justify_content(justify_content_end()),
     [inner],
   )
   let outer = taffy.new_with_children(
     Style::default()
-    .with_size(Size::new(width=percent(1.0), height=auto()))
-    .with_inset(
-      Rect::new(left=length(1.5), right=auto(), top=auto(), bottom=auto()),
-    ),
+    .with_size(Size(width=percent(1.0), height=auto()))
+    .with_inset(Rect(left=length(1.5), right=auto(), top=auto(), bottom=auto())),
     [wrapper],
   )
   let root = taffy.new_with_children(
     Style::default().with_size(
-      Size::new(width=length(1920.0), height=length(1080.0)),
+      Size(width=length(1920.0), height=length(1080.0)),
     ),
     [outer],
   )

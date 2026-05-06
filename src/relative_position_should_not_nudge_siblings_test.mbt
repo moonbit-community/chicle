@@ -14,18 +14,18 @@
 
 ///|
 test "relative_position_should_not_nudge_siblings (upstream: generated/flex/relative_position_should_not_nudge_siblings.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let child_style = Style::default()
-    .with_size(Size::new(width=auto(), height=length(10.0)))
+    .with_size(Size(width=auto(), height=length(10.0)))
     .with_inset(
-      Rect::new(left=auto(), right=auto(), top=length(15.0), bottom=auto()),
+      Rect(left=auto(), right=auto(), top=length(15.0), bottom=auto()),
     )
   let node0 = taffy.new_leaf(child_style)
   let node1 = taffy.new_leaf(child_style)
   let node = taffy.new_with_children(
     Style::default()
     .with_flex_direction(flex_direction_column())
-    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    .with_size(Size(width=length(100.0), height=length(100.0))),
     [node0, node1],
   )
   taffy.compute_layout(node, Size::max_content())

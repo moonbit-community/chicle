@@ -14,21 +14,17 @@
 
 ///|
 test "align_baseline (upstream: generated/flex/align_baseline.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node0 = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(50.0), height=length(50.0)),
-    ),
+    Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
   )
   let node1 = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(50.0), height=length(20.0)),
-    ),
+    Style::default().with_size(Size(width=length(50.0), height=length(20.0))),
   )
   let root = taffy.new_with_children(
     Style::default()
     .with_align_items(align_items_baseline())
-    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    .with_size(Size(width=length(100.0), height=length(100.0))),
     [node0, node1],
   )
   taffy.compute_layout(root, Size::max_content())
@@ -47,27 +43,23 @@ test "align_baseline (upstream: generated/flex/align_baseline.rs)" {
 
 ///|
 test "align_self_baseline (upstream: generated/flex/align_self_baseline.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node0 = taffy.new_leaf(
     Style::default()
     .with_align_self(align_items_baseline())
-    .with_size(Size::new(width=length(50.0), height=length(50.0))),
+    .with_size(Size(width=length(50.0), height=length(50.0))),
   )
   let node10 = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(50.0), height=length(10.0)),
-    ),
+    Style::default().with_size(Size(width=length(50.0), height=length(10.0))),
   )
   let node1 = taffy.new_with_children(
     Style::default()
     .with_align_self(align_items_baseline())
-    .with_size(Size::new(width=length(50.0), height=length(20.0))),
+    .with_size(Size(width=length(50.0), height=length(20.0))),
     [node10],
   )
   let root = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(100.0), height=length(100.0)),
-    ),
+    Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
     [node0, node1],
   )
   taffy.compute_layout(root, Size::max_content())

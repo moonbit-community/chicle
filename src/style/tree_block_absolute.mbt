@@ -37,7 +37,7 @@ fn[C] compute_block_absolute_children(
     final_border_box_height - border.top - border.bottom - scrollbar_x,
     0.0,
   )
-  let abs_available = Size::new(
+  let abs_available = Size(
     width=AvailDefinite(final_padding_box_width),
     height=AvailDefinite(final_padding_box_height),
   )
@@ -228,12 +228,12 @@ fn[C] compute_block_absolute_children(
 
     // First pass: determine intrinsic size under the containing block constraints, if needed.
     let intrinsic = match (used_width, used_height) {
-      (Some(w), Some(h)) => Size::new(width=w, height=h)
+      (Some(w), Some(h)) => Size(width=w, height=h)
       _ => {
         compute_node_layout_with_measure(
           tree,
           child_id,
-          Size::new(width=None, height=None),
+          Size(width=None, height=None),
           abs_available,
           Point::zero(),
           measure_function,
@@ -283,10 +283,7 @@ fn[C] compute_block_absolute_children(
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(
-        width=Some(clamped_final_width),
-        height=Some(clamped_final_height),
-      ),
+      Size(width=Some(clamped_final_width), height=Some(clamped_final_height)),
       abs_available,
       Point::zero(),
       measure_function,
@@ -401,9 +398,9 @@ fn[C] compute_block_absolute_children(
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=Some(final_size.width), height=Some(final_size.height)),
+      Size(width=Some(final_size.width), height=Some(final_size.height)),
       abs_available,
-      Point::new(
+      Point(
         x=padding_origin.x + x_in_padding,
         y=padding_origin.y + y_in_padding,
       ),

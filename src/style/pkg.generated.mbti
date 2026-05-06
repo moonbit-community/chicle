@@ -236,7 +236,6 @@ pub struct Line[T] {
   end : T
 }
 pub fn[T] Line::Line(start~ : T, end~ : T) -> Self[T]
-pub fn[T] Line::new(start~ : T, end~ : T) -> Self[T]
 
 type Node[C]
 
@@ -252,7 +251,6 @@ pub struct Point[T] {
   y : T
 }
 pub fn[T] Point::Point(x~ : T, y~ : T) -> Self[T]
-pub fn[T] Point::new(x~ : T, y~ : T) -> Self[T]
 pub fn Point::zero() -> Self[Double]
 
 pub enum Position {
@@ -267,7 +265,6 @@ pub struct Rect[T] {
   bottom : T
 }
 pub fn[T] Rect::Rect(left~ : T, right~ : T, top~ : T, bottom~ : T) -> Self[T]
-pub fn[T] Rect::new(left~ : T, right~ : T, top~ : T, bottom~ : T) -> Self[T]
 
 pub struct Size[T] {
   width : T
@@ -275,7 +272,6 @@ pub struct Size[T] {
 }
 pub fn[T] Size::Size(width~ : T, height~ : T) -> Self[T]
 pub fn Size::max_content() -> Self[AvailableSpace]
-pub fn[T] Size::new(width~ : T, height~ : T) -> Self[T]
 pub fn Size::zero() -> Self[Double]
 
 pub struct Style {
@@ -361,7 +357,6 @@ pub fn[C] TaffyTree::compute_layout_with_measure(Self[C], Int, Size[AvailableSpa
 pub fn[C] TaffyTree::dirty(Self[C], Int) -> Bool raise TaffyError
 pub fn[C] TaffyTree::layout(Self[C], Int) -> Layout raise TaffyError
 pub fn[C] TaffyTree::mark_dirty(Self[C], Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::new() -> Self[C]
 pub fn[C] TaffyTree::new_leaf(Self[C], Style) -> Int
 pub fn[C] TaffyTree::new_leaf_with_context(Self[C], Style, C) -> Int
 pub fn[C] TaffyTree::new_with_children(Self[C], Style, Array[Int]) -> Int

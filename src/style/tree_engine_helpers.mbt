@@ -47,9 +47,9 @@ fn make_size_from_main_cross(
   is_col : Bool,
 ) -> Size[Double] {
   if is_col {
-    Size::new(width=cross, height=main)
+    Size(width=cross, height=main)
   } else {
-    Size::new(width=main, height=cross)
+    Size(width=main, height=cross)
   }
 }
 

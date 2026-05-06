@@ -14,12 +14,10 @@
 
 ///|
 test "align_content_center_wrapped (upstream: generated/flex/align_content_center_wrapped.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let mk = fn() {
     taffy.new_leaf(
-      Style::default().with_size(
-        Size::new(width=length(50.0), height=length(10.0)),
-      ),
+      Style::default().with_size(Size(width=length(50.0), height=length(10.0))),
     )
   }
   let node0 = mk()
@@ -32,7 +30,7 @@ test "align_content_center_wrapped (upstream: generated/flex/align_content_cente
     Style::default()
     .with_flex_wrap(flex_wrap_wrap())
     .with_align_content(align_content_center())
-    .with_size(Size::new(width=length(120.0), height=length(100.0))),
+    .with_size(Size(width=length(120.0), height=length(100.0))),
     [node0, node1, node2, node3, node4, node5],
   )
   taffy.compute_layout(root, Size::max_content())

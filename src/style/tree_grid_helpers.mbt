@@ -31,7 +31,7 @@ fn merged_placement_line(
   legacy_start : Int?,
 ) -> Line[GridPlacement] {
   match legacy_start {
-    Some(v) => Line::new(start=PlaceLine(v), end=placement.end)
+    Some(v) => Line(start=PlaceLine(v), end=placement.end)
     None => placement
   }
 }

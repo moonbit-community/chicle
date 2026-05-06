@@ -14,10 +14,10 @@
 
 ///|
 test "vertical_padding_percentage_uses_width_as_basis" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node = taffy.new_leaf(
     Style::default().with_padding(
-      Rect::new(
+      Rect(
         left=percent(1.0),
         right=length(0.0),
         top=percent(1.0),
@@ -27,7 +27,7 @@ test "vertical_padding_percentage_uses_width_as_basis" {
   )
   taffy.compute_layout(
     node,
-    Size::new(
+    Size(
       width=available_space_definite(200.0),
       height=available_space_definite(100.0),
     ),

@@ -68,7 +68,7 @@ fn[C] compute_flex_layout_with_measure(
     tentative_border_box_height - vert_inset,
     0.0,
   )
-  let parent_available_for_children = Size::new(
+  let parent_available_for_children = Size(
     width=if width_def_for_percent {
       AvailDefinite(tentative_content_width)
     } else {
@@ -164,12 +164,12 @@ fn[C] compute_flex_layout_with_measure(
     _ => AvailMaxContent
   }
   let intrinsic_available_for_children = if is_col {
-    Size::new(
+    Size(
       width=parent_available_for_children.width,
       height=intrinsic_main_available,
     )
   } else {
-    Size::new(
+    Size(
       width=intrinsic_main_available,
       height=parent_available_for_children.height,
     )
@@ -251,7 +251,7 @@ fn[C] compute_flex_layout_with_measure(
     let child_intrinsic_available = if is_col {
       match (specified_width, child.style.size.width) {
         (None, DimPercent(_)) =>
-          Size::new(
+          Size(
             width=match parent_available_for_children.width {
               AvailMinContent => AvailMinContent
               _ => AvailMaxContent
@@ -278,15 +278,15 @@ fn[C] compute_flex_layout_with_measure(
             0.0,
           )
           if is_col {
-            Size::new(width=Some(stretched), height=None)
+            Size(width=Some(stretched), height=None)
           } else {
-            Size::new(width=None, height=Some(stretched))
+            Size(width=None, height=Some(stretched))
           }
         }
-        _ => Size::new(width=None, height=None)
+        _ => Size(width=None, height=None)
       }
     } else {
-      Size::new(width=None, height=None)
+      Size(width=None, height=None)
     }
     compute_node_layout_with_measure(
       tree,
@@ -496,7 +496,7 @@ fn[C] compute_flex_layout_with_measure(
   )
   tree.nodes[node_id].layout = Layout::{
     location: absolute_origin,
-    size: Size::new(width=border_box_width, height=border_box_height),
+    size: Size(width=border_box_width, height=border_box_height),
   }
   let mut content_width = max_double(border_box_width - horiz_inset, 0.0)
   let mut content_height = max_double(border_box_height - vert_inset, 0.0)
@@ -673,7 +673,7 @@ fn[C] compute_flex_layout_with_measure(
       }
       tree.nodes[node_id].layout = Layout::{
         location: absolute_origin,
-        size: Size::new(width=border_box_width, height=border_box_height),
+        size: Size(width=border_box_width, height=border_box_height),
       }
       container_main = if is_col { content_height } else { content_width }
       container_cross = if is_col { content_width } else { content_height }
@@ -739,7 +739,7 @@ fn[C] compute_flex_layout_with_measure(
           line_cross_sizes[li]
       }
     }
-    let child_available_for_final = Size::new(
+    let child_available_for_final = Size(
       width=AvailDefinite(content_width),
       height=AvailDefinite(content_height),
     )
@@ -1079,14 +1079,14 @@ fn[C] compute_flex_layout_with_measure(
           }
         }
         let child_origin = if is_col {
-          Point::new(x=base_x + cross_offset, y=base_y + main_pos)
+          Point(x=base_x + cross_offset, y=base_y + main_pos)
         } else {
-          Point::new(x=base_x + main_pos, y=base_y + cross_offset)
+          Point(x=base_x + main_pos, y=base_y + cross_offset)
         }
         compute_node_layout_with_measure(
           tree,
           child_id,
-          Size::new(width=known_width, height=known_height),
+          Size(width=known_width, height=known_height),
           child_available_for_final,
           child_origin,
           measure_function,
@@ -1136,7 +1136,7 @@ fn[C] compute_flex_layout_with_measure(
         }
         tree.nodes[node_id].layout = Layout::{
           location: absolute_origin,
-          size: Size::new(width=border_box_width, height=border_box_height),
+          size: Size(width=border_box_width, height=border_box_height),
         }
       }
     }
@@ -1348,7 +1348,7 @@ fn[C] compute_flex_layout_with_measure(
       _ => resolve_justify_start_main(justify, leftover_for_justify, is_reverse)
     }
     let actual_gap_main = gap_main + extra_between
-    let child_available_for_final = Size::new(
+    let child_available_for_final = Size(
       width=AvailDefinite(content_width),
       height=AvailDefinite(content_height),
     )
@@ -1651,14 +1651,14 @@ fn[C] compute_flex_layout_with_measure(
         }
       }
       let child_origin = if is_col {
-        Point::new(x=base_x + cross_offset, y=base_y + main_pos)
+        Point(x=base_x + cross_offset, y=base_y + main_pos)
       } else {
-        Point::new(x=base_x + main_pos, y=base_y + cross_offset)
+        Point(x=base_x + main_pos, y=base_y + cross_offset)
       }
       compute_node_layout_with_measure(
         tree,
         child_id,
-        Size::new(width=known_width, height=known_height),
+        Size(width=known_width, height=known_height),
         child_available_for_final,
         child_origin,
         measure_function,
@@ -1706,7 +1706,7 @@ fn[C] compute_flex_layout_with_measure(
       }
       tree.nodes[node_id].layout = Layout::{
         location: absolute_origin,
-        size: Size::new(width=border_box_width, height=border_box_height),
+        size: Size(width=border_box_width, height=border_box_height),
       }
     }
   }
@@ -1842,24 +1842,21 @@ fn[C] compute_flex_layout_with_measure(
     if resized {
       tree.nodes[node_id].layout = Layout::{
         location: absolute_origin,
-        size: Size::new(width=border_box_width, height=border_box_height),
+        size: Size(width=border_box_width, height=border_box_height),
       }
       if force_basisless_leaf_main {
-        let child_available_for_final = Size::new(
+        let child_available_for_final = Size(
           width=AvailDefinite(content_width),
           height=AvailDefinite(content_height),
         )
-        let child_origin = Point::new(
+        let child_origin = Point(
           x=base_x + margin_main_start[0],
           y=base_y + margin_cross_start[0],
         )
         compute_node_layout_with_measure(
           tree,
           only_child,
-          Size::new(
-            width=Some(content_main_sizes[0]),
-            height=Some(child_cross_size),
-          ),
+          Size(width=Some(content_main_sizes[0]), height=Some(child_cross_size)),
           child_available_for_final,
           child_origin,
           measure_function,
@@ -1984,7 +1981,7 @@ fn[C] compute_flex_layout_with_measure(
     }
     tree.nodes[node_id].layout = Layout::{
       location: absolute_origin,
-      size: Size::new(width=border_box_width, height=border_box_height),
+      size: Size(width=border_box_width, height=border_box_height),
     }
     if cross_is_auto_container {
       let mut needed_cross = 0.0
@@ -2026,7 +2023,7 @@ fn[C] compute_flex_layout_with_measure(
       }
       tree.nodes[node_id].layout = Layout::{
         location: absolute_origin,
-        size: Size::new(width=border_box_width, height=border_box_height),
+        size: Size(width=border_box_width, height=border_box_height),
       }
     }
   }

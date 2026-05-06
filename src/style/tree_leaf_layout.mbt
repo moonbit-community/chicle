@@ -78,7 +78,7 @@ fn[C] compute_leaf_layout_with_measure(
       }
     None => ()
   }
-  let mut measure_known_dimensions = Size::new(
+  let mut measure_known_dimensions = Size(
     width=match known_width {
       Some(w) => Some(w)
       None => specified_width
@@ -102,14 +102,14 @@ fn[C] compute_leaf_layout_with_measure(
       _ => v
     }
   }
-  measure_known_dimensions = Size::new(
+  measure_known_dimensions = Size(
     width=clamp_opt_to_max(measure_known_dimensions.width, resolved_max_width),
     height=clamp_opt_to_max(
       measure_known_dimensions.height,
       resolved_max_height,
     ),
   )
-  let measure_available_space = Size::new(
+  let measure_available_space = Size(
     width=match (available_space.width, resolved_max_width) {
       (AvailDefinite(v), Some(max0)) =>
         AvailDefinite(if v > max0 { max0 } else { v })
@@ -160,8 +160,8 @@ fn[C] compute_leaf_layout_with_measure(
         None => max_double(measured.height + vert_inset, vert_inset)
       }
   }
-  let raw_border_box = Size::new(width=raw_width, height=raw_height)
-  let mut border_box_size = Size::new(
+  let raw_border_box = Size(width=raw_width, height=raw_height)
+  let mut border_box_size = Size(
     width=max_double(
       clamp_dimension(
         raw_border_box.width,
@@ -211,7 +211,7 @@ fn[C] compute_leaf_layout_with_measure(
             (border_box_size.height * ratio).round(),
             horiz_inset,
           )
-          border_box_size = Size::new(
+          border_box_size = Size(
             width=max_double(
               clamp_dimension(
                 ratio_width,
@@ -232,7 +232,7 @@ fn[C] compute_leaf_layout_with_measure(
             vert_inset,
           )
           if min_height > border_box_size.height {
-            border_box_size = Size::new(
+            border_box_size = Size(
               width=border_box_size.width,
               height=min_height,
             )
@@ -242,7 +242,7 @@ fn[C] compute_leaf_layout_with_measure(
         } else {
           ()
         }
-        border_box_size = Size::new(
+        border_box_size = Size(
           width=max_double(
             clamp_dimension(
               border_box_size.width,

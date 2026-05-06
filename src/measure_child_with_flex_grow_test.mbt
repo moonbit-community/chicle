@@ -14,18 +14,16 @@
 
 ///|
 test "measure_child_with_flex_grow (upstream: generated/flex/measure_child_with_flex_grow.rs)" {
-  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(50.0), height=length(50.0)),
-    ),
+    Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
   )
   let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
     text_content: "H\u{200B}H\u{200B}H\u{200B}H\u{200B}H",
     writing_mode: Horizontal,
   })
   let node = taffy.new_with_children(
-    Style::default().with_size(Size::new(width=length(100.0), height=auto())),
+    Style::default().with_size(Size(width=length(100.0), height=auto())),
     [node0, node1],
   )
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)

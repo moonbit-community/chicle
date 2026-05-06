@@ -36,7 +36,7 @@ fn[C] compute_flex_absolute_and_hidden_children(
   // Absolute positioned children: compute after container size is known, and do not affect flow layout.
   // Follow the same sizing rules as the block layout absolute-positioning pass:
   // inset constraints can determine auto sizes, and aspect-ratio participates in sizing.
-  let padding_origin = Point::new(
+  let padding_origin = Point(
     x=absolute_origin.x + border.left,
     y=absolute_origin.y + border.top,
   )
@@ -48,7 +48,7 @@ fn[C] compute_flex_absolute_and_hidden_children(
     border_box_height - border.top - border.bottom,
     0.0,
   )
-  let abs_available = Size::new(
+  let abs_available = Size(
     width=AvailDefinite(padding_box_width),
     height=AvailDefinite(padding_box_height),
   )
@@ -219,12 +219,12 @@ fn[C] compute_flex_absolute_and_hidden_children(
 
     // First pass: determine intrinsic size under the containing block constraints, if needed.
     let intrinsic = match (used_width, used_height) {
-      (Some(w), Some(h)) => Size::new(width=w, height=h)
+      (Some(w), Some(h)) => Size(width=w, height=h)
       _ => {
         compute_node_layout_with_measure(
           tree,
           child_id,
-          Size::new(width=None, height=None),
+          Size(width=None, height=None),
           abs_available,
           Point::zero(),
           measure_function,
@@ -274,10 +274,7 @@ fn[C] compute_flex_absolute_and_hidden_children(
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(
-        width=Some(clamped_final_width),
-        height=Some(clamped_final_height),
-      ),
+      Size(width=Some(clamped_final_width), height=Some(clamped_final_height)),
       abs_available,
       Point::zero(),
       measure_function,
@@ -437,9 +434,9 @@ fn[C] compute_flex_absolute_and_hidden_children(
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=Some(final_size.width), height=Some(final_size.height)),
+      Size(width=Some(final_size.width), height=Some(final_size.height)),
       abs_available,
-      Point::new(
+      Point(
         x=padding_origin.x + x_in_padding,
         y=padding_origin.y + y_in_padding,
       ),
@@ -453,7 +450,7 @@ fn[C] compute_flex_absolute_and_hidden_children(
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=None, height=None),
+      Size(width=None, height=None),
       abs_available,
       Point::zero(),
       measure_function,

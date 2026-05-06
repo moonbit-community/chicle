@@ -703,8 +703,8 @@ fn[C] compute_grid_layout_with_measure(
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=None, height=None),
-      Size::new(width=AvailMaxContent, height=contrib_available_height),
+      Size(width=None, height=None),
+      Size(width=AvailMaxContent, height=contrib_available_height),
       Point::zero(),
       measure_function,
       false,
@@ -712,7 +712,7 @@ fn[C] compute_grid_layout_with_measure(
     let max_sz = tree.nodes[child_id].layout.size
     let resolved_margin = resolve_rect_width_basis(
       child.style.margin,
-      Size::new(width=AvailMaxContent, height=AvailMaxContent),
+      Size(width=AvailMaxContent, height=AvailMaxContent),
     )
     let max_needed = max_double(
       max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
@@ -725,8 +725,8 @@ fn[C] compute_grid_layout_with_measure(
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=None, height=None),
-      Size::new(width=AvailMinContent, height=contrib_available_height),
+      Size(width=None, height=None),
+      Size(width=AvailMinContent, height=contrib_available_height),
       Point::zero(),
       measure_function,
       false,
@@ -853,7 +853,7 @@ fn[C] compute_grid_layout_with_measure(
     let row_gap_total = row_gap * (row_span - 1).to_double()
     let resolved_margin = resolve_rect_width_basis(
       child.style.margin,
-      Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
+      Size(width=AvailDefinite(col_w), height=AvailMaxContent),
     )
     let margin_left_auto = child.style.margin.left is DimAuto
     let margin_right_auto = child.style.margin.right is DimAuto
@@ -881,8 +881,8 @@ fn[C] compute_grid_layout_with_measure(
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=known_w_for_contrib, height=None),
-      Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
+      Size(width=known_w_for_contrib, height=None),
+      Size(width=AvailDefinite(col_w), height=AvailMaxContent),
       Point::zero(),
       measure_function,
       false,
@@ -903,8 +903,8 @@ fn[C] compute_grid_layout_with_measure(
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=known_w_for_contrib, height=None),
-      Size::new(width=AvailDefinite(col_w), height=AvailMinContent),
+      Size(width=known_w_for_contrib, height=None),
+      Size(width=AvailDefinite(col_w), height=AvailMinContent),
       Point::zero(),
       measure_function,
       false,
@@ -1051,11 +1051,8 @@ fn[C] compute_grid_layout_with_measure(
       compute_node_layout_with_measure(
         tree,
         child_id,
-        Size::new(width=None, height=None),
-        Size::new(
-          width=AvailMaxContent,
-          height=rerun_col_contrib_available_height,
-        ),
+        Size(width=None, height=None),
+        Size(width=AvailMaxContent, height=rerun_col_contrib_available_height),
         Point::zero(),
         measure_function,
         false,
@@ -1063,7 +1060,7 @@ fn[C] compute_grid_layout_with_measure(
       let max_sz = tree.nodes[child_id].layout.size
       let resolved_margin = resolve_rect_width_basis(
         child.style.margin,
-        Size::new(width=AvailMaxContent, height=AvailMaxContent),
+        Size(width=AvailMaxContent, height=AvailMaxContent),
       )
       let max_needed = max_double(
         max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
@@ -1075,11 +1072,8 @@ fn[C] compute_grid_layout_with_measure(
       compute_node_layout_with_measure(
         tree,
         child_id,
-        Size::new(width=None, height=None),
-        Size::new(
-          width=AvailMinContent,
-          height=rerun_col_contrib_available_height,
-        ),
+        Size(width=None, height=None),
+        Size(width=AvailMinContent, height=rerun_col_contrib_available_height),
         Point::zero(),
         measure_function,
         false,
@@ -1128,7 +1122,7 @@ fn[C] compute_grid_layout_with_measure(
       let row_gap_total = row_gap * (row_span - 1).to_double()
       let resolved_margin = resolve_rect_width_basis(
         child.style.margin,
-        Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
+        Size(width=AvailDefinite(col_w), height=AvailMaxContent),
       )
       let margin_left_auto = child.style.margin.left is DimAuto
       let margin_right_auto = child.style.margin.right is DimAuto
@@ -1154,8 +1148,8 @@ fn[C] compute_grid_layout_with_measure(
       compute_node_layout_with_measure(
         tree,
         child_id,
-        Size::new(width=known_w_for_contrib, height=None),
-        Size::new(width=AvailDefinite(col_w), height=AvailMaxContent),
+        Size(width=known_w_for_contrib, height=None),
+        Size(width=AvailDefinite(col_w), height=AvailMaxContent),
         Point::zero(),
         measure_function,
         false,
@@ -1174,8 +1168,8 @@ fn[C] compute_grid_layout_with_measure(
       compute_node_layout_with_measure(
         tree,
         child_id,
-        Size::new(width=known_w_for_contrib, height=None),
-        Size::new(width=AvailDefinite(col_w), height=AvailMinContent),
+        Size(width=known_w_for_contrib, height=None),
+        Size(width=AvailDefinite(col_w), height=AvailMinContent),
         Point::zero(),
         measure_function,
         false,
@@ -1221,7 +1215,7 @@ fn[C] compute_grid_layout_with_measure(
   }
   tree.nodes[node_id].layout = Layout::{
     location: absolute_origin,
-    size: Size::new(width=border_box_width, height=border_box_height),
+    size: Size(width=border_box_width, height=border_box_height),
   }
 
   // Track alignment within the container's content box.
@@ -1492,7 +1486,7 @@ fn[C] compute_grid_layout_with_measure(
     if row_span > 1 {
       cell_h = cell_h + row_gap_effective * (row_span - 1).to_double()
     }
-    let child_available = Size::new(
+    let child_available = Size(
       width=AvailDefinite(cell_w),
       height=AvailDefinite(cell_h),
     )
@@ -1517,7 +1511,7 @@ fn[C] compute_grid_layout_with_measure(
       cell_h - resolved_margin.top - resolved_margin.bottom,
       0.0,
     )
-    let item_available = Size::new(
+    let item_available = Size(
       width=AvailDefinite(available_w_for_item),
       height=AvailDefinite(available_h_for_item),
     )
@@ -1566,7 +1560,7 @@ fn[C] compute_grid_layout_with_measure(
     compute_node_layout_with_measure(
       tree,
       child_id,
-      Size::new(width=known_w, height=None),
+      Size(width=known_w, height=None),
       item_available,
       Point::zero(),
       measure_function,
@@ -1644,7 +1638,7 @@ fn[C] compute_grid_layout_with_measure(
         if row_span > 1 {
           cell_h = cell_h + row_gap_effective * (row_span - 1).to_double()
         }
-        let child_available = Size::new(
+        let child_available = Size(
           width=AvailDefinite(cell_w),
           height=AvailDefinite(cell_h),
         )
@@ -1667,7 +1661,7 @@ fn[C] compute_grid_layout_with_measure(
           cell_h - resolved_margin.top - resolved_margin.bottom,
           0.0,
         )
-        let item_available = Size::new(
+        let item_available = Size(
           width=AvailDefinite(available_w_for_item),
           height=AvailDefinite(available_h_for_item),
         )
@@ -1740,7 +1734,7 @@ fn[C] compute_grid_layout_with_measure(
         compute_node_layout_with_measure(
           tree,
           child_id,
-          Size::new(width=known_w, height=known_h),
+          Size(width=known_w, height=known_h),
           child_available,
           Point::zero(),
           measure_function,
@@ -1778,7 +1772,7 @@ fn[C] compute_grid_layout_with_measure(
               compute_node_layout_with_measure(
                 tree,
                 child_id,
-                Size::new(width=known_w, height=known_h),
+                Size(width=known_w, height=known_h),
                 child_available,
                 Point::zero(),
                 measure_function,
@@ -1841,9 +1835,9 @@ fn[C] compute_grid_layout_with_measure(
         compute_node_layout_with_measure(
           tree,
           child_id,
-          Size::new(width=known_w, height=known_h),
+          Size(width=known_w, height=known_h),
           child_available,
-          Point::new(
+          Point(
             x=(base_x + x + margin_left + offset_x).round(),
             y=(base_y + y + margin_top + offset_y).round(),
           ),
@@ -1853,7 +1847,7 @@ fn[C] compute_grid_layout_with_measure(
       }
     }
   }
-  let padding_origin = Point::new(
+  let padding_origin = Point(
     x=absolute_origin.x + border.left,
     y=absolute_origin.y + border.top,
   )

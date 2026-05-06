@@ -14,17 +14,17 @@
 
 ///|
 test "flex_wrap_align_stretch_fits_one_row (upstream: generated/flex/flex_wrap_align_stretch_fits_one_row.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node0 = taffy.new_leaf(
-    Style::default().with_size(Size::new(width=length(50.0), height=auto())),
+    Style::default().with_size(Size(width=length(50.0), height=auto())),
   )
   let node1 = taffy.new_leaf(
-    Style::default().with_size(Size::new(width=length(50.0), height=auto())),
+    Style::default().with_size(Size(width=length(50.0), height=auto())),
   )
   let root = taffy.new_with_children(
     Style::default()
     .with_flex_wrap(flex_wrap_wrap())
-    .with_size(Size::new(width=length(150.0), height=length(100.0))),
+    .with_size(Size(width=length(150.0), height=length(100.0))),
     [node0, node1],
   )
   taffy.compute_layout(root, Size::max_content())

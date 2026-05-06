@@ -14,32 +14,32 @@
 
 ///|
 test "upstream/generated/block/block_absolute_layout_within_border" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node0 = taffy.new_leaf(
     Style::default()
     .with_display(display_block())
     .with_position(position_absolute())
-    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_size(Size(width=length(50.0), height=length(50.0)))
     .with_inset(
-      Rect::new(left=length(0.0), right=auto(), top=length(0.0), bottom=auto()),
+      Rect(left=length(0.0), right=auto(), top=length(0.0), bottom=auto()),
     ),
   )
   let node1 = taffy.new_leaf(
     Style::default()
     .with_display(display_block())
     .with_position(position_absolute())
-    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_size(Size(width=length(50.0), height=length(50.0)))
     .with_inset(
-      Rect::new(left=auto(), right=length(0.0), top=auto(), bottom=length(0.0)),
+      Rect(left=auto(), right=length(0.0), top=auto(), bottom=length(0.0)),
     ),
   )
   let node2 = taffy.new_leaf(
     Style::default()
     .with_display(display_block())
     .with_position(position_absolute())
-    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_size(Size(width=length(50.0), height=length(50.0)))
     .with_margin(
-      Rect::new(
+      Rect(
         left=length(10.0),
         right=length(10.0),
         top=length(10.0),
@@ -47,16 +47,16 @@ test "upstream/generated/block/block_absolute_layout_within_border" {
       ),
     )
     .with_inset(
-      Rect::new(left=length(0.0), right=auto(), top=length(0.0), bottom=auto()),
+      Rect(left=length(0.0), right=auto(), top=length(0.0), bottom=auto()),
     ),
   )
   let node3 = taffy.new_leaf(
     Style::default()
     .with_display(display_block())
     .with_position(position_absolute())
-    .with_size(Size::new(width=length(50.0), height=length(50.0)))
+    .with_size(Size(width=length(50.0), height=length(50.0)))
     .with_margin(
-      Rect::new(
+      Rect(
         left=length(10.0),
         right=length(10.0),
         top=length(10.0),
@@ -64,14 +64,14 @@ test "upstream/generated/block/block_absolute_layout_within_border" {
       ),
     )
     .with_inset(
-      Rect::new(left=auto(), right=length(0.0), top=auto(), bottom=length(0.0)),
+      Rect(left=auto(), right=length(0.0), top=auto(), bottom=length(0.0)),
     ),
   )
   let root_style = Style::default()
     .with_display(display_block())
-    .with_size(Size::new(width=length(100.0), height=length(100.0)))
+    .with_size(Size(width=length(100.0), height=length(100.0)))
     .with_padding(
-      Rect::new(
+      Rect(
         left=length(10.0),
         right=length(10.0),
         top=length(10.0),
@@ -79,7 +79,7 @@ test "upstream/generated/block/block_absolute_layout_within_border" {
       ),
     )
     .with_border(
-      Rect::new(
+      Rect(
         left=length(10.0),
         right=length(10.0),
         top=length(10.0),

@@ -14,7 +14,7 @@
 
 ///|
 test "upstream/generated/grid/grid_auto_columns_fixed_width" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let children : Array[NodeId] = []
   for _ in 0..<16 {
     children.push(taffy.new_leaf(Style::default()))
@@ -23,7 +23,7 @@ test "upstream/generated/grid/grid_auto_columns_fixed_width" {
     .with_display(display_grid())
     .with_grid_template_rows([length(40.0), auto(), length(40.0), auto()])
     .with_grid_template_columns([length(40.0), auto(), length(40.0), auto()])
-    .with_size(Size::new(width=length(200.0), height=length(200.0)))
+    .with_size(Size(width=length(200.0), height=length(200.0)))
   let root = taffy.new_with_children(root_style, children)
   taffy.compute_layout(root, Size::max_content())
   let col_w = [40.0, 60.0, 40.0, 60.0]

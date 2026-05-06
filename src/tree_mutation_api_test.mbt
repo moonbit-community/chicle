@@ -14,28 +14,26 @@
 
 ///|
 test "tree_mutation: set_children updates parent pointers" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let a = taffy.new_leaf(
-    Style::default().with_size(
-      Size::new(width=length(10.0), height=length(10.0)),
-    ),
+    Style::default().with_size(Size(width=length(10.0), height=length(10.0))),
   )
   let parent1 = taffy.new_with_children(
     Style::default()
     .with_flex_direction(flex_direction_column())
-    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    .with_size(Size(width=length(100.0), height=length(100.0))),
     [a],
   )
   let parent2 = taffy.new_with_children(
     Style::default()
     .with_flex_direction(flex_direction_column())
-    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    .with_size(Size(width=length(100.0), height=length(100.0))),
     [],
   )
   let root = taffy.new_with_children(
     Style::default()
     .with_flex_direction(flex_direction_row())
-    .with_size(Size::new(width=length(200.0), height=length(100.0))),
+    .with_size(Size(width=length(200.0), height=length(100.0))),
     [parent1, parent2],
   )
   taffy.compute_layout(root, Size::max_content())
@@ -52,12 +50,10 @@ test "tree_mutation: set_children updates parent pointers" {
 
 ///|
 test "tree_mutation: add_child rejects cycles" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let leaf = taffy.new_leaf(Style::default())
   let root = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(10.0), height=length(10.0)),
-    ),
+    Style::default().with_size(Size(width=length(10.0), height=length(10.0))),
     [leaf],
   )
   let err = try taffy.add_child(leaf, root) catch {
@@ -73,13 +69,11 @@ test "tree_mutation: add_child rejects cycles" {
 
 ///|
 test "tree_mutation: remove_subtree invalidates nodes" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let leaf = taffy.new_leaf(Style::default())
   let parent = taffy.new_with_children(Style::default(), [leaf])
   let root = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(100.0), height=length(100.0)),
-    ),
+    Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
     [parent],
   )
   taffy.compute_layout(root, Size::max_content())
@@ -94,12 +88,10 @@ test "tree_mutation: remove_subtree invalidates nodes" {
 
 ///|
 test "tree_mutation: dirty tracking" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let leaf = taffy.new_leaf(Style::default())
   let root = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(10.0), height=length(10.0)),
-    ),
+    Style::default().with_size(Size(width=length(10.0), height=length(10.0))),
     [leaf],
   )
   assert_eq(taffy.dirty(root), true)

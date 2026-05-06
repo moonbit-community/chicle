@@ -14,12 +14,12 @@
 
 ///|
 test "margin_and_flex_row (upstream: generated/flex/margin_and_flex_row.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node0 = taffy.new_leaf(
     Style::default()
     .with_flex_grow(1.0)
     .with_margin(
-      Rect::new(
+      Rect(
         left=length(10.0),
         right=length(10.0),
         top=length(0.0),
@@ -28,9 +28,7 @@ test "margin_and_flex_row (upstream: generated/flex/margin_and_flex_row.rs)" {
     ),
   )
   let node = taffy.new_with_children(
-    Style::default().with_size(
-      Size::new(width=length(100.0), height=length(100.0)),
-    ),
+    Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
     [node0],
   )
   taffy.compute_layout(node, Size::max_content())

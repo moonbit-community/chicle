@@ -52,7 +52,7 @@ pub fn[C] TaffyTree::layout(
       }
       let parent_layout = parent.layout
       Layout::{
-        location: Point::new(
+        location: Point(
           x=layout.location.x - parent_layout.location.x,
           y=layout.location.y - parent_layout.location.y,
         ),
@@ -106,7 +106,7 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
   compute_node_layout_with_measure(
     self,
     root,
-    Size::new(width=None, height=None),
+    Size(width=None, height=None),
     available_space,
     Point::zero(),
     measure_function,
@@ -126,8 +126,8 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
         let rounded_right = (layout.location.x + layout.size.width).round()
         let rounded_bottom = (layout.location.y + layout.size.height).round()
         self.nodes[cur].layout = Layout::{
-          location: Point::new(x=rounded_left, y=rounded_top),
-          size: Size::new(
+          location: Point(x=rounded_left, y=rounded_top),
+          size: Size(
             width=max_double(rounded_right - rounded_left, 0.0),
             height=max_double(rounded_bottom - rounded_top, 0.0),
           ),

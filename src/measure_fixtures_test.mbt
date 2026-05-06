@@ -50,7 +50,7 @@ fn measure_text(
   // U+200B ZERO WIDTH SPACE
   let zws = "\u{200B}"
   match (known_dimensions.width, known_dimensions.height) {
-    (Some(w), Some(h)) => return Size::new(width=w, height=h)
+    (Some(w), Some(h)) => return Size(width=w, height=h)
     _ => ()
   }
   let ctx = match node_context {
@@ -150,15 +150,15 @@ fn measure_text(
     }
   })
   if is_horizontal {
-    Size::new(width=inline_size, height=block_size)
+    Size(width=inline_size, height=block_size)
   } else {
-    Size::new(width=block_size, height=inline_size)
+    Size(width=block_size, height=inline_size)
   }
 }
 
 ///|
 test "measure_text_vertical_smoke" {
-  let taffy : TaffyTree[TextMeasure] = TaffyTree::new()
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
     text_content: "H\u{200B}H\u{200B}H\u{200B}H\u{200B}H",
     writing_mode: Vertical,

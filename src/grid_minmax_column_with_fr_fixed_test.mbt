@@ -14,14 +14,14 @@
 
 ///|
 test "upstream/generated/grid/grid_minmax_column_with_fr_fixed" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node0 = taffy.new_leaf(Style::default())
   let node1 = taffy.new_leaf(Style::default())
   let root_style = Style::default()
     .with_display(display_grid())
     .with_grid_template_rows([length(40.0)])
     .with_grid_template_columns([minmax(length(20.0), length(40.0)), fr(1.0)])
-    .with_size(Size::new(width=length(60.0), height=auto()))
+    .with_size(Size(width=length(60.0), height=auto()))
   let root = taffy.new_with_children(root_style, [node0, node1])
   taffy.compute_layout(root, Size::max_content())
   let root_layout = taffy.layout(root)

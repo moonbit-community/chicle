@@ -24,11 +24,6 @@ pub fn[T] Point::Point(x~ : T, y~ : T) -> Point[T] {
 }
 
 ///|
-pub fn[T] Point::new(x~ : T, y~ : T) -> Point[T] {
-  Point(x~, y~)
-}
-
-///|
 pub fn Point::zero() -> Point[Double] {
   Point(x=0.0, y=0.0)
 }
@@ -42,11 +37,6 @@ pub struct Size[T] {
 ///|
 pub fn[T] Size::Size(width~ : T, height~ : T) -> Size[T] {
   { width, height }
-}
-
-///|
-pub fn[T] Size::new(width~ : T, height~ : T) -> Size[T] {
-  Size(width~, height~)
 }
 
 ///|
@@ -68,11 +58,6 @@ pub fn[T] Rect::Rect(left~ : T, right~ : T, top~ : T, bottom~ : T) -> Rect[T] {
 }
 
 ///|
-pub fn[T] Rect::new(left~ : T, right~ : T, top~ : T, bottom~ : T) -> Rect[T] {
-  Rect(left~, right~, top~, bottom~)
-}
-
-///|
 pub struct Line[T] {
   start : T
   end : T
@@ -81,9 +66,4 @@ pub struct Line[T] {
 ///|
 pub fn[T] Line::Line(start~ : T, end~ : T) -> Line[T] {
   { start, end }
-}
-
-///|
-pub fn[T] Line::new(start~ : T, end~ : T) -> Line[T] {
-  Line(start~, end~)
 }

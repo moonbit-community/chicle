@@ -14,19 +14,19 @@
 
 ///|
 test "flex_root_ignored" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node0 = taffy.new_leaf(
     Style::default().with_flex_grow(1.0).with_flex_basis(length(200.0)),
   )
   let node1 = taffy.new_leaf(
-    Style::default().with_size(Size::new(width=auto(), height=length(100.0))),
+    Style::default().with_size(Size(width=auto(), height=length(100.0))),
   )
   let node = taffy.new_with_children(
     Style::default()
     .with_flex_direction(flex_direction_column())
-    .with_size(Size::new(width=length(100.0), height=auto()))
-    .with_min_size(Size::new(width=auto(), height=length(100.0)))
-    .with_max_size(Size::new(width=auto(), height=length(500.0))),
+    .with_size(Size(width=length(100.0), height=auto()))
+    .with_min_size(Size(width=auto(), height=length(100.0)))
+    .with_max_size(Size(width=auto(), height=length(500.0))),
     [node0, node1],
   )
   taffy.compute_layout(node, Size::max_content())

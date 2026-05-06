@@ -24,7 +24,7 @@ fn mk_grid_root(
     .with_align_content(align)
     .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
     .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size::new(width=length(200.0), height=length(200.0))),
+    .with_size(Size(width=length(200.0), height=length(200.0))),
     children,
   )
 }
@@ -49,7 +49,7 @@ fn check_grid_cell(
 
 ///|
 test "grid_align_content_start (upstream: generated/grid/grid_align_content_start.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let nodes = Array::make(9, 0)
   for i in 0..<9 {
     nodes[i] = taffy.new_leaf(Style::default())
@@ -74,7 +74,7 @@ test "grid_align_content_start (upstream: generated/grid/grid_align_content_star
 
 ///|
 test "grid_align_content_center (upstream: generated/grid/grid_align_content_center.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let nodes = Array::make(9, 0)
   for i in 0..<9 {
     nodes[i] = taffy.new_leaf(Style::default())
@@ -99,7 +99,7 @@ test "grid_align_content_center (upstream: generated/grid/grid_align_content_cen
 
 ///|
 test "grid_align_content_end (upstream: generated/grid/grid_align_content_end.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let nodes = Array::make(9, 0)
   for i in 0..<9 {
     nodes[i] = taffy.new_leaf(Style::default())

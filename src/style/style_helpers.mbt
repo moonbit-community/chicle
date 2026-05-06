@@ -337,5 +337,5 @@ pub fn justify_content_space_around() -> JustifyContent {
 
 ///|
 pub fn Size::max_content() -> Size[AvailableSpace] {
-  Size::new(width=AvailMaxContent, height=AvailMaxContent)
+  Size(width=AvailMaxContent, height=AvailMaxContent)
 }

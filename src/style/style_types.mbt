@@ -171,24 +171,24 @@ pub fn Style::default() -> Style {
     overflow: Point::{ x: OverflowVisible, y: OverflowVisible },
     scrollbar_width: 0.0,
     position: PosRelative,
-    inset: Rect::new(left=DimAuto, right=DimAuto, top=DimAuto, bottom=DimAuto),
-    size: Size::new(width=DimAuto, height=DimAuto),
-    min_size: Size::new(width=DimAuto, height=DimAuto),
-    max_size: Size::new(width=DimAuto, height=DimAuto),
+    inset: Rect(left=DimAuto, right=DimAuto, top=DimAuto, bottom=DimAuto),
+    size: Size(width=DimAuto, height=DimAuto),
+    min_size: Size(width=DimAuto, height=DimAuto),
+    max_size: Size(width=DimAuto, height=DimAuto),
     aspect_ratio: None,
-    margin: Rect::new(
+    margin: Rect(
       left=DimLength(0.0),
       right=DimLength(0.0),
       top=DimLength(0.0),
       bottom=DimLength(0.0),
     ),
-    padding: Rect::new(
+    padding: Rect(
       left=DimLength(0.0),
       right=DimLength(0.0),
       top=DimLength(0.0),
       bottom=DimLength(0.0),
     ),
-    border: Rect::new(
+    border: Rect(
       left=DimLength(0.0),
       right=DimLength(0.0),
       top=DimLength(0.0),
@@ -200,7 +200,7 @@ pub fn Style::default() -> Style {
     justify_self: None,
     align_content: None,
     justify_content: None,
-    gap: Size::new(width=DimLength(0.0), height=DimLength(0.0)),
+    gap: Size(width=DimLength(0.0), height=DimLength(0.0)),
     flex_direction: FlexRow,
     flex_wrap: FlexNoWrap,
     flex_basis: DimAuto,
@@ -211,8 +211,8 @@ pub fn Style::default() -> Style {
     grid_auto_rows: [],
     grid_auto_columns: [],
     grid_auto_flow: Row,
-    grid_row: Line::new(start=PlaceAuto, end=PlaceAuto),
-    grid_column: Line::new(start=PlaceAuto, end=PlaceAuto),
+    grid_row: Line(start=PlaceAuto, end=PlaceAuto),
+    grid_column: Line(start=PlaceAuto, end=PlaceAuto),
     grid_row_start: None,
     grid_column_start: None,
   }

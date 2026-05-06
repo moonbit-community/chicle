@@ -14,13 +14,13 @@
 
 ///|
 test "absolute_margin_bottom_left (upstream: generated/flex/absolute_margin_bottom_left.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let child = taffy.new_leaf(
     Style::default()
     .with_position(position_absolute())
-    .with_size(Size::new(width=length(10.0), height=length(10.0)))
+    .with_size(Size(width=length(10.0), height=length(10.0)))
     .with_margin(
-      Rect::new(
+      Rect(
         left=length(10.0),
         right=length(0.0),
         top=length(0.0),
@@ -32,7 +32,7 @@ test "absolute_margin_bottom_left (upstream: generated/flex/absolute_margin_bott
     Style::default()
     .with_flex_direction(flex_direction_column())
     .with_justify_content(justify_content_flex_end())
-    .with_size(Size::new(width=length(100.0), height=length(100.0))),
+    .with_size(Size(width=length(100.0), height=length(100.0))),
     [child],
   )
   taffy.compute_layout(root, Size::max_content())

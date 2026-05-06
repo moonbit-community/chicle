@@ -16,27 +16,27 @@
 test "grid_out_of_order_items_column_dense (regression)" {
   // Mirror of upstream/generated/grid/grid_out_of_order_items.rs, but for column dense auto-placement.
   // This is a MoonBit-only regression test because upstream only ships RowDense vectors.
-  let taffy : TaffyTree[Unit] = TaffyTree::new()
+  let taffy : TaffyTree[Unit] = TaffyTree()
   let node0 = taffy.new_leaf(Style::default())
   let node1 = taffy.new_leaf(Style::default())
   let node2 = taffy.new_leaf(
     Style::default()
-    .with_grid_row(Line::new(start=line(1), end=place_auto()))
-    .with_size(Size::new(width=length(35.0), height=length(35.0))),
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_size(Size(width=length(35.0), height=length(35.0))),
   )
   let node3 = taffy.new_leaf(Style::default())
   let node4 = taffy.new_leaf(Style::default())
   let node5 = taffy.new_leaf(
     Style::default()
-    .with_grid_row(Line::new(start=line(1), end=place_auto()))
-    .with_grid_column(Line::new(start=line(1), end=place_auto()))
-    .with_size(Size::new(width=length(20.0), height=length(20.0))),
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto()))
+    .with_size(Size(width=length(20.0), height=length(20.0))),
   )
   let node6 = taffy.new_leaf(Style::default())
   let node7 = taffy.new_leaf(
     Style::default()
-    .with_grid_column(Line::new(start=line(1), end=place_auto()))
-    .with_size(Size::new(width=length(10.0), height=length(10.0))),
+    .with_grid_column(Line(start=line(1), end=place_auto()))
+    .with_size(Size(width=length(10.0), height=length(10.0))),
   )
   let node8 = taffy.new_leaf(Style::default())
   let root = taffy.new_with_children(
@@ -45,7 +45,7 @@ test "grid_out_of_order_items_column_dense (regression)" {
     .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
     .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
     .with_grid_auto_flow(grid_auto_flow_column_dense())
-    .with_size(Size::new(width=length(120.0), height=length(120.0))),
+    .with_size(Size(width=length(120.0), height=length(120.0))),
     [node0, node1, node2, node3, node4, node5, node6, node7, node8],
   )
   taffy.compute_layout(root, Size::max_content())

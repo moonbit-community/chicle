@@ -211,7 +211,7 @@ pub fn Style::with_grid_row_start(self : Style, start : Int) -> Style {
   {
     ..self,
     grid_row_start: Some(start),
-    grid_row: Line::new(start=PlaceLine(start), end=PlaceAuto),
+    grid_row: Line(start=PlaceLine(start), end=PlaceAuto),
   }
 }
 
@@ -220,6 +220,6 @@ pub fn Style::with_grid_column_start(self : Style, start : Int) -> Style {
   {
     ..self,
     grid_column_start: Some(start),
-    grid_column: Line::new(start=PlaceLine(start), end=PlaceAuto),
+    grid_column: Line(start=PlaceLine(start), end=PlaceAuto),
   }
 }

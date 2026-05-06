@@ -113,21 +113,21 @@ fn[C] compute_block_layout_with_measure(
   )
   tree.nodes[node_id].layout = Layout::{
     location: absolute_origin,
-    size: Size::new(width=border_box_width, height=border_box_height),
+    size: Size(width=border_box_width, height=border_box_height),
   }
 
   // Containing block for in-flow positioning: content box (padding box minus padding).
-  let padding_origin = Point::new(
+  let padding_origin = Point(
     x=absolute_origin.x + border.left,
     y=absolute_origin.y + border.top,
   )
-  let content_origin = Point::new(
+  let content_origin = Point(
     x=padding_origin.x + padding.left,
     y=padding_origin.y + padding.top,
   )
   let content_width = max_double(border_box_width - horiz_inset, 0.0)
   let content_height = max_double(border_box_height - vert_inset, 0.0)
-  let flow_available = Size::new(
+  let flow_available = Size(
     width=match width_definite {
       true => AvailDefinite(content_width)
       false => available_space.width
@@ -145,7 +145,7 @@ fn[C] compute_block_layout_with_measure(
         None => 0.0
       }
   }
-  let margin_basis_available = Size::new(
+  let margin_basis_available = Size(
     width=AvailDefinite(margin_basis_width),
     height=flow_available.height,
   )
@@ -381,9 +381,9 @@ fn[C] compute_block_layout_with_measure(
             compute_node_layout_with_measure(
               tree,
               child_id,
-              Size::new(width=target_width, height=None),
+              Size(width=target_width, height=None),
               margin_basis_available,
-              Point::new(
+              Point(
                 x=content_origin.x + fixed_margin_left,
                 y=content_origin.y + child_y_rel_static,
               ),
@@ -516,14 +516,14 @@ fn[C] compute_block_layout_with_measure(
       final_border_box_height - vert_inset,
       0.0,
     )
-    let flow_available2 = Size::new(
+    let flow_available2 = Size(
       width=AvailDefinite(final_content_width_for_flow),
       height=match specified_height {
         Some(_) => AvailDefinite(final_content_height_for_flow)
         None => AvailMaxContent
       },
     )
-    let margin_basis_available2 = Size::new(
+    let margin_basis_available2 = Size(
       width=AvailDefinite(final_content_width_for_flow),
       height=flow_available2.height,
     )
@@ -677,9 +677,9 @@ fn[C] compute_block_layout_with_measure(
               compute_node_layout_with_measure(
                 tree,
                 child_id,
-                Size::new(width=target_width, height=None),
+                Size(width=target_width, height=None),
                 flow_available2,
-                Point::new(
+                Point(
                   x=content_origin.x + fixed_margin_left,
                   y=content_origin.y + child_y_rel_static,
                 ),
@@ -784,10 +784,7 @@ fn[C] compute_block_layout_with_measure(
   }
   tree.nodes[node_id].layout = Layout::{
     location: absolute_origin,
-    size: Size::new(
-      width=final_border_box_width,
-      height=final_border_box_height,
-    ),
+    size: Size(width=final_border_box_width, height=final_border_box_height),
   }
 
   compute_block_absolute_children(

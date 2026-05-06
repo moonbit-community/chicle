@@ -13,8 +13,13 @@
 // limitations under the License.
 
 ///|
+pub fn[C] TaffyTree::TaffyTree() -> TaffyTree[C] {
+  { nodes: [] }
+}
+
+///|
 pub fn[C] TaffyTree::new() -> TaffyTree[C] {
-  TaffyTree::{ nodes: [] }
+  TaffyTree()
 }
 
 ///|

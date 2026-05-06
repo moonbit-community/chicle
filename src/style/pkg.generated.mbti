@@ -234,9 +234,8 @@ pub fn Layout::zero() -> Self
 pub struct Line[T] {
   start : T
   end : T
-
-  fn[T] new(start~ : T, end~ : T) -> Line[T]
 }
+pub fn[T] Line::Line(start~ : T, end~ : T) -> Self[T]
 pub fn[T] Line::new(start~ : T, end~ : T) -> Self[T]
 
 type Node[C]
@@ -251,9 +250,8 @@ pub enum Overflow {
 pub struct Point[T] {
   x : T
   y : T
-
-  fn[T] new(x~ : T, y~ : T) -> Point[T]
 }
+pub fn[T] Point::Point(x~ : T, y~ : T) -> Self[T]
 pub fn[T] Point::new(x~ : T, y~ : T) -> Self[T]
 pub fn Point::zero() -> Self[Double]
 
@@ -267,17 +265,15 @@ pub struct Rect[T] {
   right : T
   top : T
   bottom : T
-
-  fn[T] new(left~ : T, right~ : T, top~ : T, bottom~ : T) -> Rect[T]
 }
+pub fn[T] Rect::Rect(left~ : T, right~ : T, top~ : T, bottom~ : T) -> Self[T]
 pub fn[T] Rect::new(left~ : T, right~ : T, top~ : T, bottom~ : T) -> Self[T]
 
 pub struct Size[T] {
   width : T
   height : T
-
-  fn[T] new(width~ : T, height~ : T) -> Size[T]
 }
+pub fn[T] Size::Size(width~ : T, height~ : T) -> Self[T]
 pub fn Size::max_content() -> Self[AvailableSpace]
 pub fn[T] Size::new(width~ : T, height~ : T) -> Self[T]
 pub fn Size::zero() -> Self[Double]
@@ -356,9 +352,8 @@ pub impl @json.FromJson for Style
 
 pub struct TaffyTree[C] {
   // private fields
-
-  fn[C] new() -> TaffyTree[C]
 }
+pub fn[C] TaffyTree::TaffyTree() -> Self[C]
 pub fn[C] TaffyTree::add_child(Self[C], Int, Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::clear_node_context(Self[C], Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::compute_layout(Self[C], Int, Size[AvailableSpace]) -> Unit raise TaffyError

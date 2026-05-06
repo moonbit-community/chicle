@@ -78,6 +78,4 @@ struct Node[C] {
 ///|
 pub struct TaffyTree[C] {
   priv nodes : Array[Node[C]]
-
-  fn[C] new() -> TaffyTree[C]
 }

@@ -20452,8 +20452,35 @@ test "upstream/generated/flex/container_with_unsized_child" {
 
 ///|
 test "upstream/generated/flex/content_size" {
-  // TODO: port from taffy-reference/tests/generated/flex/content_size.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/content_size.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node00 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_position(position_absolute())
+    .with_flex_shrink(0.0)
+    .with_size(Size(width=percent(1.0), height=length(20.0)))
+    .with_inset(
+      Rect(left=auto(), right=auto(), top=length(-10.0), bottom=auto()),
+    ),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node0 = taffy.new_with_children(
+    Style::default().with_size(Size(width=auto(), height=length(30.0))),
+    [node00],
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_flex_direction(flex_direction_column())
+    .with_overflow(Point(x=overflow_visible(), y=overflow_scroll()))
+    .with_scrollbar_width(15.0)
+    .with_size(Size(width=length(100.0), height=length(100.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 100.0, 100.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 85.0, 30.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node00, 85.0, 20.0, 0.0, -10.0)
 }
 
 ///|
@@ -20739,8 +20766,31 @@ test "upstream/generated/flex/display_none_with_position_absolute" {
 
 ///|
 test "upstream/generated/flex/do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent" {
-  // TODO: port from taffy-reference/tests/generated/flex/do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node00 = taffy.new_leaf(
+    Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
+  )
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_position(position_absolute())
+    .with_flex_direction(flex_direction_column())
+    .with_inset(
+      Rect(left=length(0.0), right=auto(), top=length(0.0), bottom=auto()),
+    ),
+    [node00],
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
+    .with_scrollbar_width(15.0)
+    .with_size(Size(width=length(50.0), height=length(50.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 50.0, 50.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 100.0, 100.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node00, 100.0, 100.0, 0.0, 0.0)
 }
 
 ///|
@@ -28315,8 +28365,28 @@ test "upstream/generated/flex/measure_child_with_flex_shrink" {
 
 ///|
 test "upstream/generated/flex/measure_child_with_flex_shrink_hidden" {
-  // TODO: port from taffy-reference/tests/generated/flex/measure_child_with_flex_shrink_hidden.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/measure_child_with_flex_shrink_hidden.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
+  )
+  let node1 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
+    .with_scrollbar_width(15.0),
+    TextMeasure::{
+      text_content: "HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH",
+      writing_mode: Horizontal,
+    },
+  )
+  let node = taffy.new_with_children(
+    Style::default().with_size(Size(width=length(100.0), height=auto())),
+    [node0, node1],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 100.0, 50.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 9.0, 50.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 91.0, 50.0, 9.0, 0.0)
 }
 
 ///|
@@ -28927,7 +28997,7 @@ test "upstream/generated/flex/min_width_overrides_width_on_root" {
 
 ///|
 test "upstream/generated/flex/mod" {
-  // TODO: port from taffy-reference/tests/generated/flex/mod.rs
+  // Ported from taffy-reference/tests/generated/flex/mod.rs
   ()
 }
 
@@ -29099,14 +29169,42 @@ test "upstream/generated/flex/overflow_main_axis" {
 
 ///|
 test "upstream/generated/flex/overflow_main_axis_shrink_hidden" {
-  // TODO: port from taffy-reference/tests/generated/flex/overflow_main_axis_shrink_hidden.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/overflow_main_axis_shrink_hidden.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
+    .with_scrollbar_width(15.0)
+    .with_flex_shrink(1.0),
+    TextMeasure::{ text_content: "HHHHHHHHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 50.0, 50.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 50.0, 50.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/flex/overflow_main_axis_shrink_scroll" {
-  // TODO: port from taffy-reference/tests/generated/flex/overflow_main_axis_shrink_scroll.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/overflow_main_axis_shrink_scroll.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
+    .with_scrollbar_width(15.0)
+    .with_flex_shrink(1.0),
+    TextMeasure::{ text_content: "HHHHHHHHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 50.0, 50.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 50.0, 50.0, 0.0, 0.0)
 }
 
 ///|
@@ -29164,38 +29262,109 @@ test "upstream/generated/flex/overflow_scroll_main_axis_justify_content_end" {
 
 ///|
 test "upstream/generated/flex/overflow_scrollbars_overridden_by_available_space" {
-  // TODO: port from taffy-reference/tests/generated/flex/overflow_scrollbars_overridden_by_available_space.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/overflow_scrollbars_overridden_by_available_space.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node00 = taffy.new_leaf(Style::default().with_flex_grow(1.0))
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
+    .with_scrollbar_width(15.0)
+    .with_flex_grow(1.0),
+    [node00],
+  )
+  let node = taffy.new_with_children(
+    Style::default().with_size(Size(width=length(2.0), height=length(4.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 2.0, 4.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 2.0, 4.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node00, 0.0, 0.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/flex/overflow_scrollbars_overridden_by_max_size" {
-  // TODO: port from taffy-reference/tests/generated/flex/overflow_scrollbars_overridden_by_max_size.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/overflow_scrollbars_overridden_by_max_size.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(Style::default().with_flex_grow(1.0))
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
+    .with_scrollbar_width(15.0)
+    .with_max_size(Size(width=length(2.0), height=length(4.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 2.0, 4.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 0.0, 0.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/flex/overflow_scrollbars_overridden_by_size" {
-  // TODO: port from taffy-reference/tests/generated/flex/overflow_scrollbars_overridden_by_size.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/overflow_scrollbars_overridden_by_size.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(Style::default().with_flex_grow(1.0))
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
+    .with_scrollbar_width(15.0)
+    .with_size(Size(width=length(2.0), height=length(4.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 2.0, 4.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 0.0, 0.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/flex/overflow_scrollbars_take_up_space_both_axis" {
-  // TODO: port from taffy-reference/tests/generated/flex/overflow_scrollbars_take_up_space_both_axis.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/overflow_scrollbars_take_up_space_both_axis.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(Style::default().with_flex_grow(1.0))
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
+    .with_scrollbar_width(15.0)
+    .with_size(Size(width=length(50.0), height=length(50.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 50.0, 50.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 35.0, 35.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/flex/overflow_scrollbars_take_up_space_cross_axis" {
-  // TODO: port from taffy-reference/tests/generated/flex/overflow_scrollbars_take_up_space_cross_axis.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/overflow_scrollbars_take_up_space_cross_axis.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(Style::default().with_flex_grow(1.0))
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_overflow(Point(x=overflow_visible(), y=overflow_scroll()))
+    .with_scrollbar_width(15.0)
+    .with_size(Size(width=length(50.0), height=length(50.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 50.0, 50.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 35.0, 50.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/flex/overflow_scrollbars_take_up_space_main_axis" {
-  // TODO: port from taffy-reference/tests/generated/flex/overflow_scrollbars_take_up_space_main_axis.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/overflow_scrollbars_take_up_space_main_axis.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(Style::default().with_flex_grow(1.0))
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_overflow(Point(x=overflow_scroll(), y=overflow_visible()))
+    .with_scrollbar_width(15.0)
+    .with_size(Size(width=length(50.0), height=length(50.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 50.0, 50.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 50.0, 35.0, 0.0, 0.0)
 }
 
 ///|
@@ -30383,8 +30552,67 @@ test "upstream/generated/flex/percentage_margin_should_calculate_based_only_on_w
 
 ///|
 test "upstream/generated/flex/percentage_moderate_complexity" {
-  // TODO: port from taffy-reference/tests/generated/flex/percentage_moderate_complexity.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/percentage_moderate_complexity.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node00 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size(width=percent(0.45), height=auto()))
+    .with_margin(
+      Rect(
+        left=percent(0.05),
+        right=percent(0.05),
+        top=percent(0.05),
+        bottom=percent(0.05),
+      ),
+    )
+    .with_padding(
+      Rect(
+        left=length(3.0),
+        right=length(3.0),
+        top=length(3.0),
+        bottom=length(3.0),
+      ),
+    ),
+  )
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_flex_direction(flex_direction_column())
+    .with_size(Size(width=percent(0.5), height=auto()))
+    .with_margin(
+      Rect(
+        left=length(5.0),
+        right=length(5.0),
+        top=length(5.0),
+        bottom=length(5.0),
+      ),
+    )
+    .with_padding(
+      Rect(
+        left=percent(0.03),
+        right=percent(0.03),
+        top=percent(0.03),
+        bottom=percent(0.03),
+      ),
+    ),
+    [node00],
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_flex())
+    .with_flex_direction(flex_direction_column())
+    .with_size(Size(width=length(200.0), height=auto()))
+    .with_padding(
+      Rect(
+        left=length(3.0),
+        right=length(3.0),
+        top=length(3.0),
+        bottom=length(3.0),
+      ),
+    ),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
 }
 
 ///|
@@ -31783,8 +32011,25 @@ test "upstream/generated/flex/rounding_total_fractial_nested" {
 
 ///|
 test "upstream/generated/flex/scroll_size" {
-  // TODO: port from taffy-reference/tests/generated/flex/scroll_size.rs
-  ()
+  // Ported from taffy-reference/tests/generated/flex/scroll_size.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_flex_shrink(0.0)
+    .with_size(Size(width=length(100.0), height=length(100.0))),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
+    .with_scrollbar_width(15.0)
+    .with_align_items(align_items_start())
+    .with_justify_content(justify_content_start())
+    .with_size(Size(width=length(50.0), height=length(50.0))),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 50.0, 50.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 100.0, 100.0, 0.0, 0.0)
 }
 
 ///|
@@ -40726,8 +40971,65 @@ test "upstream/generated/grid/grid_percent_items_nested_inside_stretch_alignment
 
 ///|
 test "upstream/generated/grid/grid_percent_items_nested_moderate" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_percent_items_nested_moderate.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_percent_items_nested_moderate.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node00 = taffy.new_leaf(
+    Style::default()
+    .with_size(Size(width=percent(0.45), height=auto()))
+    .with_margin(
+      Rect(
+        left=percent(0.05),
+        right=percent(0.05),
+        top=percent(0.05),
+        bottom=percent(0.05),
+      ),
+    )
+    .with_padding(
+      Rect(
+        left=length(3.0),
+        right=length(3.0),
+        top=length(3.0),
+        bottom=length(3.0),
+      ),
+    ),
+  )
+  let node0 = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_size(Size(width=percent(0.5), height=auto()))
+    .with_margin(
+      Rect(
+        left=length(5.0),
+        right=length(5.0),
+        top=length(5.0),
+        bottom=length(5.0),
+      ),
+    )
+    .with_padding(
+      Rect(
+        left=percent(0.03),
+        right=percent(0.03),
+        top=percent(0.03),
+        bottom=percent(0.03),
+      ),
+    ),
+    [node00],
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_size(Size(width=length(200.0), height=auto()))
+    .with_padding(
+      Rect(
+        left=length(3.0),
+        right=length(3.0),
+        top=length(3.0),
+        bottom=length(3.0),
+      ),
+    ),
+    [node0],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
 }
 
 ///|
@@ -41318,134 +41620,836 @@ test "upstream/generated/grid/grid_size_child_fixed_tracks" {
 
 ///|
 test "upstream/generated/grid/grid_span_13_most_non_flex_with_minmax_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_13_most_non_flex_with_minmax_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_13_most_non_flex_with_minmax_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default().with_grid_column(Line(start=line(1), end=span(13))),
+    TextMeasure::{
+      text_content: "HHHHHHHHHHHHHHHH\u{200b}HHHHHHHHHHHHHHHH",
+      writing_mode: Horizontal,
+    },
+  )
+  let node1 = taffy.new_leaf(Style::default())
+  let node2 = taffy.new_leaf(Style::default())
+  let node3 = taffy.new_leaf(Style::default())
+  let node4 = taffy.new_leaf(Style::default())
+  let node5 = taffy.new_leaf(Style::default())
+  let node6 = taffy.new_leaf(Style::default())
+  let node7 = taffy.new_leaf(Style::default())
+  let node8 = taffy.new_leaf(Style::default())
+  let node9 = taffy.new_leaf(Style::default())
+  let node10 = taffy.new_leaf(Style::default())
+  let node11 = taffy.new_leaf(Style::default())
+  let node12 = taffy.new_leaf(Style::default())
+  let node13 = taffy.new_leaf(Style::default())
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0), length(40.0)])
+    .with_grid_template_columns([
+      grid_min_content(),
+      grid_max_content(),
+      fit_content(length(20.0)),
+      auto(),
+      length(10.0),
+      percent(0.2),
+      minmax(length(2.0), auto()),
+      minmax(length(2.0), length(4.0)),
+      minmax(length(2.0), grid_min_content()),
+      minmax(length(2.0), grid_max_content()),
+      minmax(grid_min_content(), grid_max_content()),
+      minmax(grid_min_content(), auto()),
+      minmax(grid_max_content(), auto()),
+    ]),
+    [
+      node0, node1, node2, node3, node4, node5, node6, node7, node8, node9, node10,
+      node11, node12, node13,
+    ],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 322.0, 80.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 322.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 11.0, 40.0, 0.0, 40.0)
+  assert_layout_xywh(taffy, node2, 91.0, 40.0, 11.0, 40.0)
+  assert_layout_xywh(taffy, node3, 11.0, 40.0, 102.0, 40.0)
+  assert_layout_xywh(taffy, node4, 11.0, 40.0, 113.0, 40.0)
+  assert_layout_xywh(taffy, node5, 10.0, 40.0, 124.0, 40.0)
+  assert_layout_xywh(taffy, node6, 65.0, 40.0, 134.0, 40.0)
+  assert_layout_xywh(taffy, node7, 2.0, 40.0, 199.0, 40.0)
+  assert_layout_xywh(taffy, node8, 4.0, 40.0, 201.0, 40.0)
+  assert_layout_xywh(taffy, node9, 2.0, 40.0, 205.0, 40.0)
+  assert_layout_xywh(taffy, node10, 2.0, 40.0, 207.0, 40.0)
+  assert_layout_xywh(taffy, node11, 11.0, 40.0, 209.0, 40.0)
+  assert_layout_xywh(taffy, node12, 11.0, 40.0, 220.0, 40.0)
+  assert_layout_xywh(taffy, node13, 91.0, 40.0, 231.0, 40.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_13_most_non_flex_with_minmax_indefinite_hidden" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_13_most_non_flex_with_minmax_indefinite_hidden.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_13_most_non_flex_with_minmax_indefinite_hidden.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
+    .with_scrollbar_width(15.0)
+    .with_grid_column(Line(start=line(1), end=span(13))),
+    TextMeasure::{
+      text_content: "HHHHHHHHHHHHHHHH\u{200b}HHHHHHHHHHHHHHHH",
+      writing_mode: Horizontal,
+    },
+  )
+  let node1 = taffy.new_leaf(Style::default())
+  let node2 = taffy.new_leaf(Style::default())
+  let node3 = taffy.new_leaf(Style::default())
+  let node4 = taffy.new_leaf(Style::default())
+  let node5 = taffy.new_leaf(Style::default())
+  let node6 = taffy.new_leaf(Style::default())
+  let node7 = taffy.new_leaf(Style::default())
+  let node8 = taffy.new_leaf(Style::default())
+  let node9 = taffy.new_leaf(Style::default())
+  let node10 = taffy.new_leaf(Style::default())
+  let node11 = taffy.new_leaf(Style::default())
+  let node12 = taffy.new_leaf(Style::default())
+  let node13 = taffy.new_leaf(Style::default())
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0), length(40.0)])
+    .with_grid_template_columns([
+      grid_min_content(),
+      grid_max_content(),
+      fit_content(length(20.0)),
+      auto(),
+      length(10.0),
+      percent(0.2),
+      minmax(length(2.0), auto()),
+      minmax(length(2.0), length(4.0)),
+      minmax(length(2.0), grid_min_content()),
+      minmax(length(2.0), grid_max_content()),
+      minmax(grid_min_content(), grid_max_content()),
+      minmax(grid_min_content(), auto()),
+      minmax(grid_max_content(), auto()),
+    ]),
+    [
+      node0, node1, node2, node3, node4, node5, node6, node7, node8, node9, node10,
+      node11, node12, node13,
+    ],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 322.0, 80.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 322.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 16.0, 40.0, 0.0, 40.0)
+  assert_layout_xywh(taffy, node2, 95.0, 40.0, 16.0, 40.0)
+  assert_layout_xywh(taffy, node3, 0.0, 40.0, 111.0, 40.0)
+  assert_layout_xywh(taffy, node4, 0.0, 40.0, 111.0, 40.0)
+  assert_layout_xywh(taffy, node5, 10.0, 40.0, 111.0, 40.0)
+  assert_layout_xywh(taffy, node6, 64.0, 40.0, 121.0, 40.0)
+  assert_layout_xywh(taffy, node7, 2.0, 40.0, 185.0, 40.0)
+  assert_layout_xywh(taffy, node8, 4.0, 40.0, 187.0, 40.0)
+  assert_layout_xywh(taffy, node9, 2.0, 40.0, 191.0, 40.0)
+  assert_layout_xywh(taffy, node10, 2.0, 40.0, 193.0, 40.0)
+  assert_layout_xywh(taffy, node11, 16.0, 40.0, 195.0, 40.0)
+  assert_layout_xywh(taffy, node12, 15.0, 40.0, 211.0, 40.0)
+  assert_layout_xywh(taffy, node13, 96.0, 40.0, 226.0, 40.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_max_content_auto_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_max_content_auto_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_max_content_auto_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_max_content(), auto()]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 80.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 60.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 20.0, 40.0, 60.0, 0.0)
+  assert_layout_xywh(taffy, node2, 80.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_max_content_auto_indefinite_hidden" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_max_content_auto_indefinite_hidden.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_max_content_auto_indefinite_hidden.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_max_content(), auto()]),
+    [node0, node1],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 0.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 0.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 0.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_max_content_fit_content_10px_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_max_content_fit_content_10px_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_max_content_fit_content_10px_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_max_content(), fit_content(length(10.0))]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 80.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 60.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 20.0, 40.0, 60.0, 0.0)
+  assert_layout_xywh(taffy, node2, 80.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_max_content_fit_content_10px_indefinite_hidden" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_max_content_fit_content_10px_indefinite_hidden.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_max_content_fit_content_10px_indefinite_hidden.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
+    .with_scrollbar_width(15.0)
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_max_content(), fit_content(length(10.0))]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 80.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 80.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 0.0, 40.0, 80.0, 0.0)
+  assert_layout_xywh(taffy, node2, 80.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_max_content_fit_content_80px_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_max_content_fit_content_80px_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_max_content_fit_content_80px_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_max_content(), fit_content(length(80.0))]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 80.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 60.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 20.0, 40.0, 60.0, 0.0)
+  assert_layout_xywh(taffy, node2, 80.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_max_content_fit_content_80px_indefinite_hidden" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_max_content_fit_content_80px_indefinite_hidden.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_max_content_fit_content_80px_indefinite_hidden.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
+    .with_scrollbar_width(15.0)
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_max_content(), fit_content(length(80.0))]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 80.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 80.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 0.0, 40.0, 80.0, 0.0)
+  assert_layout_xywh(taffy, node2, 80.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_max_content_max_content_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_max_content_max_content_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_max_content_max_content_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_max_content(), grid_max_content()]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 80.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 40.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 40.0, 40.0, 40.0, 0.0)
+  assert_layout_xywh(taffy, node2, 80.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_min_content_auto_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_min_content_auto_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_min_content_auto_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(Style::default())
+  let node1 = taffy.new_leaf(Style::default())
+  let node2 = taffy.new_leaf_with_context(
+    Style::default().with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_min_content(), auto()]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 80.0, 50.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 20.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 60.0, 40.0, 20.0, 0.0)
+  assert_layout_xywh(taffy, node2, 80.0, 10.0, 0.0, 40.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_min_content_auto_indefinite_hidden" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_min_content_auto_indefinite_hidden.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_min_content_auto_indefinite_hidden.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(Style::default())
+  let node1 = taffy.new_leaf(Style::default())
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
+    .with_scrollbar_width(15.0)
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_min_content(), auto()]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 80.0, 50.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 40.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 40.0, 40.0, 40.0, 0.0)
+  assert_layout_xywh(taffy, node2, 80.0, 10.0, 0.0, 40.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_min_content_fit_content_10px_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_10px_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_10px_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_min_content(), fit_content(length(10.0))]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 40.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 20.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 20.0, 40.0, 20.0, 0.0)
+  assert_layout_xywh(taffy, node2, 40.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_min_content_fit_content_10px_indefinite_hidden" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_10px_indefinite_hidden.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_10px_indefinite_hidden.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
+    .with_scrollbar_width(15.0)
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_min_content(), fit_content(length(10.0))]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 50.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 40.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 10.0, 40.0, 40.0, 0.0)
+  assert_layout_xywh(taffy, node2, 50.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_min_content_fit_content_30px_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_30px_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_30px_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_min_content(), fit_content(length(30.0))]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 50.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 20.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 30.0, 40.0, 20.0, 0.0)
+  assert_layout_xywh(taffy, node2, 50.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_min_content_fit_content_30px_indefinite_hidden" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_30px_indefinite_hidden.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_30px_indefinite_hidden.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
+    .with_scrollbar_width(15.0)
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_min_content(), fit_content(length(30.0))]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 70.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 40.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 30.0, 40.0, 40.0, 0.0)
+  assert_layout_xywh(taffy, node2, 70.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_min_content_fit_content_80px_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_80px_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_80px_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_min_content(), fit_content(length(80.0))]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 80.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 20.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 60.0, 40.0, 20.0, 0.0)
+  assert_layout_xywh(taffy, node2, 80.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_min_content_fit_content_80px_indefinite_hidden" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_80px_indefinite_hidden.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_min_content_fit_content_80px_indefinite_hidden.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
+    .with_scrollbar_width(15.0)
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_min_content(), fit_content(length(80.0))]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 80.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 40.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 40.0, 40.0, 40.0, 0.0)
+  assert_layout_xywh(taffy, node2, 80.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_min_content_max_content_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_min_content_max_content_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_min_content_max_content_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_min_content(), grid_max_content()]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 80.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 20.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 60.0, 40.0, 20.0, 0.0)
+  assert_layout_xywh(taffy, node2, 80.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_2_min_content_min_content_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_2_min_content_min_content_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_2_min_content_min_content_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=place_auto())),
+  )
+  let node1 = taffy.new_leaf(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(2), end=place_auto())),
+  )
+  let node2 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_grid_row(Line(start=line(1), end=place_auto()))
+    .with_grid_column(Line(start=line(1), end=span(2))),
+    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+  )
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([grid_min_content(), grid_min_content()]),
+    [node0, node1, node2],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 40.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 20.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 20.0, 40.0, 20.0, 0.0)
+  assert_layout_xywh(taffy, node2, 40.0, 40.0, 0.0, 0.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_6_all_non_flex_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_6_all_non_flex_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_6_all_non_flex_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default().with_grid_column(Line(start=line(1), end=span(6))),
+    TextMeasure::{
+      text_content: "HHHHHHHH\u{200b}HHHHHHHH",
+      writing_mode: Horizontal,
+    },
+  )
+  let node1 = taffy.new_leaf(Style::default())
+  let node2 = taffy.new_leaf(Style::default())
+  let node3 = taffy.new_leaf(Style::default())
+  let node4 = taffy.new_leaf(Style::default())
+  let node5 = taffy.new_leaf(Style::default())
+  let node6 = taffy.new_leaf(Style::default())
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0), length(40.0)])
+    .with_grid_template_columns([
+      grid_min_content(),
+      grid_max_content(),
+      fit_content(length(20.0)),
+      auto(),
+      length(10.0),
+      percent(0.2),
+    ]),
+    [node0, node1, node2, node3, node4, node5, node6],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 160.0, 80.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 160.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 10.0, 40.0, 0.0, 40.0)
+  assert_layout_xywh(taffy, node2, 89.0, 40.0, 10.0, 40.0)
+  assert_layout_xywh(taffy, node3, 10.0, 40.0, 99.0, 40.0)
+  assert_layout_xywh(taffy, node4, 9.0, 40.0, 109.0, 40.0)
+  assert_layout_xywh(taffy, node5, 10.0, 40.0, 118.0, 40.0)
+  assert_layout_xywh(taffy, node6, 32.0, 40.0, 128.0, 40.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_6_all_non_flex_indefinite_hidden" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_6_all_non_flex_indefinite_hidden.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_6_all_non_flex_indefinite_hidden.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default()
+    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
+    .with_scrollbar_width(15.0)
+    .with_grid_column(Line(start=line(1), end=span(6))),
+    TextMeasure::{
+      text_content: "HHHHHHHH\u{200b}HHHHHHHH",
+      writing_mode: Horizontal,
+    },
+  )
+  let node1 = taffy.new_leaf(Style::default())
+  let node2 = taffy.new_leaf(Style::default())
+  let node3 = taffy.new_leaf(Style::default())
+  let node4 = taffy.new_leaf(Style::default())
+  let node5 = taffy.new_leaf(Style::default())
+  let node6 = taffy.new_leaf(Style::default())
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0), length(40.0)])
+    .with_grid_template_columns([
+      grid_min_content(),
+      grid_max_content(),
+      fit_content(length(20.0)),
+      auto(),
+      length(10.0),
+      percent(0.2),
+    ]),
+    [node0, node1, node2, node3, node4, node5, node6],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 160.0, 80.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 160.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 19.0, 40.0, 0.0, 40.0)
+  assert_layout_xywh(taffy, node2, 99.0, 40.0, 19.0, 40.0)
+  assert_layout_xywh(taffy, node3, 0.0, 40.0, 118.0, 40.0)
+  assert_layout_xywh(taffy, node4, 0.0, 40.0, 118.0, 40.0)
+  assert_layout_xywh(taffy, node5, 10.0, 40.0, 118.0, 40.0)
+  assert_layout_xywh(taffy, node6, 32.0, 40.0, 128.0, 40.0)
 }
 
 ///|
 test "upstream/generated/grid/grid_span_8_all_track_types_indefinite" {
-  // TODO: port from taffy-reference/tests/generated/grid/grid_span_8_all_track_types_indefinite.rs
-  ()
+  // Ported from taffy-reference/tests/generated/grid/grid_span_8_all_track_types_indefinite.rs
+  let taffy : TaffyTree[TextMeasure] = TaffyTree()
+  let node0 = taffy.new_leaf_with_context(
+    Style::default().with_grid_column(Line(start=line(1), end=span(8))),
+    TextMeasure::{
+      text_content: "HHHHHHHH\u{200b}HHHHHHHH",
+      writing_mode: Horizontal,
+    },
+  )
+  let node1 = taffy.new_leaf(Style::default())
+  let node2 = taffy.new_leaf(Style::default())
+  let node3 = taffy.new_leaf(Style::default())
+  let node4 = taffy.new_leaf(Style::default())
+  let node5 = taffy.new_leaf(Style::default())
+  let node6 = taffy.new_leaf(Style::default())
+  let node7 = taffy.new_leaf(Style::default())
+  let node8 = taffy.new_leaf(Style::default())
+  let node = taffy.new_with_children(
+    Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0), length(40.0)])
+    .with_grid_template_columns([
+      grid_min_content(),
+      grid_max_content(),
+      fit_content(length(20.0)),
+      auto(),
+      length(10.0),
+      percent(0.2),
+      fr(1.0),
+      fr(2.0),
+    ]),
+    [node0, node1, node2, node3, node4, node5, node6, node7, node8],
+  )
+  taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
+  assert_layout_xywh(taffy, node, 160.0, 80.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node0, 160.0, 40.0, 0.0, 0.0)
+  assert_layout_xywh(taffy, node1, 0.0, 40.0, 0.0, 40.0)
+  assert_layout_xywh(taffy, node2, 0.0, 40.0, 0.0, 40.0)
+  assert_layout_xywh(taffy, node3, 0.0, 40.0, 0.0, 40.0)
+  assert_layout_xywh(taffy, node4, 0.0, 40.0, 0.0, 40.0)
+  assert_layout_xywh(taffy, node5, 10.0, 40.0, 0.0, 40.0)
+  assert_layout_xywh(taffy, node6, 32.0, 40.0, 10.0, 40.0)
+  assert_layout_xywh(taffy, node7, 39.0, 40.0, 42.0, 40.0)
+  assert_layout_xywh(taffy, node8, 79.0, 40.0, 81.0, 40.0)
 }
 
 ///|
@@ -41489,7 +42493,7 @@ test "upstream/generated/grid/grid_taffy_issue_624" {
 
 ///|
 test "upstream/generated/grid/mod" {
-  // TODO: port from taffy-reference/tests/generated/grid/mod.rs
+  // Ported from taffy-reference/tests/generated/grid/mod.rs
   ()
 }
 

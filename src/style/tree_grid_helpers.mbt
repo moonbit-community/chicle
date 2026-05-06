@@ -394,13 +394,17 @@ fn compute_intrinsic_bases_max_content(
   tracks : Array[Dimension],
   col_start : Array[Int],
   col_span : Array[Int],
-  min_needed : Array[Double],
+  minimum_needed : Array[Double],
+  min_content_needed : Array[Double],
   max_needed : Array[Double],
   placed : Array[Bool],
   percent_basis : Double?,
 ) -> Array[Double] {
   let count = tracks.length()
+  let inf = 1.0e30
+  let eps = 0.000001
   let bases : Array[Double] = Array::make(count, 0.0)
+  let planned : Array[Double] = Array::make(count, 0.0)
   for i in 0..<count {
     match tracks[i] {
       DimLength(v) => bases[i] = v
@@ -409,24 +413,144 @@ fn compute_intrinsic_bases_max_content(
           Some(b) => bases[i] = b * p
           None => bases[i] = 0.0
         }
-      DimMinMax(min_d, max_d) =>
-        // Handle simple fixed-length/percent minmax cases
-        match (min_d, max_d, percent_basis) {
-          (DimLength(a), DimLength(b), _) if a == b => bases[i] = a
-          (DimPercent(p), DimPercent(q), Some(b)) if p == q => bases[i] = b * p
+      DimMinMax(min_d, _max_d) =>
+        match min_d {
+          DimLength(a) => bases[i] = a
+          DimPercent(p) =>
+            match percent_basis {
+              Some(b) => bases[i] = b * p
+              None => ()
+            }
           _ => ()
         }
       _ => ()
     }
   }
 
+  fn is_intrinsic_min(track : Dimension) -> Bool {
+    match track {
+      DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
+      DimPercent(_) => percent_basis is None
+      DimMinMax(min_d, _) =>
+        match min_d {
+          DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
+          DimPercent(_) => percent_basis is None
+          _ => false
+        }
+      _ => false
+    }
+  }
+
+  fn max_is_min_content(track : Dimension) -> Bool {
+    match track {
+      DimMinContent => true
+      DimMinMax(_, max_d) => max_d is DimMinContent
+      _ => false
+    }
+  }
+
+  fn max_is_intrinsic(track : Dimension) -> Bool {
+    match track {
+      DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
+      DimPercent(_) => percent_basis is None
+      DimFr(_) => true
+      DimMinMax(_, max_d) =>
+        match max_d {
+          DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
+          DimPercent(_) => percent_basis is None
+          DimFr(_) => true
+          _ => false
+        }
+      _ => false
+    }
+  }
+
+  fn max_is_max_content_or_fit(track : Dimension) -> Bool {
+    match track {
+      DimMaxContent | DimFitContent(_) => true
+      DimMinMax(_, max_d) =>
+        match max_d {
+          DimMaxContent | DimFitContent(_) => true
+          _ => false
+        }
+      _ => false
+    }
+  }
+
+  fn fit_content_limit(track : Dimension) -> Double {
+    let limit = match track {
+      DimFitContent(limit) => Some(limit)
+      DimMinMax(_, DimFitContent(limit)) => Some(limit)
+      _ => None
+    }
+    match limit {
+      Some(DimPercent(p)) =>
+        match percent_basis {
+          Some(b) => b * p
+          None => inf
+        }
+      Some(d) => resolve_track_dimension(d, 0.0)
+      None => inf
+    }
+  }
+
+  fn distribute_up_to_limits(
+    bases : Array[Double],
+    tracks : Array[Dimension],
+    incurred : Array[Double],
+    start : Int,
+    span : Int,
+    space : Double,
+    should_affect : (Int, Dimension) -> Bool,
+    limit_of : (Dimension) -> Double,
+  ) -> Double {
+    let mut remaining = space
+    while remaining > eps {
+      let mut growable = 0
+      for j in start..<(start + span) {
+        if should_affect(j, tracks[j]) &&
+          bases[j] + incurred[j] < limit_of(tracks[j]) - eps {
+          growable = growable + 1
+        }
+      }
+      if growable == 0 {
+        return remaining
+      }
+      let mut min_room = inf
+      for j in start..<(start + span) {
+        if should_affect(j, tracks[j]) &&
+          bases[j] + incurred[j] < limit_of(tracks[j]) - eps {
+          let room = limit_of(tracks[j]) - bases[j] - incurred[j]
+          if room < min_room {
+            min_room = room
+          }
+        }
+      }
+      let share = min_double(min_room, remaining / growable.to_double())
+      if share <= 0.0 {
+        return remaining
+      }
+      for j in start..<(start + span) {
+        if should_affect(j, tracks[j]) &&
+          bases[j] + incurred[j] < limit_of(tracks[j]) - eps {
+          incurred[j] = incurred[j] + share
+          remaining = remaining - share
+        }
+      }
+    }
+    remaining
+  }
+
   fn distribute(
     bases : Array[Double],
+    planned : Array[Double],
     tracks : Array[Dimension],
     start : Int,
     span : Int,
     space : Double,
     should_affect : (Int, Dimension) -> Bool,
+    limit_of : (Dimension) -> Double,
+    is_maximum : Bool,
   ) -> Unit {
     if space <= 0.0 || span <= 0 {
       return
@@ -439,20 +563,62 @@ fn compute_intrinsic_bases_max_content(
     if extra <= 0.0 {
       return
     }
-    let mut count = 0
+    let mut has_affected = false
     for j in start..<(start + span) {
       if should_affect(j, tracks[j]) {
-        count = count + 1
+        has_affected = true
+        break
       }
     }
-    if count <= 0 {
+    if !has_affected {
       return
     }
-    let share = extra / count.to_double()
-    for j in start..<(start + span) {
-      if should_affect(j, tracks[j]) {
-        bases[j] = bases[j] + share
+    let incurred : Array[Double] = Array::make(bases.length(), 0.0)
+    let remaining = distribute_up_to_limits(
+      bases, tracks, incurred, start, span, extra, should_affect, limit_of,
+    )
+    if remaining > eps {
+      let mut matching_affected = false
+      for j in start..<(start + span) {
+        let matches_beyond = if is_maximum {
+          max_is_max_content_or_fit(tracks[j]) ||
+          col_min_sizing_kind(tracks[j]) == 2
+        } else {
+          max_is_intrinsic(tracks[j])
+        }
+        if should_affect(j, tracks[j]) && matches_beyond {
+          matching_affected = true
+          break
+        }
       }
+      let beyond_filter = fn(_idx : Int, track : Dimension) -> Bool {
+        if matching_affected {
+          if is_maximum {
+            max_is_max_content_or_fit(track) || col_min_sizing_kind(track) == 2
+          } else {
+            max_is_intrinsic(track)
+          }
+        } else {
+          true
+        }
+      }
+      ignore(
+        distribute_up_to_limits(
+          bases, tracks, incurred, start, span, remaining, beyond_filter, limit_of,
+        ),
+      )
+    }
+    for j in start..<(start + span) {
+      if incurred[j] > planned[j] {
+        planned[j] = incurred[j]
+      }
+    }
+  }
+
+  fn flush() -> Unit {
+    for i in 0..<count {
+      bases[i] = bases[i] + planned[i]
+      planned[i] = 0.0
     }
   }
 
@@ -463,7 +629,6 @@ fn compute_intrinsic_bases_max_content(
     }
   }
 
-  // Distribute min-content contributions, then max-content contributions (max-content constraint quirk).
   for span in 1..<(max_span + 1) {
     for i in 0..<placed.length() {
       if !placed[i] || col_span[i] != span {
@@ -471,13 +636,62 @@ fn compute_intrinsic_bases_max_content(
       }
       let s = col_start[i]
       let sp = col_span[i]
-      let min_space = min_needed[i]
-      distribute(bases, tracks, s, sp, min_space, fn(_idx, track) {
-        let k = col_min_sizing_kind(track)
-        k == 1 || k == 2
-      })
+      let scroll_container = minimum_needed[i] + eps < min_content_needed[i]
+      let min_space = if scroll_container {
+        minimum_needed[i]
+      } else {
+        max_double(minimum_needed[i], min_content_needed[i])
+      }
+      let limit_of = if scroll_container {
+        fit_content_limit
+      } else {
+        fn(_track : Dimension) -> Double { inf }
+      }
+      distribute(
+        bases,
+        planned,
+        tracks,
+        s,
+        sp,
+        min_space,
+        fn(_idx, track) { is_intrinsic_min(track) },
+        limit_of,
+        false,
+      )
     }
   }
+  flush()
+
+  for span in 1..<(max_span + 1) {
+    for i in 0..<placed.length() {
+      if !placed[i] || col_span[i] != span {
+        continue
+      }
+      let s = col_start[i]
+      let sp = col_span[i]
+      let scroll_container = minimum_needed[i] + eps < min_content_needed[i]
+      let limit_of = if scroll_container {
+        fit_content_limit
+      } else {
+        fn(_track : Dimension) -> Double { inf }
+      }
+      distribute(
+        bases,
+        planned,
+        tracks,
+        s,
+        sp,
+        min_content_needed[i],
+        fn(_idx, track) {
+          let k = col_min_sizing_kind(track)
+          k == 1 || k == 2
+        },
+        limit_of,
+        false,
+      )
+    }
+  }
+  flush()
 
   for span in 1..<(max_span + 1) {
     for i in 0..<placed.length() {
@@ -495,9 +709,69 @@ fn compute_intrinsic_bases_max_content(
         }
       }
       let affect_kind = if has_max_content { 2 } else { 3 }
-      distribute(bases, tracks, s, sp, max_space, fn(_idx, track) {
-        col_min_sizing_kind(track) == affect_kind
-      })
+      let limit_of = if has_max_content {
+        fn(_track : Dimension) -> Double { inf }
+      } else {
+        fit_content_limit
+      }
+      distribute(
+        bases,
+        planned,
+        tracks,
+        s,
+        sp,
+        max_space,
+        fn(_idx, track) {
+          col_min_sizing_kind(track) == affect_kind &&
+          !max_is_min_content(track)
+        },
+        limit_of,
+        true,
+      )
+    }
+  }
+  flush()
+
+  for span in 1..<(max_span + 1) {
+    for i in 0..<placed.length() {
+      if !placed[i] || col_span[i] != span {
+        continue
+      }
+      let s = col_start[i]
+      let sp = col_span[i]
+      distribute(
+        bases,
+        planned,
+        tracks,
+        s,
+        sp,
+        max_needed[i],
+        fn(_idx, track) { col_min_sizing_kind(track) == 2 },
+        fn(_track : Dimension) -> Double { inf },
+        true,
+      )
+    }
+  }
+  flush()
+
+  for i in 0..<count {
+    match tracks[i] {
+      DimMinMax(_, max_d) =>
+        match max_d {
+          DimLength(b) => if b > bases[i] { bases[i] = b }
+          DimPercent(q) =>
+            match percent_basis {
+              Some(basis) => {
+                let b = basis * q
+                if b > bases[i] {
+                  bases[i] = b
+                }
+              }
+              None => ()
+            }
+          _ => ()
+        }
+      _ => ()
     }
   }
 

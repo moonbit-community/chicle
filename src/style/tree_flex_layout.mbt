@@ -29,8 +29,25 @@ fn[C] compute_flex_layout_with_measure(
   }
   let padding = resolve_rect_width_basis(node.style.padding, available_space)
   let border = resolve_rect_width_basis(node.style.border, available_space)
-  let horiz_inset = padding.left + padding.right + border.left + border.right
-  let vert_inset = padding.top + padding.bottom + border.top + border.bottom
+  let scrollbar_w = node.style.scrollbar_width
+  let scrollbar_x = match node.style.overflow.x {
+    OverflowScroll => scrollbar_w
+    _ => 0.0
+  }
+  let scrollbar_y = match node.style.overflow.y {
+    OverflowScroll => scrollbar_w
+    _ => 0.0
+  }
+  let horiz_non_scroll_inset = padding.left +
+    padding.right +
+    border.left +
+    border.right
+  let vert_non_scroll_inset = padding.top +
+    padding.bottom +
+    border.top +
+    border.bottom
+  let horiz_inset = horiz_non_scroll_inset + scrollbar_y
+  let vert_inset = vert_non_scroll_inset + scrollbar_x
   let is_col = is_column(node.style.flex_direction)
   let style_width = resolve_optional_dimension(
     node.style.size.width,
@@ -53,11 +70,11 @@ fn[C] compute_flex_layout_with_measure(
   let height_def_for_percent = known_dimensions.height is Some(_) ||
     style_height is Some(_)
   let tentative_border_box_width = match specified_width {
-    Some(w) => max_double(w, horiz_inset)
+    Some(w) => max_double(w, horiz_non_scroll_inset)
     None => horiz_inset
   }
   let tentative_border_box_height = match specified_height {
-    Some(h) => max_double(h, vert_inset)
+    Some(h) => max_double(h, vert_non_scroll_inset)
     None => vert_inset
   }
   let tentative_content_width = max_double(
@@ -459,7 +476,7 @@ fn[C] compute_flex_layout_with_measure(
   let total_base_outer_main = total_base_main + total_base_margin_main
   // Container sizing (border-box)
   let raw_width = match specified_width {
-    Some(w) => max_double(w, horiz_inset)
+    Some(w) => max_double(w, horiz_non_scroll_inset)
     None =>
       if is_col {
         max_double(max_cross + total_gap_cross_pre + horiz_inset, horiz_inset)
@@ -471,7 +488,7 @@ fn[C] compute_flex_layout_with_measure(
       }
   }
   let raw_height = match specified_height {
-    Some(h) => max_double(h, vert_inset)
+    Some(h) => max_double(h, vert_non_scroll_inset)
     None =>
       if is_col {
         max_double(

@@ -75,6 +75,79 @@ fn GridItem::grid_area_size(
 }
 
 ///|
+fn[C] compute_grid_absolute_placement(
+  view : TaffyView[C],
+  children : Array[NodeId],
+  node_style : Style,
+  col_sizes : Array[Double],
+  row_sizes : Array[Double],
+  col_gap_effective : Double,
+  row_gap_effective : Double,
+  start_x : Double,
+  start_y : Double,
+  absolute_origin : Point[Double],
+  border : Rect[Double],
+  padding : Rect[Double],
+  border_box_width : Double,
+  border_box_height : Double,
+  explicit_col_count : Int,
+  explicit_row_count : Int,
+  negative_cols : Int,
+  negative_rows : Int,
+) -> Unit raise TaffyError {
+  let padding_origin = Point(
+    x=absolute_origin.x + border.left,
+    y=absolute_origin.y + border.top,
+  )
+  let padding_box_width = max_double(
+    border_box_width - border.left - border.right,
+    0.0,
+  )
+  let padding_box_height = max_double(
+    border_box_height - border.top - border.bottom,
+    0.0,
+  )
+  let content_start_x = padding.left + start_x
+  let content_start_y = padding.top + start_y
+  let explicit_col_lines : Array[Double] = [content_start_x]
+  let explicit_row_lines : Array[Double] = [content_start_y]
+  let mut col_line_pos = content_start_x
+  let mut row_line_pos = content_start_y
+  for i in 0..<explicit_col_count {
+    let track_idx = negative_cols + i
+    if track_idx >= 0 && track_idx < col_sizes.length() {
+      col_line_pos = col_line_pos + col_sizes[track_idx]
+    }
+    if i + 1 < explicit_col_count {
+      col_line_pos = col_line_pos + col_gap_effective
+    }
+    explicit_col_lines.push(col_line_pos)
+  }
+  for i in 0..<explicit_row_count {
+    let track_idx = negative_rows + i
+    if track_idx >= 0 && track_idx < row_sizes.length() {
+      row_line_pos = row_line_pos + row_sizes[track_idx]
+    }
+    if i + 1 < explicit_row_count {
+      row_line_pos = row_line_pos + row_gap_effective
+    }
+    explicit_row_lines.push(row_line_pos)
+  }
+  let default_abs_align = match node_style.align_items {
+    Some(v) => v
+    None => ItemsStretch
+  }
+  let default_abs_justify = match node_style.justify_items {
+    Some(v) => v
+    None => ItemsStretch
+  }
+  compute_grid_absolute_children(
+    view, children, explicit_col_lines, explicit_row_lines, padding_origin, padding_box_width,
+    padding_box_height, default_abs_align, default_abs_justify,
+  )
+}
+
+///|
 fn[C] compute_grid_absolute_children(
   view : TaffyView[C],
   children : Array[NodeId],

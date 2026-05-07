@@ -1229,63 +1229,25 @@ fn[C] compute_grid_layout(
     border, padding, content_width, default_align_items, default_justify_items, row_count,
     col_count,
   )
-  let padding_origin = Point(
-    x=absolute_origin.x + border.left,
-    y=absolute_origin.y + border.top,
-  )
-  let padding_box_width = max_double(
-    border_box_width - border.left - border.right,
-    0.0,
-  )
-  let padding_box_height = max_double(
-    border_box_height - border.top - border.bottom,
-    0.0,
-  )
-  let content_start_x = padding.left + start_x
-  let content_start_y = padding.top + start_y
-  let explicit_col_lines : Array[Double] = [content_start_x]
-  let explicit_row_lines : Array[Double] = [content_start_y]
-  let mut col_line_pos = content_start_x
-  let mut row_line_pos = content_start_y
-  for i in 0..<explicit_col_count {
-    let track_idx = negative_cols + i
-    if track_idx >= 0 && track_idx < col_sizes.length() {
-      col_line_pos = col_line_pos + col_sizes[track_idx]
-    }
-    if i + 1 < explicit_col_count {
-      col_line_pos = col_line_pos + col_gap_effective
-    }
-    explicit_col_lines.push(col_line_pos)
-  }
-  for i in 0..<explicit_row_count {
-    let track_idx = negative_rows + i
-    if track_idx >= 0 && track_idx < row_sizes.length() {
-      row_line_pos = row_line_pos + row_sizes[track_idx]
-    }
-    if i + 1 < explicit_row_count {
-      row_line_pos = row_line_pos + row_gap_effective
-    }
-    explicit_row_lines.push(row_line_pos)
-  }
-
-  let default_abs_align = match node.style.align_items {
-    Some(v) => v
-    None => ItemsStretch
-  }
-  let default_abs_justify = match node.style.justify_items {
-    Some(v) => v
-    None => ItemsStretch
-  }
-  compute_grid_absolute_children(
+  compute_grid_absolute_placement(
     view,
     tree.children[node_id],
-    explicit_col_lines,
-    explicit_row_lines,
-    padding_origin,
-    padding_box_width,
-    padding_box_height,
-    default_abs_align,
-    default_abs_justify,
+    node.style,
+    col_sizes,
+    row_sizes,
+    col_gap_effective,
+    row_gap_effective,
+    start_x,
+    start_y,
+    absolute_origin,
+    border,
+    padding,
+    border_box_width,
+    border_box_height,
+    explicit_col_count,
+    explicit_row_count,
+    negative_cols,
+    negative_rows,
   )
   let resolved_margin = resolve_rect_width_basis(
     node.style.margin,

@@ -542,6 +542,7 @@ fn[C] compute_grid_layout(
   }
   let mut col_count = col_tracks.length()
   let mut row_count = row_tracks.length()
+  initialize_grid_item_track_crossings(grid_items, col_tracks, row_tracks)
 
   // Compute min-content and max-content contributions for each track.
   let col_min_contrib : Array[Double] = Array::make(col_count, 0.0)

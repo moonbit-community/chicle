@@ -13,6 +13,7 @@
 // limitations under the License.
 
 ///|
+#warnings("-unused_field")
 priv struct GridItem {
   node : NodeId
   source_order : Int
@@ -29,6 +30,10 @@ priv struct GridItem {
   mut row_max_content_contribution : Double
   mut baseline : Double
   mut baseline_shim : Double
+  mut crosses_flexible_row : Bool
+  mut crosses_flexible_column : Bool
+  mut crosses_intrinsic_row : Bool
+  mut crosses_intrinsic_column : Bool
   mut y_position : Double
   mut height : Double
 }
@@ -55,6 +60,10 @@ fn GridItem::GridItem(
     row_max_content_contribution: 0.0,
     baseline: 0.0,
     baseline_shim: 0.0,
+    crosses_flexible_row: false,
+    crosses_flexible_column: false,
+    crosses_intrinsic_row: false,
+    crosses_intrinsic_column: false,
     y_position: 0.0,
     height: 0.0,
   }
@@ -159,6 +168,53 @@ fn GridItem::set_final_area(
 ) -> Unit {
   self.y_position = y_position
   self.height = height
+}
+
+///|
+fn GridItem::set_track_crossings(
+  self : GridItem,
+  col_tracks : Array[Dimension],
+  row_tracks : Array[Dimension],
+) -> Unit {
+  let mut crosses_flexible_column = false
+  let mut crosses_intrinsic_column = false
+  for i in self.column..<(self.column + self.column_span) {
+    let track = col_tracks[i]
+    if track_has_flexible_max(track) {
+      crosses_flexible_column = true
+    }
+    if track_min_sizing_kind(track) != 0 {
+      crosses_intrinsic_column = true
+    }
+  }
+  let mut crosses_flexible_row = false
+  let mut crosses_intrinsic_row = false
+  for i in self.row..<(self.row + self.row_span) {
+    let track = row_tracks[i]
+    if track_has_flexible_max(track) {
+      crosses_flexible_row = true
+    }
+    if track_min_sizing_kind(track) != 0 {
+      crosses_intrinsic_row = true
+    }
+  }
+  self.crosses_flexible_column = crosses_flexible_column
+  self.crosses_intrinsic_column = crosses_intrinsic_column
+  self.crosses_flexible_row = crosses_flexible_row
+  self.crosses_intrinsic_row = crosses_intrinsic_row
+}
+
+///|
+fn initialize_grid_item_track_crossings(
+  items : Array[GridItem],
+  col_tracks : Array[Dimension],
+  row_tracks : Array[Dimension],
+) -> Unit {
+  for item in items {
+    if item.placed {
+      item.set_track_crossings(col_tracks, row_tracks)
+    }
+  }
 }
 
 ///|
@@ -330,6 +386,24 @@ fn compute_max_content_spanning_track_sizes_for_grid_items(
   tracks : Array[Dimension],
   items : Array[GridItem],
 ) -> (Array[Double], Double)? {
+  let mut has_spanning_item = false
+  let mut has_flexible_spanning_item = false
+  let mut has_intrinsic_spanning_item = false
+  for item in items {
+    if item.placed && item.column_span > 1 {
+      has_spanning_item = true
+      if item.crosses_flexible_column {
+        has_flexible_spanning_item = true
+      }
+      if item.crosses_intrinsic_column {
+        has_intrinsic_spanning_item = true
+      }
+    }
+  }
+  if !has_spanning_item ||
+    (!has_flexible_spanning_item && !has_intrinsic_spanning_item) {
+    return None
+  }
   compute_max_content_spanning_track_sizes(
     tracks,
     grid_items_column(items),

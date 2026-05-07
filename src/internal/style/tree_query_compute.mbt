@@ -52,11 +52,11 @@ pub fn[C] TaffyTree::layout(
       }
       let parent_layout = parent.layout
       {
+        ..layout,
         location: Point(
           x=layout.location.x - parent_layout.location.x,
           y=layout.location.y - parent_layout.location.y,
         ),
-        size: layout.size,
       }
     }
   }
@@ -99,7 +99,6 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
       }
     None => raise InvalidNodeId(root)
   }
-  clear_transient_layout_caches(self)
   if !compute_default_single_child_chain_layout(
       self, root, available_space, measure_function,
     ) {
@@ -114,14 +113,6 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
     )
   }
   round_layout_tree_and_mark_clean(self, root)
-}
-
-///|
-fn[C] clear_transient_layout_caches(tree : TaffyTree[C]) -> Unit {
-  for i in 0..<tree.nodes.length() {
-    tree.nodes[i].leaf_measure_cache.clear()
-    tree.nodes[i].node_layout_cache.clear()
-  }
 }
 
 ///|
@@ -153,9 +144,17 @@ fn[C] compute_default_single_child_chain_layout(
       let size = measure_default_flex_chain_leaf(
         tree, cur, available_space, measure_function,
       )
-      tree.nodes[cur].layout = { location: Point::zero(), size }
+      tree.nodes[cur].layout = {
+        ..Layout::zero(),
+        location: Point::zero(),
+        size,
+      }
       for parent_id in chain {
-        tree.nodes[parent_id].layout = { location: Point::zero(), size }
+        tree.nodes[parent_id].layout = {
+          ..Layout::zero(),
+          location: Point::zero(),
+          size,
+        }
       }
       return true
     }
@@ -337,6 +336,7 @@ fn[C] round_layout_tree_and_mark_clean(
         let rounded_right = (layout.location.x + layout.size.width).round()
         let rounded_bottom = (layout.location.y + layout.size.height).round()
         tree.nodes[cur].layout = {
+          ..Layout::zero(),
           location: Point(x=rounded_left, y=rounded_top),
           size: Size(
             width=max_double(rounded_right - rounded_left, 0.0),

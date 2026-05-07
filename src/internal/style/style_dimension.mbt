@@ -31,3 +31,112 @@ pub enum Dimension {
   DimFitContent(Dimension)
   DimRepeat(GridTrackRepetition, Array[Dimension])
 }
+
+///|
+pub fn AvailableSpace::is_definite(self : AvailableSpace) -> Bool {
+  self is AvailDefinite(_)
+}
+
+///|
+pub fn AvailableSpace::into_option(self : AvailableSpace) -> Double? {
+  match self {
+    AvailDefinite(value) => Some(value)
+    _ => None
+  }
+}
+
+///|
+pub fn AvailableSpace::unwrap_or(
+  self : AvailableSpace,
+  default : Double,
+) -> Double {
+  match self {
+    AvailDefinite(value) => value
+    _ => default
+  }
+}
+
+///|
+pub fn AvailableSpace::or(
+  self : AvailableSpace,
+  default : AvailableSpace,
+) -> AvailableSpace {
+  match self {
+    AvailDefinite(_) => self
+    _ => default
+  }
+}
+
+///|
+pub fn AvailableSpace::maybe_set(
+  self : AvailableSpace,
+  value : Double?,
+) -> AvailableSpace {
+  match value {
+    Some(value) => AvailDefinite(value)
+    None => self
+  }
+}
+
+///|
+pub fn Dimension::into_option(self : Dimension) -> Double? {
+  match self {
+    DimLength(value) => Some(value)
+    _ => None
+  }
+}
+
+///|
+pub enum LengthPercentage {
+  LengthPercentageLength(Double)
+  LengthPercentagePercent(Double)
+}
+
+///|
+pub enum LengthPercentageAuto {
+  LengthPercentageAutoLength(Double)
+  LengthPercentageAutoPercent(Double)
+  LengthPercentageAutoAuto
+}
+
+///|
+pub fn length_percentage_length(value : Double) -> LengthPercentage {
+  LengthPercentageLength(value)
+}
+
+///|
+pub fn length_percentage_percent(value : Double) -> LengthPercentage {
+  LengthPercentagePercent(value)
+}
+
+///|
+pub fn length_percentage_auto_length(value : Double) -> LengthPercentageAuto {
+  LengthPercentageAutoLength(value)
+}
+
+///|
+pub fn length_percentage_auto_percent(value : Double) -> LengthPercentageAuto {
+  LengthPercentageAutoPercent(value)
+}
+
+///|
+pub fn length_percentage_auto_auto() -> LengthPercentageAuto {
+  LengthPercentageAutoAuto
+}
+
+///|
+pub fn LengthPercentageAuto::resolve_to_option(
+  self : LengthPercentageAuto,
+  context : Double,
+) -> Double? {
+  match self {
+    LengthPercentageAutoLength(value) => Some(value)
+    LengthPercentageAutoPercent(percent) => Some(context * percent)
+    LengthPercentageAutoAuto => None
+  }
+}
+
+///|
+pub fn LengthPercentageAuto::is_auto(self : LengthPercentageAuto) -> Bool {
+  self is LengthPercentageAutoAuto
+}

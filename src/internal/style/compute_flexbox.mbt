@@ -512,6 +512,7 @@ fn[C] compute_flex_layout_with_measure(
     available_space.height,
   )
   tree.nodes[node_id].layout = {
+    ..Layout::zero(),
     location: absolute_origin,
     size: Size(width=border_box_width, height=border_box_height),
   }
@@ -689,6 +690,7 @@ fn[C] compute_flex_layout_with_measure(
         content_height = max_double(border_box_height - vert_inset, 0.0)
       }
       tree.nodes[node_id].layout = {
+        ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
       }
@@ -1152,6 +1154,7 @@ fn[C] compute_flex_layout_with_measure(
           container_main = content_width
         }
         tree.nodes[node_id].layout = {
+          ..Layout::zero(),
           location: absolute_origin,
           size: Size(width=border_box_width, height=border_box_height),
         }
@@ -1722,6 +1725,7 @@ fn[C] compute_flex_layout_with_measure(
         content_height = max_double(border_box_height - vert_inset, 0.0)
       }
       tree.nodes[node_id].layout = {
+        ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
       }
@@ -1858,6 +1862,7 @@ fn[C] compute_flex_layout_with_measure(
     }
     if resized {
       tree.nodes[node_id].layout = {
+        ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
       }
@@ -1997,6 +2002,7 @@ fn[C] compute_flex_layout_with_measure(
       container_main = content_width
     }
     tree.nodes[node_id].layout = {
+      ..Layout::zero(),
       location: absolute_origin,
       size: Size(width=border_box_width, height=border_box_height),
     }
@@ -2039,6 +2045,7 @@ fn[C] compute_flex_layout_with_measure(
         container_cross = content_height
       }
       tree.nodes[node_id].layout = {
+        ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
       }

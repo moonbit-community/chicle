@@ -79,7 +79,7 @@ fn[C] detach_from_parent(
           Some(idx) => ignore(old_children.remove(idx))
           None => ()
         }
-        tree.nodes[old_parent].node_layout_cache.clear()
+        tree.nodes[old_parent].cache.clear()
       }
     None => ()
   }
@@ -191,6 +191,7 @@ pub fn[C] TaffyTree::mark_dirty(
       None => break
       Some(id) => {
         tree.nodes[id].dirty = true
+        tree.nodes[id].cache.clear()
         cur = tree.nodes[id].parent
       }
     }
@@ -291,8 +292,7 @@ pub fn[C] TaffyTree::remove_subtree(
         kids.clear()
         tree.nodes[cur].parent = None
         tree.nodes[cur].context = None
-        tree.nodes[cur].leaf_measure_cache.clear()
-        tree.nodes[cur].node_layout_cache.clear()
+        tree.nodes[cur].cache.clear()
         tree.nodes[cur].layout = Layout::zero()
         tree.nodes[cur].alive = false
       }
@@ -314,8 +314,7 @@ pub fn[C] TaffyTree::set_node_context(
     Some(_) =>
       if tree.nodes[node].alive {
         tree.nodes[node].context = Some(context)
-        tree.nodes[node].leaf_measure_cache.clear()
-        tree.nodes[node].node_layout_cache.clear()
+        tree.nodes[node].cache.clear()
         tree.mark_dirty(node)
       } else {
         raise InvalidNodeId(node)
@@ -333,8 +332,7 @@ pub fn[C] TaffyTree::clear_node_context(
     Some(_) =>
       if tree.nodes[node].alive {
         tree.nodes[node].context = None
-        tree.nodes[node].leaf_measure_cache.clear()
-        tree.nodes[node].node_layout_cache.clear()
+        tree.nodes[node].cache.clear()
         tree.mark_dirty(node)
       } else {
         raise InvalidNodeId(node)
@@ -353,8 +351,7 @@ pub fn[C] TaffyTree::set_style(
     Some(_) =>
       if tree.nodes[node].alive {
         tree.nodes[node].style = style
-        tree.nodes[node].leaf_measure_cache.clear()
-        tree.nodes[node].node_layout_cache.clear()
+        tree.nodes[node].cache.clear()
         tree.mark_dirty(node)
       } else {
         raise InvalidNodeId(node)

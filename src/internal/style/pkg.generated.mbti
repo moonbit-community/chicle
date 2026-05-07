@@ -6,6 +6,10 @@ import {
 }
 
 // Values
+pub fn abstract_axis_block() -> AbstractAxis
+
+pub fn abstract_axis_inline() -> AbstractAxis
+
 pub fn align_content_center() -> AlignContent
 
 pub fn align_content_end() -> AlignContent
@@ -100,6 +104,16 @@ pub fn justify_content_stretch() -> AlignContent
 
 pub fn length(Double) -> Dimension
 
+pub fn length_percentage_auto_auto() -> LengthPercentageAuto
+
+pub fn length_percentage_auto_length(Double) -> LengthPercentageAuto
+
+pub fn length_percentage_auto_percent(Double) -> LengthPercentageAuto
+
+pub fn length_percentage_length(Double) -> LengthPercentage
+
+pub fn length_percentage_percent(Double) -> LengthPercentage
+
 pub fn line(Int) -> GridPlacement
 
 pub fn max_content() -> AvailableSpace
@@ -138,6 +152,16 @@ pub fn span(Int) -> GridPlacement
 type TaffyError
 
 // Types and methods
+pub enum AbsoluteAxis {
+  Horizontal
+  Vertical
+}
+
+pub enum AbstractAxis {
+  Inline
+  Block
+}
+
 #alias(JustifyContent)
 pub enum AlignContent {
   AlignStart
@@ -169,6 +193,11 @@ pub enum AvailableSpace {
   AvailMinContent
   AvailMaxContent
 }
+pub fn AvailableSpace::into_option(Self) -> Double?
+pub fn AvailableSpace::is_definite(Self) -> Bool
+pub fn AvailableSpace::maybe_set(Self, Double?) -> Self
+pub fn AvailableSpace::or(Self, Self) -> Self
+pub fn AvailableSpace::unwrap_or(Self, Double) -> Double
 
 pub enum Dimension {
   DimAuto
@@ -181,6 +210,7 @@ pub enum Dimension {
   DimFitContent(Dimension)
   DimRepeat(GridTrackRepetition, Array[Dimension])
 }
+pub fn Dimension::into_option(Self) -> Double?
 pub impl ToJson for Dimension
 pub impl @json.FromJson for Dimension
 
@@ -210,12 +240,16 @@ pub enum GridAutoFlow {
   RowDense
   ColumnDense
 }
+pub fn GridAutoFlow::is_dense(Self) -> Bool
+pub fn GridAutoFlow::primary_axis(Self) -> AbsoluteAxis
 
 pub enum GridPlacement {
   PlaceAuto
   PlaceLine(Int)
   PlaceSpan(Int)
 }
+pub fn GridPlacement::indefinite_span(Line[Self]) -> Int
+pub fn GridPlacement::is_definite(Line[Self]) -> Bool
 pub impl ToJson for GridPlacement
 pub impl @json.FromJson for GridPlacement
 
@@ -226,10 +260,28 @@ pub enum GridTrackRepetition {
 }
 
 pub struct Layout {
+  order : Int
   location : Point[Double]
   size : Size[Double]
+  content_size : Size[Double]
+  scrollbar_size : Size[Double]
+  border : Rect[Double]
+  padding : Rect[Double]
 }
 pub fn Layout::zero() -> Self
+
+pub enum LengthPercentage {
+  LengthPercentageLength(Double)
+  LengthPercentagePercent(Double)
+}
+
+pub enum LengthPercentageAuto {
+  LengthPercentageAutoLength(Double)
+  LengthPercentageAutoPercent(Double)
+  LengthPercentageAutoAuto
+}
+pub fn LengthPercentageAuto::is_auto(Self) -> Bool
+pub fn LengthPercentageAuto::resolve_to_option(Self, Double) -> Double?
 
 pub struct Line[T] {
   start : T
@@ -351,10 +403,16 @@ pub struct TaffyTree[C] {
 }
 pub fn[C] TaffyTree::TaffyTree() -> Self[C]
 pub fn[C] TaffyTree::add_child(Self[C], Int, Int) -> Unit raise TaffyError
+pub fn[C] TaffyTree::child_count(Self[C], Int) -> Int raise TaffyError
+pub fn[C] TaffyTree::child_ids(Self[C], Int) -> Array[Int] raise TaffyError
 pub fn[C] TaffyTree::clear_node_context(Self[C], Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::compute_layout(Self[C], Int, Size[AvailableSpace]) -> Unit raise TaffyError
 pub fn[C] TaffyTree::compute_layout_with_measure(Self[C], Int, Size[AvailableSpace], (Size[Double?], Size[AvailableSpace], Int, C?, Style) -> Size[Double]) -> Unit raise TaffyError
 pub fn[C] TaffyTree::dirty(Self[C], Int) -> Bool raise TaffyError
+pub fn[C] TaffyTree::get_child_id(Self[C], Int, Int) -> Int raise TaffyError
+pub fn[C] TaffyTree::get_final_layout(Self[C], Int) -> Layout raise TaffyError
+pub fn[C] TaffyTree::get_style(Self[C], Int) -> Style raise TaffyError
+pub fn[C] TaffyTree::get_unrounded_layout(Self[C], Int) -> Layout raise TaffyError
 pub fn[C] TaffyTree::layout(Self[C], Int) -> Layout raise TaffyError
 pub fn[C] TaffyTree::mark_dirty(Self[C], Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::new_leaf(Self[C], Style) -> Int
@@ -365,8 +423,10 @@ pub fn[C] TaffyTree::remove(Self[C], Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::remove_child(Self[C], Int, Int) -> Int raise TaffyError
 pub fn[C] TaffyTree::remove_subtree(Self[C], Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::set_children(Self[C], Int, Array[Int]) -> Unit raise TaffyError
+pub fn[C] TaffyTree::set_final_layout(Self[C], Int, Layout) -> Unit raise TaffyError
 pub fn[C] TaffyTree::set_node_context(Self[C], Int, C) -> Unit raise TaffyError
 pub fn[C] TaffyTree::set_style(Self[C], Int, Style) -> Unit raise TaffyError
+pub fn[C] TaffyTree::set_unrounded_layout(Self[C], Int, Layout) -> Unit raise TaffyError
 pub fn[C] TaffyTree::with_capacity(Int) -> Self[C]
 
 // Type aliases

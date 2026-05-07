@@ -6,6 +6,10 @@ import {
 }
 
 // Values
+pub fn abstract_axis_block() -> @style.AbstractAxis
+
+pub fn abstract_axis_inline() -> @style.AbstractAxis
+
 pub fn align_content_center() -> @style.AlignContent
 
 pub fn align_content_end() -> @style.AlignContent
@@ -94,6 +98,16 @@ pub fn justify_content_start() -> @style.AlignContent
 
 pub fn length(Double) -> @style.Dimension
 
+pub fn length_percentage_auto_auto() -> @style.LengthPercentageAuto
+
+pub fn length_percentage_auto_length(Double) -> @style.LengthPercentageAuto
+
+pub fn length_percentage_auto_percent(Double) -> @style.LengthPercentageAuto
+
+pub fn length_percentage_length(Double) -> @style.LengthPercentage
+
+pub fn length_percentage_percent(Double) -> @style.LengthPercentage
+
 pub fn line(Int) -> @style.GridPlacement
 
 pub fn max_content() -> @style.AvailableSpace
@@ -129,6 +143,10 @@ pub fn span(Int) -> @style.GridPlacement
 // Types and methods
 
 // Type aliases
+pub using @style {type AbsoluteAxis}
+
+pub using @style {type AbstractAxis}
+
 pub using @style {type AlignContent}
 
 pub using @style {type AlignItems}
@@ -158,6 +176,10 @@ pub using @style {type AlignItems as JustifyItems}
 pub using @style {type AlignItems as JustifySelf}
 
 pub using @style {type Layout}
+
+pub using @style {type LengthPercentage}
+
+pub using @style {type LengthPercentageAuto}
 
 pub using @style {type Line}
 

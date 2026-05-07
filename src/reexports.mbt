@@ -25,6 +25,12 @@ pub type Rect[T] = @style.Rect[T]
 pub type Line[T] = @style.Line[T]
 
 ///|
+pub type AbsoluteAxis = @style.AbsoluteAxis
+
+///|
+pub type AbstractAxis = @style.AbstractAxis
+
+///|
 pub type AvailableSpace = @style.AvailableSpace
 
 ///|
@@ -38,6 +44,12 @@ pub type GridPlacement = @style.GridPlacement
 
 ///|
 pub type Dimension = @style.Dimension
+
+///|
+pub type LengthPercentage = @style.LengthPercentage
+
+///|
+pub type LengthPercentageAuto = @style.LengthPercentageAuto
 
 ///|
 pub type Display = @style.Display
@@ -86,3 +98,38 @@ pub type TaffyError = @style.TaffyError
 
 ///|
 pub type TaffyTree[C] = @style.TaffyTree[C]
+
+///|
+pub fn abstract_axis_inline() -> AbstractAxis {
+  @style.abstract_axis_inline()
+}
+
+///|
+pub fn abstract_axis_block() -> AbstractAxis {
+  @style.abstract_axis_block()
+}
+
+///|
+pub fn length_percentage_length(value : Double) -> LengthPercentage {
+  @style.length_percentage_length(value)
+}
+
+///|
+pub fn length_percentage_percent(value : Double) -> LengthPercentage {
+  @style.length_percentage_percent(value)
+}
+
+///|
+pub fn length_percentage_auto_length(value : Double) -> LengthPercentageAuto {
+  @style.length_percentage_auto_length(value)
+}
+
+///|
+pub fn length_percentage_auto_percent(value : Double) -> LengthPercentageAuto {
+  @style.length_percentage_auto_percent(value)
+}
+
+///|
+pub fn length_percentage_auto_auto() -> LengthPercentageAuto {
+  @style.length_percentage_auto_auto()
+}

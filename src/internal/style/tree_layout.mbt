@@ -25,21 +25,44 @@ pub type NodeId = Int
 
 ///|
 pub struct Layout {
+  order : Int
   location : Point[Double]
   size : Size[Double]
+  content_size : Size[Double]
+  scrollbar_size : Size[Double]
+  border : Rect[Double]
+  padding : Rect[Double]
 }
 
 ///|
 pub fn Layout::zero() -> Layout {
-  { location: Point::zero(), size: Size::zero() }
+  {
+    order: 0,
+    location: Point::zero(),
+    size: Size::zero(),
+    content_size: Size::zero(),
+    scrollbar_size: Size::zero(),
+    border: Rect(left=0.0, right=0.0, top=0.0, bottom=0.0),
+    padding: Rect(left=0.0, right=0.0, top=0.0, bottom=0.0),
+  }
 }
 
 ///|
-priv struct LeafMeasureCacheEntry {
+priv enum RunMode {
+  PerformLayout
+  ComputeSize
+  PerformHiddenLayout
+}
+
+///|
+priv struct CacheEntry[T] {
   known_dimensions : Size[Double?]
   available_space : Size[AvailableSpace]
-  measured : Size[Double]
+  content : T
 }
+
+///|
+type LeafMeasureCacheEntry = CacheEntry[Size[Double]]
 
 ///|
 priv struct NodeLayoutCacheEntry {
@@ -58,14 +81,27 @@ priv struct NodeLayoutCacheEntry {
 }
 
 ///|
+priv struct Cache {
+  mut final_layout_entry : NodeLayoutCacheEntry?
+  measure_entries : Array[LeafMeasureCacheEntry?]
+}
+
+///|
+fn Cache::Cache() -> Cache {
+  {
+    final_layout_entry: None,
+    measure_entries: [None, None, None, None, None, None, None, None, None],
+  }
+}
+
+///|
 struct Node[C] {
   mut style : Style
   children : Array[NodeId]
   mut parent : NodeId?
   mut layout : Layout
   mut context : C?
-  leaf_measure_cache : Array[LeafMeasureCacheEntry]
-  node_layout_cache : Array[NodeLayoutCacheEntry]
+  cache : Cache
   mut effective_margin_top : Double
   mut effective_margin_bottom : Double
   mut effective_margin_top_max_pos : Double

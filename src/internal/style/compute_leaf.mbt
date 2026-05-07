@@ -123,9 +123,10 @@ fn[C] compute_leaf_layout_with_measure(
   )
   let measured = match
     find_leaf_measure_cache(
-      node.leaf_measure_cache,
+      node.cache,
       measure_known_dimensions,
       measure_available_space,
+      ComputeSize,
     ) {
     Some(v) => v
     None => {
@@ -136,11 +137,13 @@ fn[C] compute_leaf_layout_with_measure(
         node.context,
         node.style,
       )
-      tree.nodes[node_id].leaf_measure_cache.push({
-        known_dimensions: measure_known_dimensions,
-        available_space: measure_available_space,
-        measured: m,
-      })
+      store_leaf_measure_cache(
+        tree.nodes[node_id].cache,
+        measure_known_dimensions,
+        measure_available_space,
+        ComputeSize,
+        m,
+      )
       m
     }
   }
@@ -266,6 +269,7 @@ fn[C] compute_leaf_layout_with_measure(
     None => ()
   }
   tree.nodes[node_id].layout = {
+    ..Layout::zero(),
     location: absolute_origin,
     size: border_box_size,
   }

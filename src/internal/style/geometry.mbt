@@ -13,6 +13,28 @@
 // limitations under the License.
 
 ///|
+pub enum AbsoluteAxis {
+  Horizontal
+  Vertical
+}
+
+///|
+pub enum AbstractAxis {
+  Inline
+  Block
+}
+
+///|
+pub fn abstract_axis_inline() -> AbstractAxis {
+  Inline
+}
+
+///|
+pub fn abstract_axis_block() -> AbstractAxis {
+  Block
+}
+
+///|
 pub struct Point[T] {
   x : T
   y : T

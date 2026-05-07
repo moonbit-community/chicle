@@ -1183,6 +1183,7 @@ fn[C] compute_grid_layout_with_measure(
     }
   }
   tree.nodes[node_id].layout = {
+    ..Layout::zero(),
     location: absolute_origin,
     size: Size(width=border_box_width, height=border_box_height),
   }

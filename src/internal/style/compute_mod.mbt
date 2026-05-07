@@ -29,10 +29,15 @@ fn[C] compute_node_layout_with_measure(
     Some(n) => n
     None => raise InvalidNodeId(node_id)
   }
+  let run_mode = if node.style.display is DisplayNone {
+    PerformHiddenLayout
+  } else {
+    PerformLayout
+  }
   let can_use_layout_cache = can_use_node_layout_cache(node, absolute_origin)
   if restore_node_layout_from_cache(
       tree, node_id, known_dimensions, available_space, absolute_origin, is_layout_root,
-      can_use_layout_cache,
+      run_mode, can_use_layout_cache,
     ) {
     return
   }
@@ -75,7 +80,7 @@ fn[C] compute_node_layout_with_measure(
   apply_relative_inset_after_layout(tree, node_id, node.style, available_space)
   save_node_layout_cache(
     tree, node_id, known_dimensions, available_space, absolute_origin, is_layout_root,
-    can_use_layout_cache,
+    run_mode, can_use_layout_cache,
   )
 }
 
@@ -97,6 +102,7 @@ fn[C] restore_node_layout_from_cache(
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
   is_layout_root : Bool,
+  run_mode : RunMode,
   can_use_layout_cache : Bool,
 ) -> Bool {
   if !can_use_layout_cache {
@@ -105,14 +111,16 @@ fn[C] restore_node_layout_from_cache(
   let node = tree.nodes[node_id]
   match
     find_node_layout_cache(
-      node.node_layout_cache,
+      node.cache,
       known_dimensions,
       available_space,
       absolute_origin,
       is_layout_root,
+      run_mode,
     ) {
     Some(entry) => {
       tree.nodes[node_id].layout = {
+        ..Layout::zero(),
         location: entry.location,
         size: entry.size,
       }
@@ -176,13 +184,14 @@ fn[C] save_node_layout_cache(
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
   is_layout_root : Bool,
+  run_mode : RunMode,
   can_use_layout_cache : Bool,
 ) -> Unit {
   if !can_use_layout_cache {
     return
   }
   let layout = tree.nodes[node_id].layout
-  tree.nodes[node_id].node_layout_cache.push({
+  store_node_layout_cache(tree.nodes[node_id].cache, run_mode, {
     known_dimensions,
     available_space,
     absolute_origin,

@@ -162,6 +162,7 @@ fn GridItem::set_final_area(
 }
 
 ///|
+#warnings("-unused_value")
 fn grid_items_first_row_baseline(items : Array[GridItem]) -> Double? {
   let mut first_row = -1
   for item in items {
@@ -325,12 +326,19 @@ fn grid_items_column_max_content_contribution(
 }
 
 ///|
-fn grid_items_row(items : Array[GridItem]) -> Array[Int] {
-  let values : Array[Int] = []
-  for item in items {
-    values.push(item.row)
-  }
-  values
+fn compute_max_content_spanning_track_sizes_for_grid_items(
+  tracks : Array[Dimension],
+  items : Array[GridItem],
+) -> (Array[Double], Double)? {
+  compute_max_content_spanning_track_sizes(
+    tracks,
+    grid_items_column(items),
+    grid_items_column_span(items),
+    grid_items_column_minimum_contribution(items),
+    grid_items_column_min_content_contribution(items),
+    grid_items_column_max_content_contribution(items),
+    grid_items_placed(items),
+  )
 }
 
 ///|
@@ -338,15 +346,6 @@ fn grid_items_column(items : Array[GridItem]) -> Array[Int] {
   let values : Array[Int] = []
   for item in items {
     values.push(item.column)
-  }
-  values
-}
-
-///|
-fn grid_items_row_span(items : Array[GridItem]) -> Array[Int] {
-  let values : Array[Int] = []
-  for item in items {
-    values.push(item.row_span)
   }
   values
 }

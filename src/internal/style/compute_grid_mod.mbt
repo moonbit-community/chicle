@@ -540,11 +540,6 @@ fn[C] compute_grid_layout(
       }
     }
   }
-  let placed = grid_items_placed(grid_items)
-  let placed_row = grid_items_row(grid_items)
-  let placed_col = grid_items_column(grid_items)
-  let placed_row_span = grid_items_row_span(grid_items)
-  let placed_col_span = grid_items_column_span(grid_items)
   let mut col_count = col_tracks.length()
   let mut row_count = row_tracks.length()
 
@@ -561,14 +556,13 @@ fn[C] compute_grid_layout(
     let item = grid_items[i]
     let child_id = item.node
     let child_style = item.style
-    let col_span = placed_col_span[i]
-    let r = placed_row[i]
-    let row_span = placed_row_span[i]
+    let col_span = item.column_span
     let gap_total = col_gap * (col_span - 1).to_double()
     let contrib_available_height = match specified_height {
       Some(_) => AvailDefinite(content_height)
       None =>
-        match spanned_definite_len(row_tracks, r, row_span, row_gap) {
+        match
+          spanned_definite_len(row_tracks, item.row, item.row_span, row_gap) {
           Some(v) => AvailDefinite(v)
           None => AvailMaxContent
         }
@@ -649,17 +643,9 @@ fn[C] compute_grid_layout(
     specified_width is Some(_),
   )
   if specified_width is None && available_space.width is AvailMaxContent {
-    let col_item_min_needed = grid_items_column_minimum_contribution(grid_items)
-    let col_item_min_content_needed = grid_items_column_min_content_contribution(
-      grid_items,
-    )
-    let col_item_max_needed = grid_items_column_max_content_contribution(
-      grid_items,
-    )
     match
-      compute_max_content_spanning_track_sizes(
-        col_tracks, placed_col, placed_col_span, col_item_min_needed, col_item_min_content_needed,
-        col_item_max_needed, placed,
+      compute_max_content_spanning_track_sizes_for_grid_items(
+        col_tracks, grid_items,
       ) {
       Some(result) => {
         col_sizes = result.0
@@ -685,17 +671,14 @@ fn[C] compute_grid_layout(
     let item = grid_items[i]
     let child_id = item.node
     let child_style = item.style
-    let c = placed_col[i]
-    let col_span = placed_col_span[i]
-    let row_span = placed_row_span[i]
     let mut col_w = 0.0
-    for j in c..<(c + col_span) {
+    for j in item.column..<(item.column + item.column_span) {
       col_w = col_w + col_sizes[j]
     }
-    if col_span > 1 {
-      col_w = col_w + col_gap * (col_span - 1).to_double()
+    if item.column_span > 1 {
+      col_w = col_w + col_gap * (item.column_span - 1).to_double()
     }
-    let row_gap_total = row_gap * (row_span - 1).to_double()
+    let row_gap_total = row_gap * (item.row_span - 1).to_double()
     let resolved_margin = resolve_rect_width_basis(
       child_style.margin,
       Size(width=AvailDefinite(col_w), height=AvailMaxContent),
@@ -874,8 +857,7 @@ fn[C] compute_grid_layout(
       let item = grid_items[i]
       let child_id = item.node
       let child_style = item.style
-      let col_span = placed_col_span[i]
-      let gap_total = col_gap * (col_span - 1).to_double()
+      let gap_total = col_gap * (item.column_span - 1).to_double()
       view.perform_child_layout(
         child_id,
         Size(width=None, height=None),
@@ -936,17 +918,14 @@ fn[C] compute_grid_layout(
       let item = grid_items[i]
       let child_id = item.node
       let child_style = item.style
-      let c = placed_col[i]
-      let col_span = placed_col_span[i]
-      let row_span = placed_row_span[i]
       let mut col_w = 0.0
-      for j in c..<(c + col_span) {
+      for j in item.column..<(item.column + item.column_span) {
         col_w = col_w + col_sizes[j]
       }
-      if col_span > 1 {
-        col_w = col_w + col_gap * (col_span - 1).to_double()
+      if item.column_span > 1 {
+        col_w = col_w + col_gap * (item.column_span - 1).to_double()
       }
-      let row_gap_total = row_gap * (row_span - 1).to_double()
+      let row_gap_total = row_gap * (item.row_span - 1).to_double()
       let resolved_margin = resolve_rect_width_basis(
         child_style.margin,
         Size(width=AvailDefinite(col_w), height=AvailMaxContent),
@@ -1050,10 +1029,9 @@ fn[C] compute_grid_layout(
       if !grid_items[i].placed {
         continue
       }
-      let row = placed_row[i]
-      let col = placed_col[i]
-      let row_end = row + placed_row_span[i] - 1
-      let col_end = col + placed_col_span[i] - 1
+      let item = grid_items[i]
+      let row_end = item.row + item.row_span - 1
+      let col_end = item.column + item.column_span - 1
       if row_end > max_row_used {
         max_row_used = row_end
       }
@@ -1256,15 +1234,11 @@ fn[C] compute_grid_layout(
     }
     let child_id = item.node
     let child_style = item.style
-    let row = placed_row[i]
-    let col = placed_col[i]
-    let row_span = placed_row_span[i]
-    let col_span = placed_col_span[i]
     let align = match child_style.align_self {
       Some(v) => v
       None => default_align_items
     }
-    if row_span != 1 {
+    if item.row_span != 1 {
       continue
     }
     match align {
@@ -1309,11 +1283,11 @@ fn[C] compute_grid_layout(
       Some(v) => v
       None => default_justify_items
     }
-    let stretch_fit_limit_w = if col_span == 1 {
+    let stretch_fit_limit_w = if item.column_span == 1 {
       match child_style.overflow.x {
         OverflowVisible => None
         _ =>
-          match col_tracks[col] {
+          match col_tracks[item.column] {
             DimFitContent(limit) =>
               resolve_optional_dimension(limit, AvailDefinite(content_width))
             _ => None
@@ -1360,11 +1334,14 @@ fn[C] compute_grid_layout(
     let before = resolved_margin.top + baseline
     let after = resolved_margin.bottom +
       max_double(intrinsic.height - baseline, 0.0)
-    row_baseline_before_max[row] = max_double(
-      row_baseline_before_max[row],
+    row_baseline_before_max[item.row] = max_double(
+      row_baseline_before_max[item.row],
       before,
     )
-    row_baseline_after_max[row] = max_double(row_baseline_after_max[row], after)
+    row_baseline_after_max[item.row] = max_double(
+      row_baseline_after_max[item.row],
+      after,
+    )
   }
   for row in 0..<row_count {
     let baseline_total = row_baseline_before_max[row] +
@@ -1393,8 +1370,6 @@ fn[C] compute_grid_layout(
           PosAbsolute => continue
           PosRelative => ()
         }
-        let col = placed_col[i]
-        let col_span = placed_col_span[i]
         let grid_area_origin = item.grid_area_origin(
           col_sizes, row_sizes, col_gap_effective, row_gap_effective, start_x, start_y,
         )
@@ -1439,11 +1414,11 @@ fn[C] compute_grid_layout(
           Some(v) => v
           None => default_align_items
         }
-        let stretch_fit_limit_w = if col_span == 1 {
+        let stretch_fit_limit_w = if item.column_span == 1 {
           match child_style.overflow.x {
             OverflowVisible => None
             _ =>
-              match col_tracks[col] {
+              match col_tracks[item.column] {
                 DimFitContent(limit) =>
                   resolve_optional_dimension(
                     limit,
@@ -1609,7 +1584,6 @@ fn[C] compute_grid_layout(
       }
     }
   }
-  ignore(grid_items_first_row_baseline(grid_items))
   let padding_origin = Point(
     x=absolute_origin.x + border.left,
     y=absolute_origin.y + border.top,

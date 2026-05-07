@@ -17,6 +17,7 @@ MoonBit directories are package boundaries. A direct copy of Rust's nested modul
 - Rust `Layout` stores order, location, size, content size, scrollbar size, border, and padding. MoonBit exposes the same `Layout` field shape; fields not yet computed by an algorithm are zero-initialized.
 - Rust exposes `LayoutInput`, `LayoutOutput`, `RunMode`, `SizingMode`, and `RequestedAxis` as low-level compute contract types. MoonBit exposes the same shapes and routes compute-size probes through `LayoutInput`.
 - Internal compute dispatch now returns `LayoutOutput` through the cached/uncached path, matching Rust taffy's `compute_cached_layout` result flow; high-level APIs still write layouts into `TaffyTree`, while internal algorithms use Rust-style names such as `compute_node_layout`, `compute_child_layout`, `compute_flexbox_layout`, `compute_grid_layout`, and `compute_leaf_layout`.
+- Grid architecture now keeps Rust taffy's explicit-grid, implicit-grid, and track-count boundaries as separate internal files. `compute_grid_mod.mbt` no longer owns the explicit/implicit track-count estimation and track construction logic directly.
 - Rust splits sizing types into `Dimension`, `LengthPercentage`, `LengthPercentageAuto`, `MinTrackSizingFunction`, and `MaxTrackSizingFunction`. MoonBit exposes those public type shapes and conversion helpers into the established `Dimension` representation used by the current grid layout implementation.
 - Rust exposes feature-gated ecosystem APIs such as print/debug helpers, serde integration, and custom tree traits. MoonBit focuses on the layout engine, style model, tree mutation/query APIs, and basic JSON conversion.
 - Rust uses `f32`; MoonBit uses `Double`. Upstream tests pass, but extreme floating-point boundary cases may not be bit-for-bit identical.
@@ -46,13 +47,14 @@ MoonBit directories are package boundaries. A direct copy of Rust's nested modul
 | `src/compute/common/*` | `compute_common_alignment.mbt`, `compute_common_content_size.mbt`, `compute_common_margin.mbt` |
 | `src/compute/grid/mod.rs` | `compute_grid_mod.mbt` |
 | `src/compute/grid/alignment.rs` | `compute_grid_alignment.mbt` |
+| `src/compute/grid/explicit_grid.rs` | `compute_grid_explicit_grid.mbt` |
+| `src/compute/grid/implicit_grid.rs` | `compute_grid_implicit_grid.mbt` |
 | `src/compute/grid/placement.rs` | `compute_grid_placement.mbt` |
 | `src/compute/grid/track_sizing.rs` | `compute_grid_track_sizing.mbt` |
 | `src/compute/grid/types/coordinates.rs` | `compute_grid_types_coordinates.mbt` |
 | `src/compute/grid/types/cell_occupancy.rs` | `compute_grid_types_cell_occupancy.mbt` |
 | `src/compute/grid/types/grid_track.rs` | `compute_grid_types_grid_track.mbt` |
-| `src/compute/grid/explicit_grid.rs` | folded into `compute_grid_mod.mbt` and grid helpers |
-| `src/compute/grid/implicit_grid.rs` | folded into `compute_grid_mod.mbt` and grid helpers |
+| `src/compute/grid/types/grid_track_counts.rs` | `compute_grid_types_grid_track_counts.mbt` |
 | `src/util/math.rs` | `util_math.mbt` |
 | `src/util/resolve.rs` | `util_resolve.mbt` |
 | `src/util/debug.rs`, `src/util/print.rs`, `src/util/sys.rs` | not ported as public utilities |

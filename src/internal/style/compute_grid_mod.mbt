@@ -164,89 +164,26 @@ fn[C] compute_grid_layout(
   let explicit_col_count = explicit_col_template.length()
   let explicit_row_count = explicit_row_template.length()
 
-  // Compute implicit track counts required by definite placements (negative/positive implicit tracks).
-  let mut min_col_line = 0
-  let mut max_col_line = 0
-  let mut min_row_line = 0
-  let mut max_row_line = 0
-  for child_id in tree.children[node_id] {
-    let child = match tree.nodes.get(child_id) {
-      Some(c) => c
-      None => raise InvalidNodeId(child_id)
-    }
-    let col_line = merged_placement_line(
-      child.style.grid_column,
-      child.style.grid_column_start,
-    )
-    let row_line = merged_placement_line(
-      child.style.grid_row,
-      child.style.grid_row_start,
-    )
-    let col_res = axis_resolve_start_line_and_span(col_line, explicit_col_count)
-    match col_res.0 {
-      Some(sl) => {
-        if sl < min_col_line {
-          min_col_line = sl
-        }
-        let end = sl + col_res.1
-        if end > max_col_line {
-          max_col_line = end
-        }
-      }
-      None => ()
-    }
-    let row_res = axis_resolve_start_line_and_span(row_line, explicit_row_count)
-    match row_res.0 {
-      Some(sl) => {
-        if sl < min_row_line {
-          min_row_line = sl
-        }
-        let end = sl + row_res.1
-        if end > max_row_line {
-          max_row_line = end
-        }
-      }
-      None => ()
-    }
-  }
-  let negative_cols = if min_col_line < 0 { -min_col_line } else { 0 }
-  let positive_cols = if max_col_line > explicit_col_count {
-    max_col_line - explicit_col_count
-  } else {
-    0
-  }
-  let negative_rows = if min_row_line < 0 { -min_row_line } else { 0 }
-  let positive_rows = if max_row_line > explicit_row_count {
-    max_row_line - explicit_row_count
-  } else {
-    0
-  }
+  let track_counts = compute_grid_size_estimate(
+    tree,
+    tree.children[node_id],
+    explicit_col_count,
+    explicit_row_count,
+  )
+  let col_counts = track_counts.0
+  let row_counts = track_counts.1
+  let negative_cols = col_counts.negative_implicit
+  let negative_rows = row_counts.negative_implicit
 
   // Build an initial implicit grid from templates + auto tracks.
   let auto_cols = axis_auto_track_list(node.style.grid_auto_columns)
   let auto_rows = axis_auto_track_list(node.style.grid_auto_rows)
-  let mut col_tracks : Array[Dimension] = []
-  for i in 0..<negative_cols {
-    let offset = negative_cols - i
-    col_tracks.push(negative_auto_track_at(auto_cols, offset))
-  }
-  for t in explicit_col_template {
-    col_tracks.push(t)
-  }
-  for i in 0..<positive_cols {
-    col_tracks.push(auto_cols[i % auto_cols.length()])
-  }
-  let mut row_tracks : Array[Dimension] = []
-  for i in 0..<negative_rows {
-    let offset = negative_rows - i
-    row_tracks.push(negative_auto_track_at(auto_rows, offset))
-  }
-  for t in explicit_row_template {
-    row_tracks.push(t)
-  }
-  for i in 0..<positive_rows {
-    row_tracks.push(auto_rows[i % auto_rows.length()])
-  }
+  let mut col_tracks = initialize_grid_tracks(
+    col_counts, explicit_col_template, auto_cols,
+  )
+  let mut row_tracks = initialize_grid_tracks(
+    row_counts, explicit_row_template, auto_rows,
+  )
 
   let placement_count = tree.children[node_id].length()
   let placed : Array[Bool] = Array::make(placement_count, false)

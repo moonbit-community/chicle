@@ -2,7 +2,7 @@
 package "Milky2018/moon_taffy"
 
 import {
-  "Milky2018/moon_taffy/style",
+  "Milky2018/moon_taffy/internal/style",
 }
 
 // Values

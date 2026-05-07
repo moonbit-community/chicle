@@ -99,10 +99,7 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
       }
     None => raise InvalidNodeId(root)
   }
-  for i in 0..<self.nodes.length() {
-    self.nodes[i].leaf_measure_cache.clear()
-    self.nodes[i].node_layout_cache.clear()
-  }
+  clear_transient_layout_caches(self)
   compute_node_layout_with_measure(
     self,
     root,
@@ -112,28 +109,44 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
     measure_function,
     true,
   )
+  round_layout_tree_and_mark_clean(self, root)
+}
+
+///|
+fn[C] clear_transient_layout_caches(tree : TaffyTree[C]) -> Unit {
+  for i in 0..<tree.nodes.length() {
+    tree.nodes[i].leaf_measure_cache.clear()
+    tree.nodes[i].node_layout_cache.clear()
+  }
+}
+
+///|
+fn[C] round_layout_tree_and_mark_clean(
+  tree : TaffyTree[C],
+  root : NodeId,
+) -> Unit {
   let stack : Array[NodeId] = [root]
   while true {
     match stack.pop() {
       None => break
       Some(cur) => {
-        if !self.nodes[cur].alive {
+        if !tree.nodes[cur].alive {
           continue
         }
-        let layout = self.nodes[cur].layout
+        let layout = tree.nodes[cur].layout
         let rounded_left = layout.location.x.round()
         let rounded_top = layout.location.y.round()
         let rounded_right = (layout.location.x + layout.size.width).round()
         let rounded_bottom = (layout.location.y + layout.size.height).round()
-        self.nodes[cur].layout = Layout::{
+        tree.nodes[cur].layout = Layout::{
           location: Point(x=rounded_left, y=rounded_top),
           size: Size(
             width=max_double(rounded_right - rounded_left, 0.0),
             height=max_double(rounded_bottom - rounded_top, 0.0),
           ),
         }
-        self.nodes[cur].dirty = false
-        for child_id in self.nodes[cur].children {
+        tree.nodes[cur].dirty = false
+        for child_id in tree.nodes[cur].children {
           stack.push(child_id)
         }
       }

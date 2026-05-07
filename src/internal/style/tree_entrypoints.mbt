@@ -17,6 +17,7 @@ suberror TaffyError {
   InvalidNodeId(Int)
   CycleDetected(parent~ : Int, child~ : Int)
   ChildNotFound(parent~ : Int, child~ : Int)
+  DuplicateChild(parent~ : Int, child~ : Int)
 }
 
 ///|

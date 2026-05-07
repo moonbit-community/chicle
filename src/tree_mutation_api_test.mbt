@@ -68,6 +68,33 @@ test "tree_mutation: add_child rejects cycles" {
 }
 
 ///|
+test "tree_mutation: new_with_children filters duplicate children" {
+  let taffy : TaffyTree[Unit] = TaffyTree()
+  let leaf = taffy.new_leaf(
+    Style::default().with_size(Size(width=length(10.0), height=length(10.0))),
+  )
+  let root = taffy.new_with_children(
+    Style::default().with_size(Size(width=auto(), height=auto())),
+    [leaf, leaf],
+  )
+  taffy.compute_layout(root, Size::max_content())
+  assert_eq(taffy.layout(root).size.width, 10.0)
+}
+
+///|
+test "tree_mutation: set_children rejects duplicate children" {
+  let taffy : TaffyTree[Unit] = TaffyTree()
+  let leaf = taffy.new_leaf(Style::default())
+  let root = taffy.new_with_children(Style::default(), [])
+  let failed = try taffy.set_children(root, [leaf, leaf]) catch {
+    _ => true
+  } noraise {
+    _ => false
+  }
+  assert_eq(failed, true)
+}
+
+///|
 test "tree_mutation: remove_subtree invalidates nodes" {
   let taffy : TaffyTree[Unit] = TaffyTree()
   let leaf = taffy.new_leaf(Style::default())

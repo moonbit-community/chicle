@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Milky2018/moon_taffy/style"
+package "Milky2018/moon_taffy/internal/style"
 
 import {
   "moonbitlang/core/json",

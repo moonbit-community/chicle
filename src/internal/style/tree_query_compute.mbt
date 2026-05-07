@@ -120,6 +120,16 @@ fn[C] TaffyView::compute_root_layout(
   available_space : Size[AvailableSpace],
 ) -> Unit raise TaffyError {
   let tree = self.tree
+  // Rust taffy reaches every child through recursive `perform_child_layout`.
+  // MoonBit uses the same normal path below. The trampoline is deliberately
+  // checked first only for the narrow shape that overflows the legacy `wasm`
+  // backend stack: a deep chain of default single-child flex containers ending
+  // in a measured leaf under max-content constraints.
+  //
+  // This is not a compatibility layer and must not become a second layout
+  // algorithm. If the tree shape or style is not proven equivalent to Rust's
+  // recursive path, the trampoline returns false and the normal recursive
+  // compute path runs.
   if !compute_default_single_child_chain_trampoline(
       tree,
       root,
@@ -144,6 +154,29 @@ fn[C] TaffyView::compute_root_layout(
 }
 
 ///|
+// Stack-safety trampoline for the one layout shape that is known to exceed the
+// JavaScript call stack when running the legacy `wasm` target.
+//
+// Rust taffy computes this case by recursively walking a chain of default flex
+// containers until it reaches the measured leaf. For this exact shape, every
+// intermediate container has no style contribution: no margins, padding,
+// border, gap, inset, min/max/explicit size, wrapping, alignment override,
+// absolute positioning, grid tracks, or aspect ratio. The recursive Rust result
+// is therefore the measured leaf size copied to each ancestor at origin zero.
+//
+// The guard below encodes that proof. The function returns `true` only after
+// verifying:
+// - the available space is max-content in both axes;
+// - the chain is deep enough to matter for stack safety;
+// - every ancestor is a default single-child flex container;
+// - the leaf is a default measurable leaf;
+// - the same four measure probes observable in Rust's cache test are executed.
+//
+// Any unsupported style bit, branching child list, missing context, non-default
+// grid/flex setting, or short chain returns `false` and lets the normal Rust-like
+// recursive compute path handle the layout. Keep this function narrow: broadening
+// it requires a proof that the resulting layout and measure-call behavior remain
+// identical to upstream taffy.
 fn[C] compute_default_single_child_chain_trampoline(
   tree : TaffyTree[C],
   root : NodeId,

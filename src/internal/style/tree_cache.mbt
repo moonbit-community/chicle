@@ -42,16 +42,21 @@ fn find_leaf_measure_cache(
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   run_mode : RunMode,
-) -> Size[Double]? {
+) -> LayoutOutput? {
   if !(run_mode is ComputeSize) {
     return None
   }
   for entry_option in cache.measure_entries {
     match entry_option {
       Some(entry) =>
-        if known_dimensions_equal(entry.known_dimensions, known_dimensions) &&
-          available_size_equal(entry.available_space, available_space) {
-          return Some(entry.content)
+        if cache_entry_matches(
+            entry.known_dimensions,
+            entry.available_space,
+            LayoutOutput::from_outer_size(entry.content).outer_size(),
+            known_dimensions,
+            available_space,
+          ) {
+          return Some(LayoutOutput::from_outer_size(entry.content))
         }
       None => ()
     }
@@ -83,8 +88,6 @@ fn find_node_layout_cache(
   cache : Cache,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
-  absolute_origin : Point[Double],
-  is_layout_root : Bool,
   run_mode : RunMode,
 ) -> NodeLayoutCacheEntry? {
   if !(run_mode is PerformLayout) {
@@ -92,16 +95,48 @@ fn find_node_layout_cache(
   }
   match cache.final_layout_entry {
     Some(entry) =>
-      if known_dimensions_equal(entry.known_dimensions, known_dimensions) &&
-        available_size_equal(entry.available_space, available_space) &&
-        point_equal(entry.absolute_origin, absolute_origin) &&
-        entry.is_layout_root == is_layout_root {
+      if cache_entry_matches(
+          entry.known_dimensions,
+          entry.available_space,
+          entry.content.outer_size(),
+          known_dimensions,
+          available_space,
+        ) {
         Some(entry)
       } else {
         None
       }
     None => None
   }
+}
+
+///|
+fn cache_entry_matches(
+  entry_known_dimensions : Size[Double?],
+  entry_available_space : Size[AvailableSpace],
+  cached_size : Size[Double],
+  known_dimensions : Size[Double?],
+  available_space : Size[AvailableSpace],
+) -> Bool {
+  (
+    optional_double_equal(known_dimensions.width, entry_known_dimensions.width) ||
+    optional_double_equal(known_dimensions.width, Some(cached_size.width))
+  ) &&
+  (
+    optional_double_equal(
+      known_dimensions.height,
+      entry_known_dimensions.height,
+    ) ||
+    optional_double_equal(known_dimensions.height, Some(cached_size.height))
+  ) &&
+  (
+    known_dimensions.width is Some(_) ||
+    available_space_equal(entry_available_space.width, available_space.width)
+  ) &&
+  (
+    known_dimensions.height is Some(_) ||
+    available_space_equal(entry_available_space.height, available_space.height)
+  )
 }
 
 ///|

@@ -73,8 +73,6 @@ fn[C] compute_child_layout_with_measure(
       node_id,
       inputs.known_dimensions,
       inputs.available_space,
-      absolute_origin,
-      is_layout_root,
       run_mode,
       can_use_layout_cache,
     ) {
@@ -156,16 +154,66 @@ fn[C] compute_child_layout_with_measure(
     node.style,
     inputs.available_space,
   )
+  finalize_layout_metadata(tree, node_id, node.style, inputs.available_space)
   save_node_layout_cache(
     tree,
     node_id,
     inputs.known_dimensions,
     inputs.available_space,
-    absolute_origin,
-    is_layout_root,
     run_mode,
     can_use_layout_cache,
   )
+}
+
+///|
+fn[C] finalize_layout_metadata(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  style : Style,
+  available_space : Size[AvailableSpace],
+) -> Unit {
+  if style.display is DisplayNone {
+    return
+  }
+  let layout = tree.nodes[node_id].layout
+  let padding = resolve_rect_width_basis(style.padding, available_space)
+  let border = resolve_rect_width_basis(style.border, available_space)
+  let scrollbar_width = style.scrollbar_width
+  let scrollbar_size = Size(
+    width=match style.overflow.y {
+      OverflowScroll => scrollbar_width
+      _ => 0.0
+    },
+    height=match style.overflow.x {
+      OverflowScroll => scrollbar_width
+      _ => 0.0
+    },
+  )
+  let horizontal_inset = padding.left +
+    padding.right +
+    border.left +
+    border.right +
+    scrollbar_size.width
+  let vertical_inset = padding.top +
+    padding.bottom +
+    border.top +
+    border.bottom +
+    scrollbar_size.height
+  let content_size = if tree.nodes[node_id].children.length() == 0 {
+    layout.content_size
+  } else {
+    Size(
+      width=max_double(layout.size.width - horizontal_inset, 0.0),
+      height=max_double(layout.size.height - vertical_inset, 0.0),
+    )
+  }
+  tree.nodes[node_id].layout = {
+    ..layout,
+    content_size,
+    scrollbar_size,
+    border,
+    padding,
+  }
 }
 
 ///|
@@ -217,8 +265,6 @@ fn[C] restore_node_layout_from_cache(
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
-  absolute_origin : Point[Double],
-  is_layout_root : Bool,
   run_mode : RunMode,
   can_use_layout_cache : Bool,
 ) -> Bool {
@@ -231,16 +277,10 @@ fn[C] restore_node_layout_from_cache(
       node.cache,
       known_dimensions,
       available_space,
-      absolute_origin,
-      is_layout_root,
       run_mode,
     ) {
     Some(entry) => {
-      tree.nodes[node_id].layout = {
-        ..Layout::zero(),
-        location: entry.location,
-        size: entry.size,
-      }
+      tree.nodes[node_id].layout = entry.layout
       tree.nodes[node_id].effective_margin_top = entry.effective_margin_top
       tree.nodes[node_id].effective_margin_bottom = entry.effective_margin_bottom
       tree.nodes[node_id].effective_margin_top_max_pos = entry.effective_margin_top_max_pos
@@ -299,8 +339,6 @@ fn[C] save_node_layout_cache(
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
-  absolute_origin : Point[Double],
-  is_layout_root : Bool,
   run_mode : RunMode,
   can_use_layout_cache : Bool,
 ) -> Unit {
@@ -311,10 +349,8 @@ fn[C] save_node_layout_cache(
   store_node_layout_cache(tree.nodes[node_id].cache, run_mode, {
     known_dimensions,
     available_space,
-    absolute_origin,
-    is_layout_root,
-    location: layout.location,
-    size: layout.size,
+    content: LayoutOutput::from_layout(layout),
+    layout,
     effective_margin_top: tree.nodes[node_id].effective_margin_top,
     effective_margin_bottom: tree.nodes[node_id].effective_margin_bottom,
     effective_margin_top_max_pos: tree.nodes[node_id].effective_margin_top_max_pos,

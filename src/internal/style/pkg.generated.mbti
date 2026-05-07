@@ -122,7 +122,27 @@ pub fn line(Int) -> GridPlacement
 
 pub fn max_content() -> AvailableSpace
 
+pub fn max_track_auto() -> MaxTrackSizingFunction
+
+pub fn max_track_fit_content(LengthPercentage) -> MaxTrackSizingFunction
+
+pub fn max_track_fixed(LengthPercentage) -> MaxTrackSizingFunction
+
+pub fn max_track_fraction(Double) -> MaxTrackSizingFunction
+
+pub fn max_track_max_content() -> MaxTrackSizingFunction
+
+pub fn max_track_min_content() -> MaxTrackSizingFunction
+
 pub fn min_content() -> AvailableSpace
+
+pub fn min_track_auto() -> MinTrackSizingFunction
+
+pub fn min_track_fixed(LengthPercentage) -> MinTrackSizingFunction
+
+pub fn min_track_max_content() -> MinTrackSizingFunction
+
+pub fn min_track_min_content() -> MinTrackSizingFunction
 
 pub fn minmax(Dimension, Dimension) -> Dimension
 
@@ -150,7 +170,11 @@ pub fn repeat_auto_fit() -> GridTrackRepetition
 
 pub fn repeat_count(Int) -> GridTrackRepetition
 
+pub fn repeated_track_sizing_function(GridTrackRepetition, Array[NonRepeatedTrackSizingFunction]) -> TrackSizingFunction
+
 pub fn span(Int) -> GridPlacement
+
+pub fn track_sizing_function(NonRepeatedTrackSizingFunction) -> TrackSizingFunction
 
 pub fn zero() -> Dimension
 
@@ -295,7 +319,43 @@ pub struct Line[T] {
 }
 pub fn[T] Line::Line(start~ : T, end~ : T) -> Self[T]
 
+pub enum MaxTrackSizingFunction {
+  MaxTrackFixed(LengthPercentage)
+  MaxTrackMinContent
+  MaxTrackMaxContent
+  MaxTrackFitContent(LengthPercentage)
+  MaxTrackAuto
+  MaxTrackFraction(Double)
+}
+pub fn MaxTrackSizingFunction::definite_limit(Self, Double?) -> Double?
+pub fn MaxTrackSizingFunction::definite_value(Self, Double?) -> Double?
+pub fn MaxTrackSizingFunction::is_flexible(Self) -> Bool
+pub fn MaxTrackSizingFunction::is_intrinsic(Self) -> Bool
+pub fn MaxTrackSizingFunction::is_max_content_alike(Self) -> Bool
+pub fn MaxTrackSizingFunction::resolved_percentage_size(Self, Double) -> Double?
+pub fn MaxTrackSizingFunction::uses_percentage(Self) -> Bool
+
+pub enum MinTrackSizingFunction {
+  MinTrackFixed(LengthPercentage)
+  MinTrackMinContent
+  MinTrackMaxContent
+  MinTrackAuto
+}
+pub fn MinTrackSizingFunction::definite_value(Self, Double?) -> Double?
+pub fn MinTrackSizingFunction::is_intrinsic(Self) -> Bool
+pub fn MinTrackSizingFunction::resolved_percentage_size(Self, Double) -> Double?
+pub fn MinTrackSizingFunction::uses_percentage(Self) -> Bool
+
 type Node[C]
+
+pub struct NonRepeatedTrackSizingFunction {
+  min : MinTrackSizingFunction
+  max : MaxTrackSizingFunction
+}
+pub fn NonRepeatedTrackSizingFunction::NonRepeatedTrackSizingFunction(min~ : MinTrackSizingFunction, max~ : MaxTrackSizingFunction) -> Self
+pub fn NonRepeatedTrackSizingFunction::has_fixed_component(Self) -> Bool
+pub fn NonRepeatedTrackSizingFunction::max_sizing_function(Self) -> MaxTrackSizingFunction
+pub fn NonRepeatedTrackSizingFunction::min_sizing_function(Self) -> MinTrackSizingFunction
 
 pub enum Overflow {
   OverflowVisible
@@ -434,6 +494,11 @@ pub fn[C] TaffyTree::set_node_context(Self[C], Int, C) -> Unit raise TaffyError
 pub fn[C] TaffyTree::set_style(Self[C], Int, Style) -> Unit raise TaffyError
 pub fn[C] TaffyTree::set_unrounded_layout(Self[C], Int, Layout) -> Unit raise TaffyError
 pub fn[C] TaffyTree::with_capacity(Int) -> Self[C]
+
+pub enum TrackSizingFunction {
+  Single(NonRepeatedTrackSizingFunction)
+  Repeat(GridTrackRepetition, Array[NonRepeatedTrackSizingFunction])
+}
 
 // Type aliases
 pub type NodeId = Int

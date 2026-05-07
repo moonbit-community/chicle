@@ -22,6 +22,7 @@ fn[C] compute_hidden_layout(
     Some(n) => n
     None => raise InvalidNodeId(node_id)
   }
+  tree.nodes[node_id].cache.clear()
   tree.nodes[node_id].layout = {
     ..Layout::zero(),
     location: absolute_origin,

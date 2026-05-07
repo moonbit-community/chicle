@@ -149,16 +149,54 @@ type LeafMeasureCacheEntry = CacheEntry[Size[Double]]
 priv struct NodeLayoutCacheEntry {
   known_dimensions : Size[Double?]
   available_space : Size[AvailableSpace]
-  absolute_origin : Point[Double]
-  is_layout_root : Bool
-  location : Point[Double]
-  size : Size[Double]
+  content : LayoutOutput
+  layout : Layout
   effective_margin_top : Double
   effective_margin_bottom : Double
   effective_margin_top_max_pos : Double
   effective_margin_top_min_neg : Double
   effective_margin_bottom_max_pos : Double
   effective_margin_bottom_min_neg : Double
+}
+
+///|
+priv struct LayoutOutput {
+  size : Size[Double]
+  content_size : Size[Double]
+  first_baselines : Point[Double?]
+  top_margin : (Double, Double)
+  bottom_margin : (Double, Double)
+  margins_can_collapse_through : Bool
+}
+
+///|
+fn LayoutOutput::from_outer_size(size : Size[Double]) -> LayoutOutput {
+  {
+    size,
+    content_size: Size::zero(),
+    first_baselines: Point(x=None, y=None),
+    top_margin: (0.0, 0.0),
+    bottom_margin: (0.0, 0.0),
+    margins_can_collapse_through: false,
+  }
+}
+
+///|
+fn LayoutOutput::from_layout(layout : Layout) -> LayoutOutput {
+  {
+    ..LayoutOutput::from_outer_size(layout.size),
+    content_size: layout.content_size,
+  }
+}
+
+///|
+fn LayoutOutput::outer_size(self : LayoutOutput) -> Size[Double] {
+  ignore(self.content_size)
+  ignore(self.first_baselines)
+  ignore(self.top_margin)
+  ignore(self.bottom_margin)
+  ignore(self.margins_can_collapse_through)
+  self.size
 }
 
 ///|

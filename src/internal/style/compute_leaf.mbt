@@ -128,7 +128,7 @@ fn[C] compute_leaf_layout_with_measure(
       measure_available_space,
       ComputeSize,
     ) {
-    Some(v) => v
+    Some(output) => output.size
     None => {
       let m = measure_function(
         measure_known_dimensions,
@@ -272,6 +272,10 @@ fn[C] compute_leaf_layout_with_measure(
     ..Layout::zero(),
     location: absolute_origin,
     size: border_box_size,
+    content_size: measured,
+    scrollbar_size: Size(width=scrollbar_y, height=scrollbar_x),
+    border: resolved_border,
+    padding: resolved_padding,
   }
   let resolved_margin = resolve_rect_width_basis(
     node.style.margin,

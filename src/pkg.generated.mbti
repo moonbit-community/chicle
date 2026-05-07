@@ -120,7 +120,27 @@ pub fn line(Int) -> @style.GridPlacement
 
 pub fn max_content() -> @style.AvailableSpace
 
+pub fn max_track_auto() -> @style.MaxTrackSizingFunction
+
+pub fn max_track_fit_content(@style.LengthPercentage) -> @style.MaxTrackSizingFunction
+
+pub fn max_track_fixed(@style.LengthPercentage) -> @style.MaxTrackSizingFunction
+
+pub fn max_track_fraction(Double) -> @style.MaxTrackSizingFunction
+
+pub fn max_track_max_content() -> @style.MaxTrackSizingFunction
+
+pub fn max_track_min_content() -> @style.MaxTrackSizingFunction
+
 pub fn min_content() -> @style.AvailableSpace
+
+pub fn min_track_auto() -> @style.MinTrackSizingFunction
+
+pub fn min_track_fixed(@style.LengthPercentage) -> @style.MinTrackSizingFunction
+
+pub fn min_track_max_content() -> @style.MinTrackSizingFunction
+
+pub fn min_track_min_content() -> @style.MinTrackSizingFunction
 
 pub fn minmax(@style.Dimension, @style.Dimension) -> @style.Dimension
 
@@ -148,7 +168,11 @@ pub fn repeat_auto_fit() -> @style.GridTrackRepetition
 
 pub fn repeat_count(Int) -> @style.GridTrackRepetition
 
+pub fn repeated_track_sizing_function(@style.GridTrackRepetition, Array[@style.NonRepeatedTrackSizingFunction]) -> @style.TrackSizingFunction
+
 pub fn span(Int) -> @style.GridPlacement
+
+pub fn track_sizing_function(@style.NonRepeatedTrackSizingFunction) -> @style.TrackSizingFunction
 
 pub fn zero() -> @style.Dimension
 
@@ -197,7 +221,13 @@ pub using @style {type LengthPercentageAuto}
 
 pub using @style {type Line}
 
+pub using @style {type MaxTrackSizingFunction}
+
+pub using @style {type MinTrackSizingFunction}
+
 pub type NodeId = Int
+
+pub using @style {type NonRepeatedTrackSizingFunction}
 
 pub using @style {type Overflow}
 
@@ -214,6 +244,8 @@ pub using @style {type Style}
 pub using @style {type TaffyError}
 
 pub using @style {type TaffyTree}
+
+pub using @style {type TrackSizingFunction}
 
 // Traits
 

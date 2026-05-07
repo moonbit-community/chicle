@@ -91,6 +91,73 @@ pub fn evenly_sized_tracks(count : Int) -> Array[Dimension] {
 }
 
 ///|
+pub fn max_track_fixed(value : LengthPercentage) -> MaxTrackSizingFunction {
+  @style.max_track_fixed(value)
+}
+
+///|
+pub fn max_track_min_content() -> MaxTrackSizingFunction {
+  @style.max_track_min_content()
+}
+
+///|
+pub fn max_track_max_content() -> MaxTrackSizingFunction {
+  @style.max_track_max_content()
+}
+
+///|
+pub fn max_track_fit_content(
+  value : LengthPercentage,
+) -> MaxTrackSizingFunction {
+  @style.max_track_fit_content(value)
+}
+
+///|
+pub fn max_track_auto() -> MaxTrackSizingFunction {
+  @style.max_track_auto()
+}
+
+///|
+pub fn max_track_fraction(value : Double) -> MaxTrackSizingFunction {
+  @style.max_track_fraction(value)
+}
+
+///|
+pub fn min_track_fixed(value : LengthPercentage) -> MinTrackSizingFunction {
+  @style.min_track_fixed(value)
+}
+
+///|
+pub fn min_track_min_content() -> MinTrackSizingFunction {
+  @style.min_track_min_content()
+}
+
+///|
+pub fn min_track_max_content() -> MinTrackSizingFunction {
+  @style.min_track_max_content()
+}
+
+///|
+pub fn min_track_auto() -> MinTrackSizingFunction {
+  @style.min_track_auto()
+}
+
+///|
+pub fn track_sizing_function(
+  value : NonRepeatedTrackSizingFunction,
+) -> TrackSizingFunction {
+  @style.track_sizing_function(value)
+}
+
+///|
+pub fn repeated_track_sizing_function(
+  repetition : GridTrackRepetition,
+  tracks : Array[NonRepeatedTrackSizingFunction],
+) -> TrackSizingFunction {
+  @style.repeated_track_sizing_function(repetition, tracks)
+}
+
+///|
 pub fn grid_auto_flow_row() -> GridAutoFlow {
   @style.grid_auto_flow_row()
 }

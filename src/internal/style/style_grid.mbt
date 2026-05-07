@@ -35,6 +35,44 @@ pub enum GridPlacement {
 }
 
 ///|
+pub enum MaxTrackSizingFunction {
+  MaxTrackFixed(LengthPercentage)
+  MaxTrackMinContent
+  MaxTrackMaxContent
+  MaxTrackFitContent(LengthPercentage)
+  MaxTrackAuto
+  MaxTrackFraction(Double)
+}
+
+///|
+pub enum MinTrackSizingFunction {
+  MinTrackFixed(LengthPercentage)
+  MinTrackMinContent
+  MinTrackMaxContent
+  MinTrackAuto
+}
+
+///|
+pub struct NonRepeatedTrackSizingFunction {
+  min : MinTrackSizingFunction
+  max : MaxTrackSizingFunction
+}
+
+///|
+pub fn NonRepeatedTrackSizingFunction::NonRepeatedTrackSizingFunction(
+  min~ : MinTrackSizingFunction,
+  max~ : MaxTrackSizingFunction,
+) -> NonRepeatedTrackSizingFunction {
+  { min, max }
+}
+
+///|
+pub enum TrackSizingFunction {
+  Single(NonRepeatedTrackSizingFunction)
+  Repeat(GridTrackRepetition, Array[NonRepeatedTrackSizingFunction])
+}
+
+///|
 pub fn GridAutoFlow::is_dense(self : GridAutoFlow) -> Bool {
   match self {
     Row | Column => false
@@ -72,4 +110,146 @@ pub fn GridPlacement::is_definite(self : Line[GridPlacement]) -> Bool {
     (_, PlaceLine(line)) if line != 0 => true
     _ => false
   }
+}
+
+///|
+pub fn MaxTrackSizingFunction::is_intrinsic(
+  self : MaxTrackSizingFunction,
+) -> Bool {
+  match self {
+    MaxTrackMinContent
+    | MaxTrackMaxContent
+    | MaxTrackFitContent(_)
+    | MaxTrackAuto => true
+    MaxTrackFixed(_) | MaxTrackFraction(_) => false
+  }
+}
+
+///|
+pub fn MaxTrackSizingFunction::is_max_content_alike(
+  self : MaxTrackSizingFunction,
+) -> Bool {
+  match self {
+    MaxTrackMaxContent | MaxTrackFitContent(_) | MaxTrackAuto => true
+    _ => false
+  }
+}
+
+///|
+pub fn MaxTrackSizingFunction::is_flexible(
+  self : MaxTrackSizingFunction,
+) -> Bool {
+  self is MaxTrackFraction(_)
+}
+
+///|
+pub fn MaxTrackSizingFunction::definite_value(
+  self : MaxTrackSizingFunction,
+  parent_size : Double?,
+) -> Double? {
+  match self {
+    MaxTrackFixed(LengthPercentageLength(size)) => Some(size)
+    MaxTrackFixed(LengthPercentagePercent(fraction)) =>
+      parent_size.map(fn(size) { size * fraction })
+    _ => None
+  }
+}
+
+///|
+pub fn MaxTrackSizingFunction::definite_limit(
+  self : MaxTrackSizingFunction,
+  parent_size : Double?,
+) -> Double? {
+  match self {
+    MaxTrackFitContent(LengthPercentageLength(size)) => Some(size)
+    MaxTrackFitContent(LengthPercentagePercent(fraction)) =>
+      parent_size.map(fn(size) { size * fraction })
+    _ => self.definite_value(parent_size)
+  }
+}
+
+///|
+pub fn MaxTrackSizingFunction::resolved_percentage_size(
+  self : MaxTrackSizingFunction,
+  parent_size : Double,
+) -> Double? {
+  match self {
+    MaxTrackFixed(LengthPercentagePercent(fraction)) =>
+      Some(parent_size * fraction)
+    _ => None
+  }
+}
+
+///|
+pub fn MaxTrackSizingFunction::uses_percentage(
+  self : MaxTrackSizingFunction,
+) -> Bool {
+  match self {
+    MaxTrackFixed(LengthPercentagePercent(_))
+    | MaxTrackFitContent(LengthPercentagePercent(_)) => true
+    _ => false
+  }
+}
+
+///|
+pub fn MinTrackSizingFunction::is_intrinsic(
+  self : MinTrackSizingFunction,
+) -> Bool {
+  match self {
+    MinTrackMinContent | MinTrackMaxContent | MinTrackAuto => true
+    MinTrackFixed(_) => false
+  }
+}
+
+///|
+pub fn MinTrackSizingFunction::definite_value(
+  self : MinTrackSizingFunction,
+  parent_size : Double?,
+) -> Double? {
+  match self {
+    MinTrackFixed(LengthPercentageLength(size)) => Some(size)
+    MinTrackFixed(LengthPercentagePercent(fraction)) =>
+      parent_size.map(fn(size) { size * fraction })
+    _ => None
+  }
+}
+
+///|
+pub fn MinTrackSizingFunction::resolved_percentage_size(
+  self : MinTrackSizingFunction,
+  parent_size : Double,
+) -> Double? {
+  match self {
+    MinTrackFixed(LengthPercentagePercent(fraction)) =>
+      Some(parent_size * fraction)
+    _ => None
+  }
+}
+
+///|
+pub fn MinTrackSizingFunction::uses_percentage(
+  self : MinTrackSizingFunction,
+) -> Bool {
+  self is MinTrackFixed(LengthPercentagePercent(_))
+}
+
+///|
+pub fn NonRepeatedTrackSizingFunction::min_sizing_function(
+  self : NonRepeatedTrackSizingFunction,
+) -> MinTrackSizingFunction {
+  self.min
+}
+
+///|
+pub fn NonRepeatedTrackSizingFunction::max_sizing_function(
+  self : NonRepeatedTrackSizingFunction,
+) -> MaxTrackSizingFunction {
+  self.max
+}
+
+///|
+pub fn NonRepeatedTrackSizingFunction::has_fixed_component(
+  self : NonRepeatedTrackSizingFunction,
+) -> Bool {
+  self.min is MinTrackFixed(_) || self.max is MaxTrackFixed(_)
 }

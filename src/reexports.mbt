@@ -43,6 +43,18 @@ pub type GridAutoFlow = @style.GridAutoFlow
 pub type GridPlacement = @style.GridPlacement
 
 ///|
+pub type MaxTrackSizingFunction = @style.MaxTrackSizingFunction
+
+///|
+pub type MinTrackSizingFunction = @style.MinTrackSizingFunction
+
+///|
+pub type NonRepeatedTrackSizingFunction = @style.NonRepeatedTrackSizingFunction
+
+///|
+pub type TrackSizingFunction = @style.TrackSizingFunction
+
+///|
 pub type Dimension = @style.Dimension
 
 ///|

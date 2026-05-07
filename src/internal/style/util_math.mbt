@@ -62,23 +62,3 @@ fn available_space_equal(a : AvailableSpace, b : AvailableSpace) -> Bool {
     _ => false
   }
 }
-
-///|
-fn known_dimensions_equal(a : Size[Double?], b : Size[Double?]) -> Bool {
-  optional_double_equal(a.width, b.width) &&
-  optional_double_equal(a.height, b.height)
-}
-
-///|
-fn available_size_equal(
-  a : Size[AvailableSpace],
-  b : Size[AvailableSpace],
-) -> Bool {
-  available_space_equal(a.width, b.width) &&
-  available_space_equal(a.height, b.height)
-}
-
-///|
-fn point_equal(a : Point[Double], b : Point[Double]) -> Bool {
-  double_approx_equal(a.x, b.x) && double_approx_equal(a.y, b.y)
-}

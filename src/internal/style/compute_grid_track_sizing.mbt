@@ -214,6 +214,52 @@ fn initialize_grid_track_sizing_state(
 }
 
 ///|
+fn apply_intrinsic_flexible_track_sizing(
+  state : GridTrackSizingState,
+  min_contrib : Array[Double],
+  max_contrib : Array[Double],
+) -> Unit {
+  let sizes = state.sizes
+  let min_sizes = state.min_sizes
+  let fr_weights = state.fr_weights
+  let is_auto = state.is_auto
+  let max_limits = state.max_limits
+  let inf = state.inf
+  let count = sizes.length()
+  let mut flex_fraction = 0.0
+  for i in 0..<count {
+    let weight = fr_weights[i]
+    if weight > 0.0 {
+      let max_c = if i < max_contrib.length() { max_contrib[i] } else { 0.0 }
+      let ratio = max_c / weight
+      if ratio > flex_fraction {
+        flex_fraction = ratio
+      }
+    }
+  }
+  if flex_fraction > 0.0 {
+    for i in 0..<count {
+      let weight = fr_weights[i]
+      if weight > 0.0 {
+        let flex_size = flex_fraction * weight
+        sizes[i] = if flex_size < min_sizes[i] {
+          min_sizes[i]
+        } else {
+          flex_size
+        }
+        min_sizes[i] = if i < min_contrib.length() {
+          min_contrib[i]
+        } else {
+          0.0
+        }
+        max_limits[i] = inf
+        is_auto[i] = true
+      }
+    }
+  }
+}
+
+///|
 fn compute_grid_track_sizes_with_contributions(
   tracks : Array[Dimension],
   available : Double,
@@ -231,42 +277,11 @@ fn compute_grid_track_sizes_with_contributions(
   let fr_weights = state.fr_weights
   let is_auto = state.is_auto
   let max_limits = state.max_limits
-  let inf = state.inf
 
   // Intrinsic sizing for flexible tracks: derive a flex fraction from content contributions.
   // This matches taffy 0.5 behavior for `fr` tracks under indefinite available space.
   if !expand_to_fill {
-    let mut flex_fraction = 0.0
-    for i in 0..<count {
-      let w = fr_weights[i]
-      if w > 0.0 {
-        let max_c = if i < max_contrib.length() { max_contrib[i] } else { 0.0 }
-        let ratio = max_c / w
-        if ratio > flex_fraction {
-          flex_fraction = ratio
-        }
-      }
-    }
-    if flex_fraction > 0.0 {
-      for i in 0..<count {
-        let w = fr_weights[i]
-        if w > 0.0 {
-          let flex_size = flex_fraction * w
-          sizes[i] = if flex_size < min_sizes[i] {
-            min_sizes[i]
-          } else {
-            flex_size
-          }
-          min_sizes[i] = if i < min_contrib.length() {
-            min_contrib[i]
-          } else {
-            0.0
-          }
-          max_limits[i] = inf
-          is_auto[i] = true
-        }
-      }
-    }
+    apply_intrinsic_flexible_track_sizing(state, min_contrib, max_contrib)
   }
 
   // Shrink tracks down to their min-content contributions if the sum of preferred sizes overflows.
@@ -439,7 +454,7 @@ fn compute_grid_track_sizes_with_contributions(
 
   // Ensure no track is below its min size.
   for i in 0..<count {
-    sizes[i] = clamp_track_size(sizes[i], min_sizes[i], inf)
+    sizes[i] = clamp_track_size(sizes[i], min_sizes[i], state.inf)
   }
   sizes
 }

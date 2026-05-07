@@ -76,12 +76,8 @@ fn region_is_free(
 }
 
 ///|
-fn mark_placed(
-  placed : Array[Bool],
-  placed_row : Array[Int],
-  placed_col : Array[Int],
-  placed_row_span : Array[Int],
-  placed_col_span : Array[Int],
+fn mark_grid_item_placed(
+  items : Array[GridItem],
   occ : Array[Array[Bool]],
   row_tracks : Array[Dimension],
   col_tracks : Array[Dimension],
@@ -106,9 +102,5 @@ fn mark_placed(
       occ[r][c] = true
     }
   }
-  placed[idx] = true
-  placed_row[idx] = row
-  placed_col[idx] = col
-  placed_row_span[idx] = row_span
-  placed_col_span[idx] = col_span
+  items[idx].place(row~, column=col, row_span~, column_span=col_span)
 }

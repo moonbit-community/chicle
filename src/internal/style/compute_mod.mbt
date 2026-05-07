@@ -93,17 +93,17 @@ fn[C] compute_default_single_child_chain_trampoline(
         return false
       }
       let size = measure_default_flex_chain_leaf(view, cur, available_space)
-      tree.nodes[cur].unrounded_layout = {
+      tree.set_unrounded_layout(cur, {
         ..Layout::zero(),
         location: Point::zero(),
         size,
-      }
+      })
       for parent_id in chain {
-        tree.nodes[parent_id].unrounded_layout = {
+        tree.set_unrounded_layout(parent_id, {
           ..Layout::zero(),
           location: Point::zero(),
           size,
-        }
+        })
       }
       return true
     }
@@ -290,7 +290,7 @@ fn[C] round_layout_tree_and_mark_clean(
             height=max_double(rounded_bottom - rounded_top, 0.0),
           ),
         }
-        tree.nodes[cur].final_layout = rounded_layout
+        tree.set_final_layout(cur, rounded_layout)
         tree.nodes[cur].dirty = false
         for child_id in tree.children[cur] {
           stack.push(child_id)
@@ -313,7 +313,7 @@ fn[C] copy_unrounded_layout_tree_and_mark_clean(
         if !tree.nodes[cur].alive {
           continue
         }
-        tree.nodes[cur].final_layout = tree.nodes[cur].unrounded_layout
+        tree.set_final_layout(cur, tree.nodes[cur].unrounded_layout)
         tree.nodes[cur].dirty = false
         for child_id in tree.children[cur] {
           stack.push(child_id)
@@ -515,13 +515,13 @@ fn[C] finalize_layout_metadata(
       height=max_double(layout.size.height - vertical_inset, 0.0),
     )
   }
-  tree.nodes[node_id].unrounded_layout = {
+  tree.set_unrounded_layout(node_id, {
     ..layout,
     content_size,
     scrollbar_size,
     border,
     padding,
-  }
+  })
 }
 
 ///|
@@ -586,7 +586,7 @@ fn[C] restore_node_layout_from_cache(
       run_mode,
     ) {
     Some(entry) => {
-      tree.nodes[node_id].unrounded_layout = entry.layout
+      tree.set_unrounded_layout(node_id, entry.layout)
       tree.nodes[node_id].effective_margin_top = entry.effective_margin_top
       tree.nodes[node_id].effective_margin_bottom = entry.effective_margin_bottom
       tree.nodes[node_id].effective_margin_top_max_pos = entry.effective_margin_top_max_pos

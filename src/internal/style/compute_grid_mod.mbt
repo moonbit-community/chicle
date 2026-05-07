@@ -186,11 +186,7 @@ fn[C] compute_grid_layout(
   )
 
   let placement_count = tree.children[node_id].length()
-  let placed : Array[Bool] = Array::make(placement_count, false)
-  let placed_row : Array[Int] = Array::make(placement_count, 0)
-  let placed_col : Array[Int] = Array::make(placement_count, 0)
-  let placed_row_span : Array[Int] = Array::make(placement_count, 1)
-  let placed_col_span : Array[Int] = Array::make(placement_count, 1)
+  let grid_items = make_grid_items(tree.children[node_id])
   let occ = matrix_make(row_tracks.length(), col_tracks.length())
 
   // Placement algorithm: CSS Grid auto-placement for explicit and implicit tracks.
@@ -226,12 +222,8 @@ fn[C] compute_grid_layout(
         )
         match (def.0, def.2) {
           (Some(r), Some(c)) =>
-            mark_placed(
-              placed,
-              placed_row,
-              placed_col,
-              placed_row_span,
-              placed_col_span,
+            mark_grid_item_placed(
+              grid_items,
               occ,
               row_tracks,
               col_tracks,
@@ -255,7 +247,7 @@ fn[C] compute_grid_layout(
 
   // Pass 2: definite in secondary axis only.
   for i in 0..<placement_count {
-    if placed[i] {
+    if grid_items[i].placed {
       continue
     }
     let child_id = tree.children[node_id][i]
@@ -302,11 +294,10 @@ fn[C] compute_grid_layout(
                   c + col_span - 1,
                 )
                 if region_is_free(occ, r, c, row_span, col_span) {
-                  mark_placed(
-                    placed, placed_row, placed_col, placed_row_span, placed_col_span,
-                    occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
-                    negative_cols, explicit_row_count, explicit_col_count, i, r,
-                    c, row_span, col_span,
+                  mark_grid_item_placed(
+                    grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                    negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                    i, r, c, row_span, col_span,
                   )
                   break
                 }
@@ -340,11 +331,10 @@ fn[C] compute_grid_layout(
                   c + col_span - 1,
                 )
                 if region_is_free(occ, r, c, row_span, col_span) {
-                  mark_placed(
-                    placed, placed_row, placed_col, placed_row_span, placed_col_span,
-                    occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
-                    negative_cols, explicit_row_count, explicit_col_count, i, r,
-                    c, row_span, col_span,
+                  mark_grid_item_placed(
+                    grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                    negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                    i, r, c, row_span, col_span,
                   )
                   break
                 }
@@ -364,7 +354,7 @@ fn[C] compute_grid_layout(
   let mut cursor_sec = 0
   let mut cursor_prim = 0
   for i in 0..<placement_count {
-    if placed[i] {
+    if grid_items[i].placed {
       continue
     }
     let child_id = tree.children[node_id][i]
@@ -416,11 +406,10 @@ fn[C] compute_grid_layout(
                     c0 + col_span - 1,
                   )
                   if region_is_free(occ, sec, c0, row_span, col_span) {
-                    mark_placed(
-                      placed, placed_row, placed_col, placed_row_span, placed_col_span,
-                      occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
-                      negative_cols, explicit_row_count, explicit_col_count, i, sec,
-                      c0, row_span, col_span,
+                    mark_grid_item_placed(
+                      grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                      negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                      i, sec, c0, row_span, col_span,
                     )
                     if !dense {
                       cursor_sec = sec
@@ -462,11 +451,10 @@ fn[C] compute_grid_layout(
                   let mut found = false
                   while prim < max_prim {
                     if region_is_free(occ, sec, prim, row_span, col_span) {
-                      mark_placed(
-                        placed, placed_row, placed_col, placed_row_span, placed_col_span,
-                        occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
-                        negative_cols, explicit_row_count, explicit_col_count, i,
-                        sec, prim, row_span, col_span,
+                      mark_grid_item_placed(
+                        grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                        negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                        i, sec, prim, row_span, col_span,
                       )
                       if !dense {
                         cursor_sec = sec
@@ -518,11 +506,10 @@ fn[C] compute_grid_layout(
                     r0 + row_span - 1,
                   )
                   if region_is_free(occ, r0, sec, row_span, col_span) {
-                    mark_placed(
-                      placed, placed_row, placed_col, placed_row_span, placed_col_span,
-                      occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
-                      negative_cols, explicit_row_count, explicit_col_count, i, r0,
-                      sec, row_span, col_span,
+                    mark_grid_item_placed(
+                      grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                      negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                      i, r0, sec, row_span, col_span,
                     )
                     if !dense {
                       cursor_sec = sec
@@ -564,11 +551,10 @@ fn[C] compute_grid_layout(
                   let mut found = false
                   while prim < max_prim {
                     if region_is_free(occ, prim, sec, row_span, col_span) {
-                      mark_placed(
-                        placed, placed_row, placed_col, placed_row_span, placed_col_span,
-                        occ, row_tracks, col_tracks, auto_rows, auto_cols, negative_rows,
-                        negative_cols, explicit_row_count, explicit_col_count, i,
-                        prim, sec, row_span, col_span,
+                      mark_grid_item_placed(
+                        grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                        negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                        i, prim, sec, row_span, col_span,
                       )
                       if !dense {
                         cursor_sec = sec
@@ -599,6 +585,11 @@ fn[C] compute_grid_layout(
       }
     }
   }
+  let placed = grid_items_placed(grid_items)
+  let placed_row = grid_items_row(grid_items)
+  let placed_col = grid_items_column(grid_items)
+  let placed_row_span = grid_items_row_span(grid_items)
+  let placed_col_span = grid_items_column_span(grid_items)
   let mut col_count = col_tracks.length()
   let mut row_count = row_tracks.length()
 
@@ -615,7 +606,7 @@ fn[C] compute_grid_layout(
   let col_item_max_needed : Array[Double] = Array::make(placement_count, 0.0)
 
   for i in 0..<placement_count {
-    if !placed[i] {
+    if !grid_items[i].placed {
       continue
     }
     let child_id = tree.children[node_id][i]
@@ -731,7 +722,7 @@ fn[C] compute_grid_layout(
 
   // Compute row contributions with the resolved column widths as a constraint.
   for i in 0..<placement_count {
-    if !placed[i] {
+    if !grid_items[i].placed {
       continue
     }
     let child_id = tree.children[node_id][i]
@@ -933,7 +924,7 @@ fn[C] compute_grid_layout(
       row_max_contrib[i] = 0.0
     }
     for i in 0..<placement_count {
-      if !placed[i] {
+      if !grid_items[i].placed {
         continue
       }
       let child_id = tree.children[node_id][i]
@@ -992,7 +983,7 @@ fn[C] compute_grid_layout(
       specified_width is Some(_),
     )
     for i in 0..<placement_count {
-      if !placed[i] {
+      if !grid_items[i].placed {
         continue
       }
       let child_id = tree.children[node_id][i]
@@ -1101,11 +1092,11 @@ fn[C] compute_grid_layout(
       used_rows = used_rows + row_gap * (row_count - 1).to_double()
     }
   }
-  tree.nodes[node_id].unrounded_layout = {
+  tree.set_unrounded_layout(node_id, {
     ..Layout::zero(),
     location: absolute_origin,
     size: Size(width=border_box_width, height=border_box_height),
-  }
+  })
 
   // Track alignment within the container's content box.
   let align_content = match node.style.align_content {
@@ -1122,7 +1113,7 @@ fn[C] compute_grid_layout(
     let mut max_row_used = 0
     let mut max_col_used = 0
     for i in 0..<placement_count {
-      if !placed[i] {
+      if !grid_items[i].placed {
         continue
       }
       let row = placed_row[i]
@@ -1325,7 +1316,7 @@ fn[C] compute_grid_layout(
   let row_baseline_after_max : Array[Double] = Array::make(row_count, 0.0)
   let item_baseline_offsets : Array[Double] = Array::make(placement_count, 0.0)
   for i in 0..<placement_count {
-    if !placed[i] {
+    if !grid_items[i].placed {
       continue
     }
     let child_id = tree.children[node_id][i]
@@ -1485,7 +1476,7 @@ fn[C] compute_grid_layout(
     match child.style.display {
       DisplayNone => compute_hidden_layout(tree, child_id, Point::zero())
       _ => {
-        if !placed[i] {
+        if !grid_items[i].placed {
           continue
         } else {
           ()

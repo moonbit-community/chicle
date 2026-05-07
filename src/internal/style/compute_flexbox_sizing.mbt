@@ -63,7 +63,7 @@ fn[C] resolve_flex_auto_min_main(
     Point::zero(),
   )
   tree.nodes[child_id].style = original_style
-  tree.nodes[child_id].unrounded_layout = original_layout
+  tree.set_unrounded_layout(child_id, original_layout)
   let mut clamped = min_content_main
   match main_from_size {
     Some(v) => clamped = min_double(clamped, v)

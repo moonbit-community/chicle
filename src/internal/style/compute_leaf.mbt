@@ -266,7 +266,7 @@ fn[C] compute_leaf_layout(
       }
     None => ()
   }
-  tree.nodes[node_id].unrounded_layout = {
+  tree.set_unrounded_layout(node_id, {
     ..Layout::zero(),
     location: absolute_origin,
     size: border_box_size,
@@ -274,7 +274,7 @@ fn[C] compute_leaf_layout(
     scrollbar_size: Size(width=scrollbar_y, height=scrollbar_x),
     border: resolved_border,
     padding: resolved_padding,
-  }
+  })
   let resolved_margin = resolve_rect_width_basis(
     node.style.margin,
     available_space,

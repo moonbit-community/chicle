@@ -109,11 +109,11 @@ fn[C] compute_block_layout(
     ),
     vert_non_scroll_inset,
   )
-  tree.nodes[node_id].unrounded_layout = {
+  tree.set_unrounded_layout(node_id, {
     ..Layout::zero(),
     location: absolute_origin,
     size: Size(width=border_box_width, height=border_box_height),
-  }
+  })
 
   // Containing block for in-flow positioning: content box (padding box minus padding).
   let padding_origin = Point(
@@ -781,11 +781,11 @@ fn[C] compute_block_layout(
         )
     }
   }
-  tree.nodes[node_id].unrounded_layout = {
+  tree.set_unrounded_layout(node_id, {
     ..Layout::zero(),
     location: absolute_origin,
     size: Size(width=final_border_box_width, height=final_border_box_height),
-  }
+  })
 
   compute_block_absolute_children(
     view, abs_child_ids, abs_child_static_y, padding_origin, padding, border, final_border_box_width,

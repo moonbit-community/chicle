@@ -23,11 +23,11 @@ fn[C] compute_hidden_layout(
     None => raise InvalidNodeId(node_id)
   }
   tree.nodes[node_id].cache.clear()
-  tree.nodes[node_id].unrounded_layout = {
+  tree.set_unrounded_layout(node_id, {
     ..Layout::zero(),
     location: absolute_origin,
     size: Size::zero(),
-  }
+  })
   tree.nodes[node_id].effective_margin_top = 0.0
   tree.nodes[node_id].effective_margin_bottom = 0.0
   tree.nodes[node_id].effective_margin_top_max_pos = 0.0
@@ -51,11 +51,11 @@ fn[C] offset_subtree(
     None => raise InvalidNodeId(node_id)
   }
   let layout = node.unrounded_layout
-  tree.nodes[node_id].unrounded_layout = {
+  tree.set_unrounded_layout(node_id, {
     ..Layout::zero(),
     location: { x: layout.location.x + dx, y: layout.location.y + dy },
     size: layout.size,
-  }
+  })
   for child_id in tree.children[node_id] {
     offset_subtree(tree, child_id, dx, dy)
   }

@@ -17,7 +17,9 @@ MoonBit directories are package boundaries. A direct copy of Rust's nested modul
 - Rust `Layout` stores order, location, size, content size, scrollbar size, border, and padding. MoonBit exposes the same `Layout` field shape; fields not yet computed by an algorithm are zero-initialized.
 - Rust exposes `LayoutInput`, `LayoutOutput`, `RunMode`, `SizingMode`, and `RequestedAxis` as low-level compute contract types. MoonBit exposes the same shapes and routes compute-size probes through `LayoutInput`.
 - Internal compute dispatch now returns `LayoutOutput` through the cached/uncached path, matching Rust taffy's `compute_cached_layout` result flow. Root execution, recursive child execution, stack-safety trampoline, and rounding now live in `compute_mod.mbt`; tree query code only validates high-level `TaffyTree` API calls and constructs `TaffyView`. Recursive child execution is routed through `TaffyView::perform_child_layout`, `TaffyView::compute_child_layout`, and `TaffyView::measure_child_size`, mirroring Rust taffy's `LayoutPartialTreeExt` boundary instead of exposing loose package-level wrapper functions.
+- Layout algorithms now write computed layouts through a single internal store boundary (`TaffyTree::set_unrounded_layout` / `TaffyTree::set_final_layout`) instead of assigning directly to node storage from each algorithm body.
 - Grid architecture now keeps Rust taffy's explicit-grid, implicit-grid, and track-count boundaries as separate internal files. `compute_grid_mod.mbt` no longer owns the explicit/implicit track-count estimation and track construction logic directly.
+- Grid auto-placement now uses `GridItem` placement records as the mutable placement source of truth before deriving track-sizing arrays, matching Rust taffy's grid item staging model more closely than the previous scattered parallel placement arrays.
 - Rust splits sizing types into `Dimension`, `LengthPercentage`, `LengthPercentageAuto`, `MinTrackSizingFunction`, and `MaxTrackSizingFunction`. MoonBit exposes those public type shapes and conversion helpers into the established `Dimension` representation used by the current grid layout implementation.
 - Rust exposes feature-gated ecosystem APIs such as print/debug helpers, serde integration, and custom tree traits. MoonBit focuses on the layout engine, style model, tree mutation/query APIs, and basic JSON conversion.
 - Rust uses `f32`; MoonBit uses `Double`. Upstream tests pass, but extreme floating-point boundary cases may not be bit-for-bit identical.
@@ -53,6 +55,7 @@ MoonBit directories are package boundaries. A direct copy of Rust's nested modul
 | `src/compute/grid/track_sizing.rs` | `compute_grid_track_sizing.mbt` |
 | `src/compute/grid/types/coordinates.rs` | `compute_grid_types_coordinates.mbt` |
 | `src/compute/grid/types/cell_occupancy.rs` | `compute_grid_types_cell_occupancy.mbt` |
+| `src/compute/grid/types/grid_item.rs` | `compute_grid_types_grid_item.mbt` |
 | `src/compute/grid/types/grid_track.rs` | `compute_grid_types_grid_track.mbt` |
 | `src/compute/grid/types/grid_track_counts.rs` | `compute_grid_types_grid_track_counts.mbt` |
 | `src/util/math.rs` | `util_math.mbt` |

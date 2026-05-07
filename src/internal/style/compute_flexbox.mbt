@@ -508,11 +508,11 @@ fn[C] compute_flexbox_layout(
     node.style.max_size.height,
     available_space.height,
   )
-  tree.nodes[node_id].unrounded_layout = {
+  tree.set_unrounded_layout(node_id, {
     ..Layout::zero(),
     location: absolute_origin,
     size: Size(width=border_box_width, height=border_box_height),
-  }
+  })
   let mut content_width = max_double(border_box_width - horiz_inset, 0.0)
   let mut content_height = max_double(border_box_height - vert_inset, 0.0)
 
@@ -686,11 +686,11 @@ fn[C] compute_flexbox_layout(
         )
         content_height = max_double(border_box_height - vert_inset, 0.0)
       }
-      tree.nodes[node_id].unrounded_layout = {
+      tree.set_unrounded_layout(node_id, {
         ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
-      }
+      })
       container_main = if is_col { content_height } else { content_width }
       container_cross = if is_col { content_width } else { content_height }
     }
@@ -1148,11 +1148,11 @@ fn[C] compute_flexbox_layout(
           content_width = max_double(border_box_width - horiz_inset, 0.0)
           container_main = content_width
         }
-        tree.nodes[node_id].unrounded_layout = {
+        tree.set_unrounded_layout(node_id, {
           ..Layout::zero(),
           location: absolute_origin,
           size: Size(width=border_box_width, height=border_box_height),
-        }
+        })
       }
     }
 
@@ -1716,11 +1716,11 @@ fn[C] compute_flexbox_layout(
         )
         content_height = max_double(border_box_height - vert_inset, 0.0)
       }
-      tree.nodes[node_id].unrounded_layout = {
+      tree.set_unrounded_layout(node_id, {
         ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
-      }
+      })
     }
   }
 
@@ -1854,11 +1854,11 @@ fn[C] compute_flexbox_layout(
       resized = true
     }
     if resized {
-      tree.nodes[node_id].unrounded_layout = {
+      tree.set_unrounded_layout(node_id, {
         ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
-      }
+      })
       if force_basisless_leaf_main {
         let child_available_for_final = Size(
           width=AvailDefinite(content_width),
@@ -1992,11 +1992,11 @@ fn[C] compute_flexbox_layout(
       content_width = max_double(border_box_width - horiz_inset, 0.0)
       container_main = content_width
     }
-    tree.nodes[node_id].unrounded_layout = {
+    tree.set_unrounded_layout(node_id, {
       ..Layout::zero(),
       location: absolute_origin,
       size: Size(width=border_box_width, height=border_box_height),
-    }
+    })
     if cross_is_auto_container {
       let mut needed_cross = 0.0
       for i in 0..<flow_count {
@@ -2035,11 +2035,11 @@ fn[C] compute_flexbox_layout(
         content_height = max_double(border_box_height - vert_inset, 0.0)
         container_cross = content_height
       }
-      tree.nodes[node_id].unrounded_layout = {
+      tree.set_unrounded_layout(node_id, {
         ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
-      }
+      })
     }
   }
 

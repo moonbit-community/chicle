@@ -776,155 +776,22 @@ fn[C] compute_grid_layout_with_measure(
     col_max_contrib,
     specified_width is Some(_),
   )
-  let mut has_percent_col = false
-  let mut has_flex_col = false
-  let mut has_intrinsic_col = false
-  let mut has_spanning_col_item = false
-  for i in 0..<placement_count {
-    if placed[i] && placed_col_span[i] > 1 {
-      has_spanning_col_item = true
-      break
-    }
-  }
-  for t in col_tracks {
-    if col_min_sizing_kind(t) != 0 {
-      has_intrinsic_col = true
-    }
-    match t {
-      DimPercent(_) => has_percent_col = true
-      DimFr(_) => has_flex_col = true
-      DimMinMax(_, max_d) =>
-        match max_d {
-          DimFr(_) => has_flex_col = true
-          _ => ()
-        }
-      _ => ()
-    }
-  }
-  if specified_width is None &&
-    available_space.width is AvailMaxContent &&
-    has_spanning_col_item &&
-    has_flex_col &&
-    has_percent_col {
-    let mut flex_space = 0.0
-    for i in 0..<placement_count {
-      if placed[i] && placed_col_span[i] > 1 {
-        let start = placed_col[i]
-        let end = start + placed_col_span[i]
-        let mut crosses_flex = false
-        for j in start..<end {
-          if fr_track_weight(col_tracks[j]) > 0.0 {
-            crosses_flex = true
-            break
-          }
-        }
-        if crosses_flex && col_item_max_needed[i] > flex_space {
-          flex_space = col_item_max_needed[i]
-        }
+  if specified_width is None && available_space.width is AvailMaxContent {
+    match
+      compute_max_content_spanning_track_sizes(
+        col_tracks, placed_col, placed_col_span, col_item_min_needed, col_item_min_content_needed,
+        col_item_max_needed, placed,
+      ) {
+      Some(result) => {
+        col_sizes = result.0
+        col_available = result.1
+        col_available_base = col_available
+        let basis_with_gaps = result.1 + col_gap * (col_count - 1).to_double()
+        col_min_basis = basis_with_gaps
+        col_max_basis = basis_with_gaps
       }
+      None => ()
     }
-    if flex_space > 0.0 {
-      col_sizes = Array::make(col_count, 0.0)
-      let mut fixed_used = 0.0
-      let mut fr_sum = 0.0
-      for i in 0..<col_count {
-        match col_tracks[i] {
-          DimLength(v) => {
-            col_sizes[i] = v
-            fixed_used = fixed_used + v
-          }
-          DimPercent(p) => {
-            let v = flex_space * p
-            col_sizes[i] = v
-            fixed_used = fixed_used + v
-          }
-          DimMinMax(min_d, max_d) =>
-            match max_d {
-              DimFr(w) => {
-                let weight = if w > 0.0 { w } else { 0.0 }
-                fr_sum = fr_sum + weight
-                match min_d {
-                  DimLength(v) => col_sizes[i] = v
-                  _ => ()
-                }
-              }
-              _ =>
-                match track_definite_len(col_tracks[i]) {
-                  Some(v) => {
-                    col_sizes[i] = v
-                    fixed_used = fixed_used + v
-                  }
-                  None => ()
-                }
-            }
-          DimFr(w) => {
-            let weight = if w > 0.0 { w } else { 0.0 }
-            fr_sum = fr_sum + weight
-          }
-          _ => ()
-        }
-      }
-      let remaining = max_double(flex_space - fixed_used, 0.0)
-      if fr_sum > 0.0 {
-        for i in 0..<col_count {
-          let w = fr_track_weight(col_tracks[i])
-          if w > 0.0 {
-            col_sizes[i] = max_double(col_sizes[i], remaining * w / fr_sum)
-          }
-        }
-      }
-      col_available = flex_space
-      col_available_base = col_available
-      col_min_basis = flex_space
-      col_max_basis = flex_space
-    }
-  }
-  if specified_width is None &&
-    available_space.width is AvailMaxContent &&
-    has_spanning_col_item &&
-    has_intrinsic_col &&
-    !has_flex_col {
-    let bases1 = compute_intrinsic_bases_max_content(
-      col_tracks,
-      placed_col,
-      placed_col_span,
-      col_item_min_needed,
-      col_item_min_content_needed,
-      col_item_max_needed,
-      placed,
-      None,
-    )
-    let mut basis1 = 0.0
-    for v in bases1 {
-      basis1 = basis1 + v
-    }
-    if has_percent_col {
-      // Match taffy 0.5 behavior: when sizing under a max-content constraint, percentage tracks
-      // initially resolve to 0, then are re-resolved against the computed content width and the
-      // intrinsic sizing pass is rerun once.
-      let bases2 = compute_intrinsic_bases_max_content(
-        col_tracks,
-        placed_col,
-        placed_col_span,
-        col_item_min_needed,
-        col_item_min_content_needed,
-        col_item_max_needed,
-        placed,
-        Some(basis1),
-      )
-      col_sizes = bases2
-      basis1 = 0.0
-      for v in col_sizes {
-        basis1 = basis1 + v
-      }
-    } else {
-      col_sizes = bases1
-    }
-    col_available = basis1
-    col_available_base = col_available
-    let basis_with_gaps = basis1 + col_gap * (col_count - 1).to_double()
-    col_min_basis = basis_with_gaps
-    col_max_basis = basis_with_gaps
   }
   let default_justify_items_for_contrib = match node.style.justify_items {
     Some(v) => v

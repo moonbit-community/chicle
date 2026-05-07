@@ -390,7 +390,361 @@ fn col_min_sizing_kind(track : Dimension) -> Int {
 }
 
 ///|
-fn compute_intrinsic_bases_max_content(
+priv struct GridTrackState {
+  dimension : Dimension
+  mut base_size : Double
+  mut base_size_planned_increase : Double
+  mut item_incurred_increase : Double
+}
+
+///|
+fn grid_track_base_state(
+  dimension : Dimension,
+  percent_basis : Double?,
+) -> GridTrackState {
+  let mut base_size = 0.0
+  match dimension {
+    DimLength(v) => base_size = v
+    DimPercent(p) =>
+      match percent_basis {
+        Some(b) => base_size = b * p
+        None => base_size = 0.0
+      }
+    DimMinMax(min_d, _) =>
+      match min_d {
+        DimLength(v) => base_size = v
+        DimPercent(p) =>
+          match percent_basis {
+            Some(b) => base_size = b * p
+            None => ()
+          }
+        _ => ()
+      }
+    _ => ()
+  }
+  GridTrackState::{
+    dimension,
+    base_size,
+    base_size_planned_increase: 0.0,
+    item_incurred_increase: 0.0,
+  }
+}
+
+///|
+fn track_max_is_min_content(track : Dimension) -> Bool {
+  match track {
+    DimMinContent => true
+    DimMinMax(_, max_d) => max_d is DimMinContent
+    _ => false
+  }
+}
+
+///|
+fn track_has_intrinsic_min(track : Dimension, percent_basis : Double?) -> Bool {
+  match track {
+    DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
+    DimPercent(_) => percent_basis is None
+    DimMinMax(min_d, _) =>
+      match min_d {
+        DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
+        DimPercent(_) => percent_basis is None
+        _ => false
+      }
+    _ => false
+  }
+}
+
+///|
+fn track_has_intrinsic_max(track : Dimension, percent_basis : Double?) -> Bool {
+  match track {
+    DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
+    DimPercent(_) => percent_basis is None
+    DimFr(_) => true
+    DimMinMax(_, max_d) =>
+      match max_d {
+        DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
+        DimPercent(_) => percent_basis is None
+        DimFr(_) => true
+        _ => false
+      }
+    _ => false
+  }
+}
+
+///|
+fn track_has_max_content_or_fit_max(track : Dimension) -> Bool {
+  match track {
+    DimMaxContent | DimFitContent(_) => true
+    DimMinMax(_, max_d) =>
+      match max_d {
+        DimMaxContent | DimFitContent(_) => true
+        _ => false
+      }
+    _ => false
+  }
+}
+
+///|
+fn track_fit_content_limit(
+  track : Dimension,
+  percent_basis : Double?,
+  inf : Double,
+) -> Double {
+  let limit = match track {
+    DimFitContent(limit) => Some(limit)
+    DimMinMax(_, DimFitContent(limit)) => Some(limit)
+    _ => None
+  }
+  match limit {
+    Some(DimPercent(p)) =>
+      match percent_basis {
+        Some(b) => b * p
+        None => inf
+      }
+    Some(d) => resolve_track_dimension(d, 0.0)
+    None => inf
+  }
+}
+
+///|
+fn track_uses_percentage(track : Dimension) -> Bool {
+  match track {
+    DimPercent(_) => true
+    DimFitContent(DimPercent(_)) => true
+    DimMinMax(min_d, max_d) =>
+      match (min_d, max_d) {
+        (DimPercent(_), _) => true
+        (_, DimPercent(_)) => true
+        (_, DimFitContent(DimPercent(_))) => true
+        _ => false
+      }
+    _ => false
+  }
+}
+
+///|
+fn track_flex_weight(track : Dimension) -> Double {
+  match track {
+    DimFr(w) => if w > 0.0 { w } else { 0.0 }
+    DimMinMax(_, DimFr(w)) => if w > 0.0 { w } else { 0.0 }
+    _ => 0.0
+  }
+}
+
+///|
+fn track_has_flexible_max(track : Dimension) -> Bool {
+  track_flex_weight(track) > 0.0
+}
+
+///|
+fn compute_spanned_max_track_size(
+  tracks : Array[Dimension],
+  starts : Array[Int],
+  spans : Array[Int],
+  max_needed : Array[Double],
+  placed : Array[Bool],
+) -> Double {
+  let mut space = 0.0
+  for i in 0..<placed.length() {
+    if placed[i] && spans[i] > 1 {
+      let start = starts[i]
+      let end = start + spans[i]
+      let mut crosses_flex = false
+      for j in start..<end {
+        if track_has_flexible_max(tracks[j]) {
+          crosses_flex = true
+          break
+        }
+      }
+      if crosses_flex && max_needed[i] > space {
+        space = max_needed[i]
+      }
+    }
+  }
+  space
+}
+
+///|
+fn distribute_track_space_up_to_limits(
+  states : Array[GridTrackState],
+  start : Int,
+  span : Int,
+  space : Double,
+  should_affect : (GridTrackState) -> Bool,
+  limit_of : (GridTrackState) -> Double,
+  eps : Double,
+  inf : Double,
+) -> Double {
+  let mut remaining = space
+  while remaining > eps {
+    let mut growable = 0
+    for j in start..<(start + span) {
+      if should_affect(states[j]) &&
+        states[j].base_size + states[j].item_incurred_increase <
+        limit_of(states[j]) - eps {
+        growable = growable + 1
+      }
+    }
+    if growable == 0 {
+      return remaining
+    }
+    let mut min_room = inf
+    for j in start..<(start + span) {
+      if should_affect(states[j]) &&
+        states[j].base_size + states[j].item_incurred_increase <
+        limit_of(states[j]) - eps {
+        let room = limit_of(states[j]) -
+          states[j].base_size -
+          states[j].item_incurred_increase
+        if room < min_room {
+          min_room = room
+        }
+      }
+    }
+    let share = min_double(min_room, remaining / growable.to_double())
+    if share <= 0.0 {
+      return remaining
+    }
+    for j in start..<(start + span) {
+      if should_affect(states[j]) &&
+        states[j].base_size + states[j].item_incurred_increase <
+        limit_of(states[j]) - eps {
+        states[j].item_incurred_increase = states[j].item_incurred_increase +
+          share
+        remaining = remaining - share
+      }
+    }
+  }
+  remaining
+}
+
+///|
+fn distribute_item_space_to_base_size(
+  states : Array[GridTrackState],
+  start : Int,
+  span : Int,
+  space : Double,
+  should_affect : (GridTrackState) -> Bool,
+  limit_of : (GridTrackState) -> Double,
+  contribution_is_maximum : Bool,
+  percent_basis : Double?,
+  eps : Double,
+  inf : Double,
+) -> Unit {
+  if space <= 0.0 || span <= 0 {
+    return
+  }
+  let mut used = 0.0
+  for j in start..<(start + span) {
+    used = used + states[j].base_size
+  }
+  let extra = space - used
+  if extra <= 0.0 {
+    return
+  }
+  let mut has_affected = false
+  for j in start..<(start + span) {
+    if should_affect(states[j]) {
+      has_affected = true
+      break
+    }
+  }
+  if !has_affected {
+    return
+  }
+  for j in start..<(start + span) {
+    states[j].item_incurred_increase = 0.0
+  }
+  let remaining = distribute_track_space_up_to_limits(
+    states, start, span, extra, should_affect, limit_of, eps, inf,
+  )
+  if remaining > eps {
+    let mut matching_affected = false
+    for j in start..<(start + span) {
+      let dimension = states[j].dimension
+      let matches_beyond = if contribution_is_maximum {
+        track_has_max_content_or_fit_max(dimension) ||
+        col_min_sizing_kind(dimension) == 2
+      } else {
+        track_has_intrinsic_max(dimension, percent_basis)
+      }
+      if should_affect(states[j]) && matches_beyond {
+        matching_affected = true
+        break
+      }
+    }
+    let beyond_filter = fn(state : GridTrackState) -> Bool {
+      if matching_affected {
+        if contribution_is_maximum {
+          track_has_max_content_or_fit_max(state.dimension) ||
+          col_min_sizing_kind(state.dimension) == 2
+        } else {
+          track_has_intrinsic_max(state.dimension, percent_basis)
+        }
+      } else {
+        true
+      }
+    }
+    ignore(
+      distribute_track_space_up_to_limits(
+        states, start, span, remaining, beyond_filter, limit_of, eps, inf,
+      ),
+    )
+  }
+  for j in start..<(start + span) {
+    if states[j].item_incurred_increase > states[j].base_size_planned_increase {
+      states[j].base_size_planned_increase = states[j].item_incurred_increase
+    }
+    states[j].item_incurred_increase = 0.0
+  }
+}
+
+///|
+fn flush_track_base_size_increases(states : Array[GridTrackState]) -> Unit {
+  for state in states {
+    state.base_size = state.base_size + state.base_size_planned_increase
+    state.base_size_planned_increase = 0.0
+  }
+}
+
+///|
+fn apply_definite_max_floor(
+  states : Array[GridTrackState],
+  percent_basis : Double?,
+) -> Unit {
+  for state in states {
+    match state.dimension {
+      DimMinMax(_, max_d) =>
+        match max_d {
+          DimLength(v) => if v > state.base_size { state.base_size = v }
+          DimPercent(p) =>
+            match percent_basis {
+              Some(basis) => {
+                let v = basis * p
+                if v > state.base_size {
+                  state.base_size = v
+                }
+              }
+              None => ()
+            }
+          _ => ()
+        }
+      _ => ()
+    }
+  }
+}
+
+///|
+fn grid_track_base_sizes(states : Array[GridTrackState]) -> Array[Double] {
+  let sizes : Array[Double] = []
+  for state in states {
+    sizes.push(state.base_size)
+  }
+  sizes
+}
+
+///|
+fn compute_intrinsic_base_sizes_max_content(
   tracks : Array[Dimension],
   col_start : Array[Int],
   col_span : Array[Int],
@@ -403,223 +757,9 @@ fn compute_intrinsic_bases_max_content(
   let count = tracks.length()
   let inf = 1.0e30
   let eps = 0.000001
-  let bases : Array[Double] = Array::make(count, 0.0)
-  let planned : Array[Double] = Array::make(count, 0.0)
+  let states : Array[GridTrackState] = []
   for i in 0..<count {
-    match tracks[i] {
-      DimLength(v) => bases[i] = v
-      DimPercent(p) =>
-        match percent_basis {
-          Some(b) => bases[i] = b * p
-          None => bases[i] = 0.0
-        }
-      DimMinMax(min_d, _max_d) =>
-        match min_d {
-          DimLength(a) => bases[i] = a
-          DimPercent(p) =>
-            match percent_basis {
-              Some(b) => bases[i] = b * p
-              None => ()
-            }
-          _ => ()
-        }
-      _ => ()
-    }
-  }
-
-  fn is_intrinsic_min(track : Dimension) -> Bool {
-    match track {
-      DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
-      DimPercent(_) => percent_basis is None
-      DimMinMax(min_d, _) =>
-        match min_d {
-          DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
-          DimPercent(_) => percent_basis is None
-          _ => false
-        }
-      _ => false
-    }
-  }
-
-  fn max_is_min_content(track : Dimension) -> Bool {
-    match track {
-      DimMinContent => true
-      DimMinMax(_, max_d) => max_d is DimMinContent
-      _ => false
-    }
-  }
-
-  fn max_is_intrinsic(track : Dimension) -> Bool {
-    match track {
-      DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
-      DimPercent(_) => percent_basis is None
-      DimFr(_) => true
-      DimMinMax(_, max_d) =>
-        match max_d {
-          DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
-          DimPercent(_) => percent_basis is None
-          DimFr(_) => true
-          _ => false
-        }
-      _ => false
-    }
-  }
-
-  fn max_is_max_content_or_fit(track : Dimension) -> Bool {
-    match track {
-      DimMaxContent | DimFitContent(_) => true
-      DimMinMax(_, max_d) =>
-        match max_d {
-          DimMaxContent | DimFitContent(_) => true
-          _ => false
-        }
-      _ => false
-    }
-  }
-
-  fn fit_content_limit(track : Dimension) -> Double {
-    let limit = match track {
-      DimFitContent(limit) => Some(limit)
-      DimMinMax(_, DimFitContent(limit)) => Some(limit)
-      _ => None
-    }
-    match limit {
-      Some(DimPercent(p)) =>
-        match percent_basis {
-          Some(b) => b * p
-          None => inf
-        }
-      Some(d) => resolve_track_dimension(d, 0.0)
-      None => inf
-    }
-  }
-
-  fn distribute_up_to_limits(
-    bases : Array[Double],
-    tracks : Array[Dimension],
-    incurred : Array[Double],
-    start : Int,
-    span : Int,
-    space : Double,
-    should_affect : (Int, Dimension) -> Bool,
-    limit_of : (Dimension) -> Double,
-  ) -> Double {
-    let mut remaining = space
-    while remaining > eps {
-      let mut growable = 0
-      for j in start..<(start + span) {
-        if should_affect(j, tracks[j]) &&
-          bases[j] + incurred[j] < limit_of(tracks[j]) - eps {
-          growable = growable + 1
-        }
-      }
-      if growable == 0 {
-        return remaining
-      }
-      let mut min_room = inf
-      for j in start..<(start + span) {
-        if should_affect(j, tracks[j]) &&
-          bases[j] + incurred[j] < limit_of(tracks[j]) - eps {
-          let room = limit_of(tracks[j]) - bases[j] - incurred[j]
-          if room < min_room {
-            min_room = room
-          }
-        }
-      }
-      let share = min_double(min_room, remaining / growable.to_double())
-      if share <= 0.0 {
-        return remaining
-      }
-      for j in start..<(start + span) {
-        if should_affect(j, tracks[j]) &&
-          bases[j] + incurred[j] < limit_of(tracks[j]) - eps {
-          incurred[j] = incurred[j] + share
-          remaining = remaining - share
-        }
-      }
-    }
-    remaining
-  }
-
-  fn distribute(
-    bases : Array[Double],
-    planned : Array[Double],
-    tracks : Array[Dimension],
-    start : Int,
-    span : Int,
-    space : Double,
-    should_affect : (Int, Dimension) -> Bool,
-    limit_of : (Dimension) -> Double,
-    is_maximum : Bool,
-  ) -> Unit {
-    if space <= 0.0 || span <= 0 {
-      return
-    }
-    let mut used = 0.0
-    for j in start..<(start + span) {
-      used = used + bases[j]
-    }
-    let extra = space - used
-    if extra <= 0.0 {
-      return
-    }
-    let mut has_affected = false
-    for j in start..<(start + span) {
-      if should_affect(j, tracks[j]) {
-        has_affected = true
-        break
-      }
-    }
-    if !has_affected {
-      return
-    }
-    let incurred : Array[Double] = Array::make(bases.length(), 0.0)
-    let remaining = distribute_up_to_limits(
-      bases, tracks, incurred, start, span, extra, should_affect, limit_of,
-    )
-    if remaining > eps {
-      let mut matching_affected = false
-      for j in start..<(start + span) {
-        let matches_beyond = if is_maximum {
-          max_is_max_content_or_fit(tracks[j]) ||
-          col_min_sizing_kind(tracks[j]) == 2
-        } else {
-          max_is_intrinsic(tracks[j])
-        }
-        if should_affect(j, tracks[j]) && matches_beyond {
-          matching_affected = true
-          break
-        }
-      }
-      let beyond_filter = fn(_idx : Int, track : Dimension) -> Bool {
-        if matching_affected {
-          if is_maximum {
-            max_is_max_content_or_fit(track) || col_min_sizing_kind(track) == 2
-          } else {
-            max_is_intrinsic(track)
-          }
-        } else {
-          true
-        }
-      }
-      ignore(
-        distribute_up_to_limits(
-          bases, tracks, incurred, start, span, remaining, beyond_filter, limit_of,
-        ),
-      )
-    }
-    for j in start..<(start + span) {
-      if incurred[j] > planned[j] {
-        planned[j] = incurred[j]
-      }
-    }
-  }
-
-  fn flush() -> Unit {
-    for i in 0..<count {
-      bases[i] = bases[i] + planned[i]
-      planned[i] = 0.0
-    }
+    states.push(grid_track_base_state(tracks[i], percent_basis))
   }
 
   let mut max_span = 1
@@ -643,24 +783,29 @@ fn compute_intrinsic_bases_max_content(
         max_double(minimum_needed[i], min_content_needed[i])
       }
       let limit_of = if scroll_container {
-        fit_content_limit
+        fn(state : GridTrackState) -> Double {
+          track_fit_content_limit(state.dimension, percent_basis, inf)
+        }
       } else {
-        fn(_track : Dimension) -> Double { inf }
+        fn(_state : GridTrackState) -> Double { inf }
       }
-      distribute(
-        bases,
-        planned,
-        tracks,
+      distribute_item_space_to_base_size(
+        states,
         s,
         sp,
         min_space,
-        fn(_idx, track) { is_intrinsic_min(track) },
+        fn(state : GridTrackState) -> Bool {
+          track_has_intrinsic_min(state.dimension, percent_basis)
+        },
         limit_of,
         false,
+        percent_basis,
+        eps,
+        inf,
       )
     }
   }
-  flush()
+  flush_track_base_size_increases(states)
 
   for span in 1..<(max_span + 1) {
     for i in 0..<placed.length() {
@@ -671,27 +816,30 @@ fn compute_intrinsic_bases_max_content(
       let sp = col_span[i]
       let scroll_container = minimum_needed[i] + eps < min_content_needed[i]
       let limit_of = if scroll_container {
-        fit_content_limit
+        fn(state : GridTrackState) -> Double {
+          track_fit_content_limit(state.dimension, percent_basis, inf)
+        }
       } else {
-        fn(_track : Dimension) -> Double { inf }
+        fn(_state : GridTrackState) -> Double { inf }
       }
-      distribute(
-        bases,
-        planned,
-        tracks,
+      distribute_item_space_to_base_size(
+        states,
         s,
         sp,
         min_content_needed[i],
-        fn(_idx, track) {
-          let k = col_min_sizing_kind(track)
+        fn(state : GridTrackState) -> Bool {
+          let k = col_min_sizing_kind(state.dimension)
           k == 1 || k == 2
         },
         limit_of,
         false,
+        percent_basis,
+        eps,
+        inf,
       )
     }
   }
-  flush()
+  flush_track_base_size_increases(states)
 
   for span in 1..<(max_span + 1) {
     for i in 0..<placed.length() {
@@ -703,34 +851,37 @@ fn compute_intrinsic_bases_max_content(
       let max_space = max_needed[i]
       let mut has_max_content = false
       for j in s..<(s + sp) {
-        if col_min_sizing_kind(tracks[j]) == 2 {
+        if col_min_sizing_kind(states[j].dimension) == 2 {
           has_max_content = true
           break
         }
       }
       let affect_kind = if has_max_content { 2 } else { 3 }
       let limit_of = if has_max_content {
-        fn(_track : Dimension) -> Double { inf }
+        fn(_state : GridTrackState) -> Double { inf }
       } else {
-        fit_content_limit
+        fn(state : GridTrackState) -> Double {
+          track_fit_content_limit(state.dimension, percent_basis, inf)
+        }
       }
-      distribute(
-        bases,
-        planned,
-        tracks,
+      distribute_item_space_to_base_size(
+        states,
         s,
         sp,
         max_space,
-        fn(_idx, track) {
-          col_min_sizing_kind(track) == affect_kind &&
-          !max_is_min_content(track)
+        fn(state : GridTrackState) -> Bool {
+          col_min_sizing_kind(state.dimension) == affect_kind &&
+          !track_max_is_min_content(state.dimension)
         },
         limit_of,
         true,
+        percent_basis,
+        eps,
+        inf,
       )
     }
   }
-  flush()
+  flush_track_base_size_increases(states)
 
   for span in 1..<(max_span + 1) {
     for i in 0..<placed.length() {
@@ -739,43 +890,162 @@ fn compute_intrinsic_bases_max_content(
       }
       let s = col_start[i]
       let sp = col_span[i]
-      distribute(
-        bases,
-        planned,
-        tracks,
+      distribute_item_space_to_base_size(
+        states,
         s,
         sp,
         max_needed[i],
-        fn(_idx, track) { col_min_sizing_kind(track) == 2 },
-        fn(_track : Dimension) -> Double { inf },
+        fn(state : GridTrackState) -> Bool {
+          col_min_sizing_kind(state.dimension) == 2
+        },
+        fn(_state : GridTrackState) -> Double { inf },
         true,
+        percent_basis,
+        eps,
+        inf,
       )
     }
   }
-  flush()
+  flush_track_base_size_increases(states)
 
-  for i in 0..<count {
-    match tracks[i] {
-      DimMinMax(_, max_d) =>
+  apply_definite_max_floor(states, percent_basis)
+  grid_track_base_sizes(states)
+}
+
+///|
+fn compute_flexible_percent_max_content_track_sizes(
+  tracks : Array[Dimension],
+  col_start : Array[Int],
+  col_span : Array[Int],
+  max_needed : Array[Double],
+  placed : Array[Bool],
+) -> (Array[Double], Double)? {
+  let flex_space = compute_spanned_max_track_size(
+    tracks, col_start, col_span, max_needed, placed,
+  )
+  if flex_space <= 0.0 {
+    return None
+  }
+  let states : Array[GridTrackState] = []
+  let mut fixed_used = 0.0
+  let mut flex_sum = 0.0
+  for track in tracks {
+    let state = grid_track_base_state(track, Some(flex_space))
+    match track {
+      DimLength(v) => fixed_used = fixed_used + v
+      DimPercent(p) => fixed_used = fixed_used + flex_space * p
+      DimMinMax(min_d, max_d) =>
         match max_d {
-          DimLength(b) => if b > bases[i] { bases[i] = b }
-          DimPercent(q) =>
-            match percent_basis {
-              Some(basis) => {
-                let b = basis * q
-                if b > bases[i] {
-                  bases[i] = b
-                }
-              }
+          DimFr(w) => {
+            if w > 0.0 {
+              flex_sum = flex_sum + w
+            }
+            match min_d {
+              DimLength(v) => state.base_size = v
+              _ => ()
+            }
+          }
+          _ =>
+            match track_definite_len(track) {
+              Some(v) => fixed_used = fixed_used + v
               None => ()
             }
-          _ => ()
         }
+      DimFr(w) => if w > 0.0 { flex_sum = flex_sum + w }
       _ => ()
     }
+    states.push(state)
   }
+  let remaining = max_double(flex_space - fixed_used, 0.0)
+  if flex_sum > 0.0 {
+    for state in states {
+      let weight = track_flex_weight(state.dimension)
+      if weight > 0.0 {
+        state.base_size = max_double(
+          state.base_size,
+          remaining * weight / flex_sum,
+        )
+      }
+    }
+  }
+  Some((grid_track_base_sizes(states), flex_space))
+}
 
-  bases
+///|
+fn compute_max_content_spanning_track_sizes(
+  tracks : Array[Dimension],
+  col_start : Array[Int],
+  col_span : Array[Int],
+  minimum_needed : Array[Double],
+  min_content_needed : Array[Double],
+  max_needed : Array[Double],
+  placed : Array[Bool],
+) -> (Array[Double], Double)? {
+  let mut has_spanning_item = false
+  for i in 0..<placed.length() {
+    if placed[i] && col_span[i] > 1 {
+      has_spanning_item = true
+      break
+    }
+  }
+  if !has_spanning_item {
+    return None
+  }
+  let mut has_percent_track = false
+  let mut has_flexible_track = false
+  let mut has_intrinsic_track = false
+  for track in tracks {
+    if track_uses_percentage(track) {
+      has_percent_track = true
+    }
+    if track_has_flexible_max(track) {
+      has_flexible_track = true
+    }
+    if col_min_sizing_kind(track) != 0 {
+      has_intrinsic_track = true
+    }
+  }
+  if has_flexible_track && has_percent_track {
+    return compute_flexible_percent_max_content_track_sizes(
+      tracks, col_start, col_span, max_needed, placed,
+    )
+  }
+  if !has_intrinsic_track || has_flexible_track {
+    return None
+  }
+  let sizes1 = compute_intrinsic_base_sizes_max_content(
+    tracks,
+    col_start,
+    col_span,
+    minimum_needed,
+    min_content_needed,
+    max_needed,
+    placed,
+    None,
+  )
+  let mut basis = 0.0
+  for size in sizes1 {
+    basis = basis + size
+  }
+  if has_percent_track {
+    let sizes2 = compute_intrinsic_base_sizes_max_content(
+      tracks,
+      col_start,
+      col_span,
+      minimum_needed,
+      min_content_needed,
+      max_needed,
+      placed,
+      Some(basis),
+    )
+    basis = 0.0
+    for size in sizes2 {
+      basis = basis + size
+    }
+    Some((sizes2, basis))
+  } else {
+    Some((sizes1, basis))
+  }
 }
 
 ///|

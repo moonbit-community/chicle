@@ -540,221 +540,24 @@ fn[C] compute_grid_layout(
   let row_min_contrib : Array[Double] = Array::make(row_count, 0.0)
   let row_max_contrib : Array[Double] = Array::make(row_count, 0.0)
 
-  for i in 0..<placement_count {
-    if !grid_items[i].placed {
-      continue
-    }
-    let item = grid_items[i]
-    let child_id = item.node
-    let child_style = item.style
-    let col_span = item.column_span
-    let gap_total = col_gap * (col_span - 1).to_double()
-    let contrib_available_height = match specified_height {
-      Some(_) => AvailDefinite(content_height)
-      None =>
-        match
-          spanned_definite_len(row_tracks, item.row, item.row_span, row_gap) {
-          Some(v) => AvailDefinite(v)
-          None => AvailMaxContent
-        }
-    }
-
-    // Max-content contribution in the column axis
-    view.perform_child_layout(
-      child_id,
-      Size(width=None, height=None),
-      Size(width=AvailMaxContent, height=contrib_available_height),
-      Point::zero(),
-      false,
-    )
-    let max_sz = tree.nodes[child_id].unrounded_layout.size
-    let resolved_margin = resolve_rect_width_basis(
-      child_style.margin,
-      Size(width=AvailMaxContent, height=AvailMaxContent),
-    )
-    let max_needed = max_double(
-      max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
-      0.0,
-    )
-
-    // Min-content contribution in the column axis
-    view.perform_child_layout(
-      child_id,
-      Size(width=None, height=None),
-      Size(width=AvailMinContent, height=contrib_available_height),
-      Point::zero(),
-      false,
-    )
-    let min_col_raw = tree.nodes[child_id].unrounded_layout.size.width
-    let min_col = match (child_style.overflow.x, child_style.overflow.y) {
-      (OverflowVisible, OverflowVisible) => min_col_raw
-      _ => 0.0
-    }
-    let min_content_needed = max_double(
-      min_col_raw + resolved_margin.left + resolved_margin.right - gap_total,
-      0.0,
-    )
-    let min_needed = max_double(
-      min_col + resolved_margin.left + resolved_margin.right - gap_total,
-      0.0,
-    )
-    item.set_column_contributions(
-      minimum=min_needed,
-      min_content=min_content_needed,
-      max_content=max_needed,
-    )
-    item.apply_column_contributions(
-      col_tracks, col_min_contrib, col_max_contrib,
-    )
-  }
-
-  let mut col_min_basis = axis_min_content_basis(
-    col_tracks, col_min_contrib, col_max_contrib, col_gap,
-  )
-  let mut col_max_basis = axis_max_content_basis(
-    col_tracks, col_min_contrib, col_max_contrib, col_gap,
-  )
-  let mut col_available = match specified_width {
-    Some(_) => content_width
-    None =>
-      available_inset_or_basis(
-        available_space.width,
-        horiz_inset,
-        col_min_basis,
-        col_max_basis,
-      )
-  }
-  let mut col_available_base = col_available
-  let mut col_sizes : Array[Double] = compute_grid_track_sizes_with_contributions(
-    col_tracks,
-    col_available,
-    col_gap,
-    col_min_contrib,
-    col_max_contrib,
-    specified_width is Some(_),
-  )
-  if specified_width is None && available_space.width is AvailMaxContent {
-    match
-      compute_max_content_spanning_track_sizes_for_grid_items(
-        col_tracks, grid_items,
-      ) {
-      Some(result) => {
-        col_sizes = result.0
-        col_available = result.1
-        col_available_base = col_available
-        let basis_with_gaps = result.1 + col_gap * (col_count - 1).to_double()
-        col_min_basis = basis_with_gaps
-        col_max_basis = basis_with_gaps
-      }
-      None => ()
-    }
-  }
   let default_justify_items_for_contrib = match node.style.justify_items {
     Some(v) => v
     None => ItemsStretch
   }
-
-  // Compute row contributions with the resolved column widths as a constraint.
-  for i in 0..<placement_count {
-    if !grid_items[i].placed {
-      continue
-    }
-    let item = grid_items[i]
-    let child_id = item.node
-    let child_style = item.style
-    let mut col_w = 0.0
-    for j in item.column..<(item.column + item.column_span) {
-      col_w = col_w + col_sizes[j]
-    }
-    if item.column_span > 1 {
-      col_w = col_w + col_gap * (item.column_span - 1).to_double()
-    }
-    let row_gap_total = row_gap * (item.row_span - 1).to_double()
-    let resolved_margin = resolve_rect_width_basis(
-      child_style.margin,
-      Size(width=AvailDefinite(col_w), height=AvailMaxContent),
-    )
-    let margin_left_auto = child_style.margin.left is DimAuto
-    let margin_right_auto = child_style.margin.right is DimAuto
-    let has_auto_margin_x = margin_left_auto || margin_right_auto
-    let justify = match child_style.justify_self {
-      Some(v) => v
-      None => default_justify_items_for_contrib
-    }
-    let available_w_for_item = max_double(
-      col_w - resolved_margin.left - resolved_margin.right,
-      0.0,
-    )
-    let mut known_w_for_contrib = resolve_optional_dimension(
-      child_style.size.width,
-      AvailDefinite(col_w),
-    )
-    if known_w_for_contrib is None &&
-      child_style.size.width is DimAuto &&
-      justify is ItemsStretch &&
-      !has_auto_margin_x {
-      known_w_for_contrib = Some(available_w_for_item)
-    }
-
-    // Max-content contribution in the row axis under the column width constraint.
-    view.perform_child_layout(
-      child_id,
-      Size(width=known_w_for_contrib, height=None),
-      Size(width=AvailDefinite(col_w), height=AvailMaxContent),
-      Point::zero(),
-      false,
-    )
-    let max_h = tree.nodes[child_id].unrounded_layout.size.height
-    let max_needed = max_double(
-      max_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
-      0.0,
-    )
-
-    // Min-content contribution in the row axis under the column width constraint.
-    view.perform_child_layout(
-      child_id,
-      Size(width=known_w_for_contrib, height=None),
-      Size(width=AvailDefinite(col_w), height=AvailMinContent),
-      Point::zero(),
-      false,
-    )
-    let min_h_raw = tree.nodes[child_id].unrounded_layout.size.height
-    let min_h = match (child_style.overflow.x, child_style.overflow.y) {
-      (OverflowVisible, OverflowVisible) => min_h_raw
-      _ => 0.0
-    }
-    let min_needed = max_double(
-      min_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
-      0.0,
-    )
-    item.set_row_contributions(minimum=min_needed, max_content=max_needed)
-    item.apply_row_contributions(row_min_contrib, row_max_contrib)
-  }
-  let row_min_basis = axis_min_content_basis(
-    row_tracks, row_min_contrib, row_max_contrib, row_gap,
+  let initial_sizing = compute_initial_grid_track_sizing(
+    view, grid_items, placement_count, col_tracks, row_tracks, col_min_contrib, col_max_contrib,
+    row_min_contrib, row_max_contrib, col_gap, row_gap, content_width, content_height,
+    available_space, horiz_inset, vert_inset, specified_width, specified_height,
+    default_justify_items_for_contrib,
   )
-  let row_max_basis = axis_max_content_basis(
-    row_tracks, row_min_contrib, row_max_contrib, row_gap,
-  )
-  let row_available = match specified_height {
-    Some(_) => content_height
-    None =>
-      available_inset_or_basis(
-        available_space.height,
-        vert_inset,
-        row_min_basis,
-        row_max_basis,
-      )
-  }
-  let row_available_base = row_available
-  let mut row_sizes : Array[Double] = compute_grid_track_sizes_with_contributions(
-    row_tracks,
-    row_available,
-    row_gap,
-    row_min_contrib,
-    row_max_contrib,
-    specified_height is Some(_),
-  )
+  let mut col_sizes = initial_sizing.0
+  let mut row_sizes = initial_sizing.1
+  let col_min_basis = initial_sizing.2
+  let col_max_basis = initial_sizing.3
+  let col_available_base = initial_sizing.4
+  let row_min_basis = initial_sizing.5
+  let row_max_basis = initial_sizing.6
+  let row_available_base = initial_sizing.7
   let mut used_cols = grid_axis_used_size(col_sizes, col_gap)
   let mut used_rows = grid_axis_used_size(row_sizes, row_gap)
 

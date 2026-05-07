@@ -106,7 +106,7 @@ fn resolve_deferred_grid_percent_gaps(
 }
 
 ///|
-fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
+fn[C] compute_grid_column_track_contributions(
   view : TaffyView[C],
   grid_items : Array[GridItem],
   placement_count : Int,
@@ -114,32 +114,13 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
   row_tracks : Array[Dimension],
   col_min_contrib : Array[Double],
   col_max_contrib : Array[Double],
-  row_min_contrib : Array[Double],
-  row_max_contrib : Array[Double],
-  col_available_base : Double,
-  row_available_base : Double,
   col_gap : Double,
   row_gap : Double,
   content_height : Double,
-  specified_width : Double?,
   specified_height : Double?,
-  default_justify_items_for_contrib : AlignItems,
-) -> (Array[Double], Array[Double], Double, Double) raise TaffyError {
+  use_row_track_constraints : Bool,
+) -> Unit raise TaffyError {
   let tree = view.tree
-  let col_count = col_tracks.length()
-  let row_count = row_tracks.length()
-  let rerun_col_contrib_available_height = match specified_height {
-    Some(_) => AvailDefinite(content_height)
-    None => AvailMaxContent
-  }
-  for i in 0..<col_count {
-    col_min_contrib[i] = 0.0
-    col_max_contrib[i] = 0.0
-  }
-  for i in 0..<row_count {
-    row_min_contrib[i] = 0.0
-    row_max_contrib[i] = 0.0
-  }
   for i in 0..<placement_count {
     if !grid_items[i].placed {
       continue
@@ -148,10 +129,23 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
     let child_id = item.node
     let child_style = item.style
     let gap_total = col_gap * (item.column_span - 1).to_double()
+    let contrib_available_height = match specified_height {
+      Some(_) => AvailDefinite(content_height)
+      None =>
+        if use_row_track_constraints {
+          match
+            spanned_definite_len(row_tracks, item.row, item.row_span, row_gap) {
+            Some(size) => AvailDefinite(size)
+            None => AvailMaxContent
+          }
+        } else {
+          AvailMaxContent
+        }
+    }
     view.perform_child_layout(
       child_id,
       Size(width=None, height=None),
-      Size(width=AvailMaxContent, height=rerun_col_contrib_available_height),
+      Size(width=AvailMaxContent, height=contrib_available_height),
       Point::zero(),
       false,
     )
@@ -167,7 +161,7 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
     view.perform_child_layout(
       child_id,
       Size(width=None, height=None),
-      Size(width=AvailMinContent, height=rerun_col_contrib_available_height),
+      Size(width=AvailMinContent, height=contrib_available_height),
       Point::zero(),
       false,
     )
@@ -176,7 +170,7 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
       (OverflowVisible, OverflowVisible) => min_col_raw
       _ => 0.0
     }
-    let column_min_content_needed = max_double(
+    let min_content_needed = max_double(
       min_col_raw + resolved_margin.left + resolved_margin.right - gap_total,
       0.0,
     )
@@ -186,21 +180,28 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
     )
     item.set_column_contributions(
       minimum=min_needed,
-      min_content=column_min_content_needed,
+      min_content=min_content_needed,
       max_content=max_needed,
     )
     item.apply_column_contributions(
       col_tracks, col_min_contrib, col_max_contrib,
     )
   }
-  let col_sizes = compute_grid_track_sizes_with_contributions(
-    col_tracks,
-    col_available_base,
-    col_gap,
-    col_min_contrib,
-    col_max_contrib,
-    specified_width is Some(_),
-  )
+}
+
+///|
+fn[C] compute_grid_row_track_contributions(
+  view : TaffyView[C],
+  grid_items : Array[GridItem],
+  placement_count : Int,
+  col_sizes : Array[Double],
+  row_min_contrib : Array[Double],
+  row_max_contrib : Array[Double],
+  col_gap : Double,
+  row_gap : Double,
+  default_justify_items_for_contrib : AlignItems,
+) -> Unit raise TaffyError {
+  let tree = view.tree
   for i in 0..<placement_count {
     if !grid_items[i].placed {
       continue
@@ -272,6 +273,175 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
     item.set_row_contributions(minimum=min_needed, max_content=max_needed)
     item.apply_row_contributions(row_min_contrib, row_max_contrib)
   }
+}
+
+///|
+fn reset_grid_track_contributions(
+  col_min_contrib : Array[Double],
+  col_max_contrib : Array[Double],
+  row_min_contrib : Array[Double],
+  row_max_contrib : Array[Double],
+) -> Unit {
+  for i in 0..<col_min_contrib.length() {
+    col_min_contrib[i] = 0.0
+    col_max_contrib[i] = 0.0
+  }
+  for i in 0..<row_min_contrib.length() {
+    row_min_contrib[i] = 0.0
+    row_max_contrib[i] = 0.0
+  }
+}
+
+///|
+fn[C] compute_initial_grid_track_sizing(
+  view : TaffyView[C],
+  grid_items : Array[GridItem],
+  placement_count : Int,
+  col_tracks : Array[Dimension],
+  row_tracks : Array[Dimension],
+  col_min_contrib : Array[Double],
+  col_max_contrib : Array[Double],
+  row_min_contrib : Array[Double],
+  row_max_contrib : Array[Double],
+  col_gap : Double,
+  row_gap : Double,
+  content_width : Double,
+  content_height : Double,
+  available_space : Size[AvailableSpace],
+  horiz_inset : Double,
+  vert_inset : Double,
+  specified_width : Double?,
+  specified_height : Double?,
+  default_justify_items_for_contrib : AlignItems,
+) -> (
+  Array[Double],
+  Array[Double],
+  Double,
+  Double,
+  Double,
+  Double,
+  Double,
+  Double,
+) raise TaffyError {
+  compute_grid_column_track_contributions(
+    view, grid_items, placement_count, col_tracks, row_tracks, col_min_contrib, col_max_contrib,
+    col_gap, row_gap, content_height, specified_height, true,
+  )
+  let mut col_min_basis = axis_min_content_basis(
+    col_tracks, col_min_contrib, col_max_contrib, col_gap,
+  )
+  let mut col_max_basis = axis_max_content_basis(
+    col_tracks, col_min_contrib, col_max_contrib, col_gap,
+  )
+  let mut col_available = match specified_width {
+    Some(_) => content_width
+    None =>
+      available_inset_or_basis(
+        available_space.width,
+        horiz_inset,
+        col_min_basis,
+        col_max_basis,
+      )
+  }
+  let mut col_available_base = col_available
+  let mut col_sizes = compute_grid_track_sizes_with_contributions(
+    col_tracks,
+    col_available,
+    col_gap,
+    col_min_contrib,
+    col_max_contrib,
+    specified_width is Some(_),
+  )
+  if specified_width is None && available_space.width is AvailMaxContent {
+    match
+      compute_max_content_spanning_track_sizes_for_grid_items(
+        col_tracks, grid_items,
+      ) {
+      Some(result) => {
+        col_sizes = result.0
+        col_available = result.1
+        col_available_base = col_available
+        let basis_with_gaps = result.1 +
+          col_gap * (col_tracks.length() - 1).to_double()
+        col_min_basis = basis_with_gaps
+        col_max_basis = basis_with_gaps
+      }
+      None => ()
+    }
+  }
+  compute_grid_row_track_contributions(
+    view, grid_items, placement_count, col_sizes, row_min_contrib, row_max_contrib,
+    col_gap, row_gap, default_justify_items_for_contrib,
+  )
+  let row_min_basis = axis_min_content_basis(
+    row_tracks, row_min_contrib, row_max_contrib, row_gap,
+  )
+  let row_max_basis = axis_max_content_basis(
+    row_tracks, row_min_contrib, row_max_contrib, row_gap,
+  )
+  let row_available_base = match specified_height {
+    Some(_) => content_height
+    None =>
+      available_inset_or_basis(
+        available_space.height,
+        vert_inset,
+        row_min_basis,
+        row_max_basis,
+      )
+  }
+  let row_sizes = compute_grid_track_sizes_with_contributions(
+    row_tracks,
+    row_available_base,
+    row_gap,
+    row_min_contrib,
+    row_max_contrib,
+    specified_height is Some(_),
+  )
+  (
+    col_sizes, row_sizes, col_min_basis, col_max_basis, col_available_base, row_min_basis,
+    row_max_basis, row_available_base,
+  )
+}
+
+///|
+fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
+  view : TaffyView[C],
+  grid_items : Array[GridItem],
+  placement_count : Int,
+  col_tracks : Array[Dimension],
+  row_tracks : Array[Dimension],
+  col_min_contrib : Array[Double],
+  col_max_contrib : Array[Double],
+  row_min_contrib : Array[Double],
+  row_max_contrib : Array[Double],
+  col_available_base : Double,
+  row_available_base : Double,
+  col_gap : Double,
+  row_gap : Double,
+  content_height : Double,
+  specified_width : Double?,
+  specified_height : Double?,
+  default_justify_items_for_contrib : AlignItems,
+) -> (Array[Double], Array[Double], Double, Double) raise TaffyError {
+  reset_grid_track_contributions(
+    col_min_contrib, col_max_contrib, row_min_contrib, row_max_contrib,
+  )
+  compute_grid_column_track_contributions(
+    view, grid_items, placement_count, col_tracks, row_tracks, col_min_contrib, col_max_contrib,
+    col_gap, row_gap, content_height, specified_height, false,
+  )
+  let col_sizes = compute_grid_track_sizes_with_contributions(
+    col_tracks,
+    col_available_base,
+    col_gap,
+    col_min_contrib,
+    col_max_contrib,
+    specified_width is Some(_),
+  )
+  compute_grid_row_track_contributions(
+    view, grid_items, placement_count, col_sizes, row_min_contrib, row_max_contrib,
+    col_gap, row_gap, default_justify_items_for_contrib,
+  )
   let row_sizes = compute_grid_track_sizes_with_contributions(
     row_tracks,
     row_available_base,

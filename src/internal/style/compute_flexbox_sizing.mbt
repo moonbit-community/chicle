@@ -50,21 +50,22 @@ fn[C] resolve_flex_auto_min_main(
   } else {
     Size(width=AvailMinContent, height=parent_available_for_children.height)
   }
-  compute_node_layout_with_measure(
+  let min_content_main = measure_child_size_with_measure(
     tree,
     child_id,
     Size(width=None, height=None),
+    Size(width=None, height=None),
     min_content_space,
+    ContentSize,
+    if is_col {
+      Vertical
+    } else {
+      Horizontal
+    },
+    Line(start=false, end=false),
     Point::zero(),
     measure_function,
-    false,
   )
-  let min_layout = tree.layout(child_id)
-  let min_content_main = if is_col {
-    min_layout.size.height
-  } else {
-    min_layout.size.width
-  }
   tree.nodes[child_id].style = original_style
   tree.nodes[child_id].layout = original_layout
   let mut clamped = min_content_main

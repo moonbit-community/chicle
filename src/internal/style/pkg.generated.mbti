@@ -54,7 +54,11 @@ pub fn display_grid() -> Display
 
 pub fn display_none() -> Display
 
+pub fn evenly_sized_tracks(Int) -> Array[Dimension]
+
 pub fn fit_content(Dimension) -> Dimension
+
+pub fn flex(Double) -> Dimension
 
 pub fn flex_direction_column() -> FlexDirection
 
@@ -147,6 +151,8 @@ pub fn repeat_auto_fit() -> GridTrackRepetition
 pub fn repeat_count(Int) -> GridTrackRepetition
 
 pub fn span(Int) -> GridPlacement
+
+pub fn zero() -> Dimension
 
 // Errors
 type TaffyError

@@ -23,8 +23,18 @@ pub fn percent(value : Double) -> Dimension {
 }
 
 ///|
+pub fn zero() -> Dimension {
+  DimLength(0.0)
+}
+
+///|
 pub fn auto() -> Dimension {
   DimAuto
+}
+
+///|
+pub fn flex(value : Double) -> Dimension {
+  DimFr(value)
 }
 
 ///|
@@ -73,6 +83,11 @@ pub fn repeat(
   tracks : Array[Dimension],
 ) -> Dimension {
   DimRepeat(repetition, tracks)
+}
+
+///|
+pub fn evenly_sized_tracks(count : Int) -> Array[Dimension] {
+  Array::make(count, DimFr(1.0))
 }
 
 ///|

@@ -22,6 +22,7 @@ MoonBit directories are package boundaries. A direct copy of Rust's nested modul
 | Rust upstream path | MoonBit internal file |
 | --- | --- |
 | `src/geometry.rs` | `geometry.mbt` |
+| `src/prelude.rs` | folded into root package exports; a literal `prelude` package conflicts with MoonBit core prelude aliasing |
 | `src/style/mod.rs` | `style_mod.mbt` |
 | `src/style/alignment.rs` | `style_alignment.mbt` |
 | `src/style/dimension.rs` | `style_dimension.mbt` |

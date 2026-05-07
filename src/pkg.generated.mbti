@@ -54,7 +54,11 @@ pub fn display_grid() -> @style.Display
 
 pub fn display_none() -> @style.Display
 
+pub fn evenly_sized_tracks(Int) -> Array[@style.Dimension]
+
 pub fn fit_content(@style.Dimension) -> @style.Dimension
+
+pub fn flex(Double) -> @style.Dimension
 
 pub fn flex_direction_column() -> @style.FlexDirection
 
@@ -63,6 +67,8 @@ pub fn flex_direction_column_reverse() -> @style.FlexDirection
 pub fn flex_direction_row() -> @style.FlexDirection
 
 pub fn flex_direction_row_reverse() -> @style.FlexDirection
+
+pub fn flex_wrap_no_wrap() -> @style.FlexWrap
 
 pub fn flex_wrap_wrap() -> @style.FlexWrap
 
@@ -73,6 +79,8 @@ pub fn fr(Double) -> @style.Dimension
 pub fn grid_auto_flow_column() -> @style.GridAutoFlow
 
 pub fn grid_auto_flow_column_dense() -> @style.GridAutoFlow
+
+pub fn grid_auto_flow_row() -> @style.GridAutoFlow
 
 pub fn grid_auto_flow_row_dense() -> @style.GridAutoFlow
 
@@ -112,7 +120,11 @@ pub fn line(Int) -> @style.GridPlacement
 
 pub fn max_content() -> @style.AvailableSpace
 
+pub fn min_content() -> @style.AvailableSpace
+
 pub fn minmax(@style.Dimension, @style.Dimension) -> @style.Dimension
+
+pub fn overflow_clip() -> @style.Overflow
 
 pub fn overflow_hidden() -> @style.Overflow
 
@@ -137,6 +149,8 @@ pub fn repeat_auto_fit() -> @style.GridTrackRepetition
 pub fn repeat_count(Int) -> @style.GridTrackRepetition
 
 pub fn span(Int) -> @style.GridPlacement
+
+pub fn zero() -> @style.Dimension
 
 // Errors
 

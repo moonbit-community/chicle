@@ -554,12 +554,6 @@ fn[C] compute_grid_layout(
   let row_min_contrib : Array[Double] = Array::make(row_count, 0.0)
   let row_max_contrib : Array[Double] = Array::make(row_count, 0.0)
 
-  let col_item_min_needed : Array[Double] = Array::make(placement_count, 0.0)
-  let col_item_min_content_needed : Array[Double] = Array::make(
-    placement_count, 0.0,
-  )
-  let col_item_max_needed : Array[Double] = Array::make(placement_count, 0.0)
-
   for i in 0..<placement_count {
     if !grid_items[i].placed {
       continue
@@ -598,7 +592,6 @@ fn[C] compute_grid_layout(
       max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
       0.0,
     )
-    col_item_max_needed[i] = max_needed
     apply_col_contribution(col_tracks, c, col_span, max_needed, col_max_contrib)
 
     // Min-content contribution in the column axis
@@ -614,7 +607,7 @@ fn[C] compute_grid_layout(
       (OverflowVisible, OverflowVisible) => min_col_raw
       _ => 0.0
     }
-    col_item_min_content_needed[i] = max_double(
+    let min_content_needed = max_double(
       min_col_raw + resolved_margin.left + resolved_margin.right - gap_total,
       0.0,
     )
@@ -622,7 +615,11 @@ fn[C] compute_grid_layout(
       min_col + resolved_margin.left + resolved_margin.right - gap_total,
       0.0,
     )
-    col_item_min_needed[i] = min_needed
+    item.set_column_contributions(
+      minimum=min_needed,
+      min_content=min_content_needed,
+      max_content=max_needed,
+    )
     apply_col_contribution(col_tracks, c, col_span, min_needed, col_min_contrib)
   }
 
@@ -652,6 +649,13 @@ fn[C] compute_grid_layout(
     specified_width is Some(_),
   )
   if specified_width is None && available_space.width is AvailMaxContent {
+    let col_item_min_needed = grid_items_column_minimum_contribution(grid_items)
+    let col_item_min_content_needed = grid_items_column_min_content_contribution(
+      grid_items,
+    )
+    let col_item_max_needed = grid_items_column_max_content_contribution(
+      grid_items,
+    )
     match
       compute_max_content_spanning_track_sizes(
         col_tracks, placed_col, placed_col_span, col_item_min_needed, col_item_min_content_needed,
@@ -900,6 +904,7 @@ fn[C] compute_grid_layout(
         max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
         0.0,
       )
+      let mut column_min_content_needed = 0.0
       apply_col_contribution(
         col_tracks, c, col_span, max_needed, col_max_contrib,
       )
@@ -915,9 +920,18 @@ fn[C] compute_grid_layout(
         (OverflowVisible, OverflowVisible) => min_col_raw
         _ => 0.0
       }
+      column_min_content_needed = max_double(
+        min_col_raw + resolved_margin.left + resolved_margin.right - gap_total,
+        0.0,
+      )
       let min_needed = max_double(
         min_col + resolved_margin.left + resolved_margin.right - gap_total,
         0.0,
+      )
+      item.set_column_contributions(
+        minimum=min_needed,
+        min_content=column_min_content_needed,
+        max_content=max_needed,
       )
       apply_col_contribution(
         col_tracks, c, col_span, min_needed, col_min_contrib,
@@ -1009,6 +1023,7 @@ fn[C] compute_grid_layout(
         min_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
         0.0,
       )
+      item.set_row_contributions(minimum=min_needed, max_content=max_needed)
       let min_share = min_needed / row_span.to_double()
       for j in r..<(r + row_span) {
         if min_share > row_min_contrib[j] {
@@ -1391,6 +1406,7 @@ fn[C] compute_grid_layout(
     )
     let baseline = grid_item_baseline_offset_y(tree, child_id)
     let intrinsic = tree.nodes[child_id].unrounded_layout.size
+    item.set_baseline(baseline~)
     item_baseline_offsets[i] = baseline
     let before = resolved_margin.top + baseline
     let after = resolved_margin.bottom +

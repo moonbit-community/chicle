@@ -22,6 +22,13 @@ priv struct GridItem {
   mut column : Int
   mut row_span : Int
   mut column_span : Int
+  mut column_minimum_contribution : Double
+  mut column_min_content_contribution : Double
+  mut column_max_content_contribution : Double
+  mut row_minimum_contribution : Double
+  mut row_max_content_contribution : Double
+  mut baseline : Double
+  baseline_shim : Double
 }
 
 ///|
@@ -39,6 +46,13 @@ fn GridItem::GridItem(
     column: 0,
     row_span: 1,
     column_span: 1,
+    column_minimum_contribution: 0.0,
+    column_min_content_contribution: 0.0,
+    column_max_content_contribution: 0.0,
+    row_minimum_contribution: 0.0,
+    row_max_content_contribution: 0.0,
+    baseline: 0.0,
+    baseline_shim: 0.0,
   }
 }
 
@@ -96,11 +110,75 @@ fn GridItem::placement_indexes_and_spans(
 }
 
 ///|
+fn GridItem::set_column_contributions(
+  self : GridItem,
+  minimum~ : Double,
+  min_content~ : Double,
+  max_content~ : Double,
+) -> Unit {
+  self.column_minimum_contribution = minimum
+  self.column_min_content_contribution = min_content
+  self.column_max_content_contribution = max_content
+}
+
+///|
+fn GridItem::set_row_contributions(
+  self : GridItem,
+  minimum~ : Double,
+  max_content~ : Double,
+) -> Unit {
+  self.row_minimum_contribution = minimum
+  self.row_max_content_contribution = max_content
+}
+
+///|
+fn GridItem::set_baseline(self : GridItem, baseline~ : Double) -> Unit {
+  self.baseline = baseline
+}
+
+///|
 fn grid_items_placed(items : Array[GridItem]) -> Array[Bool] {
   let values : Array[Bool] = []
   for item in items {
     ignore(item.source_order)
     values.push(item.placed)
+  }
+  values
+}
+
+///|
+fn grid_items_column_minimum_contribution(
+  items : Array[GridItem],
+) -> Array[Double] {
+  let values : Array[Double] = []
+  for item in items {
+    values.push(item.column_minimum_contribution)
+  }
+  values
+}
+
+///|
+fn grid_items_column_min_content_contribution(
+  items : Array[GridItem],
+) -> Array[Double] {
+  let values : Array[Double] = []
+  for item in items {
+    values.push(item.column_min_content_contribution)
+  }
+  values
+}
+
+///|
+fn grid_items_column_max_content_contribution(
+  items : Array[GridItem],
+) -> Array[Double] {
+  let values : Array[Double] = []
+  for item in items {
+    ignore(item.row_minimum_contribution)
+    ignore(item.row_max_content_contribution)
+    ignore(item.baseline)
+    ignore(item.baseline_shim)
+    values.push(item.column_max_content_contribution)
   }
   values
 }

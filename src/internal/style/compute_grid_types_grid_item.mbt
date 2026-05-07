@@ -28,7 +28,9 @@ priv struct GridItem {
   mut row_minimum_contribution : Double
   mut row_max_content_contribution : Double
   mut baseline : Double
-  baseline_shim : Double
+  mut baseline_shim : Double
+  mut y_position : Double
+  mut height : Double
 }
 
 ///|
@@ -53,6 +55,8 @@ fn GridItem::GridItem(
     row_max_content_contribution: 0.0,
     baseline: 0.0,
     baseline_shim: 0.0,
+    y_position: 0.0,
+    height: 0.0,
   }
 }
 
@@ -137,6 +141,147 @@ fn GridItem::set_baseline(self : GridItem, baseline~ : Double) -> Unit {
 }
 
 ///|
+fn GridItem::set_baseline_shim(
+  self : GridItem,
+  row_baseline_before_max : Array[Double],
+  resolved_margin : Rect[Double],
+) -> Unit {
+  self.baseline_shim = self.baseline_alignment_offset(
+    row_baseline_before_max, resolved_margin,
+  )
+}
+
+///|
+fn GridItem::set_final_area(
+  self : GridItem,
+  y_position~ : Double,
+  height~ : Double,
+) -> Unit {
+  self.y_position = y_position
+  self.height = height
+}
+
+///|
+fn grid_items_first_row_baseline(items : Array[GridItem]) -> Double? {
+  let mut first_row = -1
+  for item in items {
+    if item.placed && item.is_relative_grid_child() {
+      if first_row == -1 || item.row < first_row {
+        first_row = item.row
+      }
+    }
+  }
+  if first_row == -1 {
+    return None
+  }
+  let mut chosen : GridItem? = None
+  for item in items {
+    if item.placed && item.is_relative_grid_child() && item.row == first_row {
+      match chosen {
+        None => chosen = Some(item)
+        Some(existing) =>
+          if item.style.align_self is Some(ItemsBaseline) &&
+            !(existing.style.align_self is Some(ItemsBaseline)) {
+            chosen = Some(item)
+          }
+      }
+    }
+  }
+  match chosen {
+    Some(item) => {
+      let baseline = if item.baseline > 0.0 {
+        item.baseline
+      } else {
+        item.height
+      }
+      Some(item.y_position + baseline)
+    }
+    None => None
+  }
+}
+
+///|
+fn GridItem::is_in_bounds(
+  self : GridItem,
+  row_count : Int,
+  col_count : Int,
+) -> Bool {
+  if !self.placed {
+    false
+  } else {
+    let row_end = self.row + self.row_span - 1
+    let col_end = self.column + self.column_span - 1
+    self.row >= 0 &&
+    self.column >= 0 &&
+    row_end < row_count &&
+    col_end < col_count
+  }
+}
+
+///|
+fn GridItem::is_relative_grid_child(self : GridItem) -> Bool {
+  !(self.style.display is DisplayNone) && self.style.position is PosRelative
+}
+
+///|
+fn GridItem::baseline_alignment_offset(
+  self : GridItem,
+  row_baseline_before_max : Array[Double],
+  resolved_margin : Rect[Double],
+) -> Double {
+  if self.row_span == 1 {
+    if self.baseline_shim == 0.0 {
+      row_baseline_before_max[self.row] - resolved_margin.top - self.baseline
+    } else {
+      self.baseline_shim
+    }
+  } else {
+    0.0
+  }
+}
+
+///|
+fn GridItem::apply_column_contributions(
+  self : GridItem,
+  col_tracks : Array[Dimension],
+  col_min_contrib : Array[Double],
+  col_max_contrib : Array[Double],
+) -> Unit {
+  apply_col_contribution(
+    col_tracks,
+    self.column,
+    self.column_span,
+    self.column_minimum_contribution,
+    col_min_contrib,
+  )
+  apply_col_contribution(
+    col_tracks,
+    self.column,
+    self.column_span,
+    self.column_max_content_contribution,
+    col_max_contrib,
+  )
+}
+
+///|
+fn GridItem::apply_row_contributions(
+  self : GridItem,
+  row_min_contrib : Array[Double],
+  row_max_contrib : Array[Double],
+) -> Unit {
+  let min_share = self.row_minimum_contribution / self.row_span.to_double()
+  let max_share = self.row_max_content_contribution / self.row_span.to_double()
+  for j in self.row..<(self.row + self.row_span) {
+    if min_share > row_min_contrib[j] {
+      row_min_contrib[j] = min_share
+    }
+    if max_share > row_max_contrib[j] {
+      row_max_contrib[j] = max_share
+    }
+  }
+}
+
+///|
 fn grid_items_placed(items : Array[GridItem]) -> Array[Bool] {
   let values : Array[Bool] = []
   for item in items {
@@ -174,10 +319,6 @@ fn grid_items_column_max_content_contribution(
 ) -> Array[Double] {
   let values : Array[Double] = []
   for item in items {
-    ignore(item.row_minimum_contribution)
-    ignore(item.row_max_content_contribution)
-    ignore(item.baseline)
-    ignore(item.baseline_shim)
     values.push(item.column_max_content_contribution)
   }
   values

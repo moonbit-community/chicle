@@ -561,7 +561,6 @@ fn[C] compute_grid_layout(
     let item = grid_items[i]
     let child_id = item.node
     let child_style = item.style
-    let c = placed_col[i]
     let col_span = placed_col_span[i]
     let r = placed_row[i]
     let row_span = placed_row_span[i]
@@ -592,7 +591,6 @@ fn[C] compute_grid_layout(
       max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
       0.0,
     )
-    apply_col_contribution(col_tracks, c, col_span, max_needed, col_max_contrib)
 
     // Min-content contribution in the column axis
     view.perform_child_layout(
@@ -620,7 +618,9 @@ fn[C] compute_grid_layout(
       min_content=min_content_needed,
       max_content=max_needed,
     )
-    apply_col_contribution(col_tracks, c, col_span, min_needed, col_min_contrib)
+    item.apply_column_contributions(
+      col_tracks, col_min_contrib, col_max_contrib,
+    )
   }
 
   let mut col_min_basis = axis_min_content_basis(
@@ -687,7 +687,6 @@ fn[C] compute_grid_layout(
     let child_style = item.style
     let c = placed_col[i]
     let col_span = placed_col_span[i]
-    let r = placed_row[i]
     let row_span = placed_row_span[i]
     let mut col_w = 0.0
     for j in c..<(c + col_span) {
@@ -736,12 +735,6 @@ fn[C] compute_grid_layout(
       max_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
       0.0,
     )
-    let max_share = max_needed / row_span.to_double()
-    for j in r..<(r + row_span) {
-      if max_share > row_max_contrib[j] {
-        row_max_contrib[j] = max_share
-      }
-    }
 
     // Min-content contribution in the row axis under the column width constraint.
     view.perform_child_layout(
@@ -760,12 +753,8 @@ fn[C] compute_grid_layout(
       min_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
       0.0,
     )
-    let min_share = min_needed / row_span.to_double()
-    for j in r..<(r + row_span) {
-      if min_share > row_min_contrib[j] {
-        row_min_contrib[j] = min_share
-      }
-    }
+    item.set_row_contributions(minimum=min_needed, max_content=max_needed)
+    item.apply_row_contributions(row_min_contrib, row_max_contrib)
   }
   let row_min_basis = axis_min_content_basis(
     row_tracks, row_min_contrib, row_max_contrib, row_gap,
@@ -885,7 +874,6 @@ fn[C] compute_grid_layout(
       let item = grid_items[i]
       let child_id = item.node
       let child_style = item.style
-      let c = placed_col[i]
       let col_span = placed_col_span[i]
       let gap_total = col_gap * (col_span - 1).to_double()
       view.perform_child_layout(
@@ -904,10 +892,6 @@ fn[C] compute_grid_layout(
         max_sz.width + resolved_margin.left + resolved_margin.right - gap_total,
         0.0,
       )
-      let mut column_min_content_needed = 0.0
-      apply_col_contribution(
-        col_tracks, c, col_span, max_needed, col_max_contrib,
-      )
       view.perform_child_layout(
         child_id,
         Size(width=None, height=None),
@@ -920,7 +904,7 @@ fn[C] compute_grid_layout(
         (OverflowVisible, OverflowVisible) => min_col_raw
         _ => 0.0
       }
-      column_min_content_needed = max_double(
+      let column_min_content_needed = max_double(
         min_col_raw + resolved_margin.left + resolved_margin.right - gap_total,
         0.0,
       )
@@ -933,8 +917,8 @@ fn[C] compute_grid_layout(
         min_content=column_min_content_needed,
         max_content=max_needed,
       )
-      apply_col_contribution(
-        col_tracks, c, col_span, min_needed, col_min_contrib,
+      item.apply_column_contributions(
+        col_tracks, col_min_contrib, col_max_contrib,
       )
     }
     col_sizes = compute_grid_track_sizes_with_contributions(
@@ -954,7 +938,6 @@ fn[C] compute_grid_layout(
       let child_style = item.style
       let c = placed_col[i]
       let col_span = placed_col_span[i]
-      let r = placed_row[i]
       let row_span = placed_row_span[i]
       let mut col_w = 0.0
       for j in c..<(c + col_span) {
@@ -1001,12 +984,6 @@ fn[C] compute_grid_layout(
         max_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
         0.0,
       )
-      let max_share = max_needed / row_span.to_double()
-      for j in r..<(r + row_span) {
-        if max_share > row_max_contrib[j] {
-          row_max_contrib[j] = max_share
-        }
-      }
       view.perform_child_layout(
         child_id,
         Size(width=known_w_for_contrib, height=None),
@@ -1024,12 +1001,7 @@ fn[C] compute_grid_layout(
         0.0,
       )
       item.set_row_contributions(minimum=min_needed, max_content=max_needed)
-      let min_share = min_needed / row_span.to_double()
-      for j in r..<(r + row_span) {
-        if min_share > row_min_contrib[j] {
-          row_min_contrib[j] = min_share
-        }
-      }
+      item.apply_row_contributions(row_min_contrib, row_max_contrib)
     }
     row_sizes = compute_grid_track_sizes_with_contributions(
       row_tracks,
@@ -1276,31 +1248,18 @@ fn[C] compute_grid_layout(
   }
   let row_baseline_before_max : Array[Double] = Array::make(row_count, 0.0)
   let row_baseline_after_max : Array[Double] = Array::make(row_count, 0.0)
-  let item_baseline_offsets : Array[Double] = Array::make(placement_count, 0.0)
   for i in 0..<placement_count {
-    if !grid_items[i].placed {
+    let item = grid_items[i]
+    if !item.is_relative_grid_child() ||
+      !item.is_in_bounds(row_count, col_count) {
       continue
     }
-    let item = grid_items[i]
     let child_id = item.node
     let child_style = item.style
-    match child_style.display {
-      DisplayNone => continue
-      _ => ()
-    }
-    match child_style.position {
-      PosAbsolute => continue
-      PosRelative => ()
-    }
     let row = placed_row[i]
     let col = placed_col[i]
     let row_span = placed_row_span[i]
     let col_span = placed_col_span[i]
-    let row_end = row + row_span - 1
-    let col_end = col + col_span - 1
-    if row < 0 || col < 0 || row_end >= row_count || col_end >= col_count {
-      continue
-    }
     let align = match child_style.align_self {
       Some(v) => v
       None => default_align_items
@@ -1312,20 +1271,11 @@ fn[C] compute_grid_layout(
       ItemsBaseline => ()
       _ => continue
     }
-    let mut cell_w = 0.0
-    for c in col..<(col + col_span) {
-      cell_w = cell_w + col_sizes[c]
-    }
-    if col_span > 1 {
-      cell_w = cell_w + col_gap_effective * (col_span - 1).to_double()
-    }
-    let mut cell_h = 0.0
-    for r in row..<(row + row_span) {
-      cell_h = cell_h + row_sizes[r]
-    }
-    if row_span > 1 {
-      cell_h = cell_h + row_gap_effective * (row_span - 1).to_double()
-    }
+    let grid_area_size = item.grid_area_size(
+      col_sizes, row_sizes, col_gap_effective, row_gap_effective,
+    )
+    let cell_w = grid_area_size.width
+    let cell_h = grid_area_size.height
     let child_available = Size(
       width=AvailDefinite(cell_w),
       height=AvailDefinite(cell_h),
@@ -1407,7 +1357,6 @@ fn[C] compute_grid_layout(
     let baseline = grid_item_baseline_offset_y(tree, child_id)
     let intrinsic = tree.nodes[child_id].unrounded_layout.size
     item.set_baseline(baseline~)
-    item_baseline_offsets[i] = baseline
     let before = resolved_margin.top + baseline
     let after = resolved_margin.bottom +
       max_double(intrinsic.height - baseline, 0.0)
@@ -1435,7 +1384,7 @@ fn[C] compute_grid_layout(
     match child_style.display {
       DisplayNone => compute_hidden_layout(tree, child_id, Point::zero())
       _ => {
-        if !grid_items[i].placed {
+        if !item.is_in_bounds(row_count, col_count) {
           continue
         } else {
           ()
@@ -1444,37 +1393,16 @@ fn[C] compute_grid_layout(
           PosAbsolute => continue
           PosRelative => ()
         }
-        let row = placed_row[i]
         let col = placed_col[i]
-        let row_span = placed_row_span[i]
         let col_span = placed_col_span[i]
-        let row_end = row + row_span - 1
-        let col_end = col + col_span - 1
-        if row < 0 || col < 0 || row_end >= row_count || col_end >= col_count {
-          continue
-        }
-        let mut x = start_x
-        for c in 0..<col {
-          x = x + col_sizes[c] + col_gap_effective
-        }
-        let mut y = start_y
-        for r in 0..<row {
-          y = y + row_sizes[r] + row_gap_effective
-        }
-        let mut cell_w = 0.0
-        for c in col..<(col + col_span) {
-          cell_w = cell_w + col_sizes[c]
-        }
-        if col_span > 1 {
-          cell_w = cell_w + col_gap_effective * (col_span - 1).to_double()
-        }
-        let mut cell_h = 0.0
-        for r in row..<(row + row_span) {
-          cell_h = cell_h + row_sizes[r]
-        }
-        if row_span > 1 {
-          cell_h = cell_h + row_gap_effective * (row_span - 1).to_double()
-        }
+        let grid_area_origin = item.grid_area_origin(
+          col_sizes, row_sizes, col_gap_effective, row_gap_effective, start_x, start_y,
+        )
+        let grid_area_size = item.grid_area_size(
+          col_sizes, row_sizes, col_gap_effective, row_gap_effective,
+        )
+        let cell_w = grid_area_size.width
+        let cell_h = grid_area_size.height
         let child_available = Size(
           width=AvailDefinite(cell_w),
           height=AvailDefinite(cell_h),
@@ -1484,6 +1412,7 @@ fn[C] compute_grid_layout(
           child_style.margin,
           child_available,
         )
+        item.set_baseline_shim(row_baseline_before_max, resolved_margin)
         let margin_left_auto = child_style.margin.left is DimAuto
         let margin_right_auto = child_style.margin.right is DimAuto
         let margin_top_auto = child_style.margin.top is DimAuto
@@ -1653,31 +1582,34 @@ fn[C] compute_grid_layout(
             ItemsEnd | ItemsFlexEnd => available_h_for_item - intrinsic.height
             ItemsCenter => (available_h_for_item - intrinsic.height) / 2.0
             ItemsBaseline =>
-              if row_span == 1 {
-                row_baseline_before_max[row] -
-                resolved_margin.top -
-                item_baseline_offsets[i]
-              } else {
-                0.0
-              }
+              item.baseline_alignment_offset(
+                row_baseline_before_max, resolved_margin,
+              )
             _ => 0.0
           }
         }
 
         // Second pass: position the item within the cell.
+        let final_location = Point(
+          x=base_x + grid_area_origin.x + margin_left + offset_x,
+          y=base_y + grid_area_origin.y + margin_top + offset_y,
+        )
         view.perform_child_layout(
           child_id,
           Size(width=known_w, height=known_h),
           child_available,
-          Point(
-            x=base_x + x + margin_left + offset_x,
-            y=base_y + y + margin_top + offset_y,
-          ),
+          final_location,
           false,
+        )
+        let final_size = tree.nodes[child_id].unrounded_layout.size
+        item.set_final_area(
+          y_position=final_location.y,
+          height=final_size.height,
         )
       }
     }
   }
+  ignore(grid_items_first_row_baseline(grid_items))
   let padding_origin = Point(
     x=absolute_origin.x + border.left,
     y=absolute_origin.y + border.top,

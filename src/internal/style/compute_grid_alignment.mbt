@@ -13,6 +13,68 @@
 // limitations under the License.
 
 ///|
+fn grid_area_axis_origin(
+  track_sizes : Array[Double],
+  gap : Double,
+  start_offset : Double,
+  start_index : Int,
+) -> Double {
+  let mut origin = start_offset
+  for i in 0..<start_index {
+    origin = origin + track_sizes[i] + gap
+  }
+  origin
+}
+
+///|
+fn grid_area_axis_size(
+  track_sizes : Array[Double],
+  gap : Double,
+  start_index : Int,
+  span : Int,
+) -> Double {
+  let mut size = 0.0
+  for i in start_index..<(start_index + span) {
+    size = size + track_sizes[i]
+  }
+  if span > 1 {
+    size + gap * (span - 1).to_double()
+  } else {
+    size
+  }
+}
+
+///|
+fn GridItem::grid_area_origin(
+  self : GridItem,
+  col_sizes : Array[Double],
+  row_sizes : Array[Double],
+  col_gap : Double,
+  row_gap : Double,
+  start_x : Double,
+  start_y : Double,
+) -> Point[Double] {
+  Point(
+    x=grid_area_axis_origin(col_sizes, col_gap, start_x, self.column),
+    y=grid_area_axis_origin(row_sizes, row_gap, start_y, self.row),
+  )
+}
+
+///|
+fn GridItem::grid_area_size(
+  self : GridItem,
+  col_sizes : Array[Double],
+  row_sizes : Array[Double],
+  col_gap : Double,
+  row_gap : Double,
+) -> Size[Double] {
+  Size(
+    width=grid_area_axis_size(col_sizes, col_gap, self.column, self.column_span),
+    height=grid_area_axis_size(row_sizes, row_gap, self.row, self.row_span),
+  )
+}
+
+///|
 fn[C] compute_grid_absolute_children(
   view : TaffyView[C],
   children : Array[NodeId],

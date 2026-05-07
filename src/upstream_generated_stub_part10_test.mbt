@@ -73,7 +73,7 @@ test "upstream/generated/flex/absolute_child_with_cross_margin" {
         bottom=length(0.0),
       ),
     ),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node2 = taffy.new_leaf(
     Style::default()

@@ -1031,11 +1031,11 @@ test "upstream/generated/blockflex/blockflex_overflow_hidden" {
     .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
     .with_scrollbar_width(15.0)
     .with_flex_grow(1.0),
-    TextMeasure::{ text_content: "HHHH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200B}HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf_with_context(
     Style::default().with_display(display_block()).with_flex_grow(1.0),
-    TextMeasure::{ text_content: "HHHH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200B}HH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()

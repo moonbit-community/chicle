@@ -18,7 +18,7 @@ test "upstream/generated/grid/grid_aspect_ratio_child_fill_content_height" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_aspect_ratio(0.5),
-    TextMeasure::{ text_content: "HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(
     Style::default().with_size(Size(width=auto(), height=length(20.0))),
@@ -39,7 +39,7 @@ test "upstream/generated/grid/grid_aspect_ratio_child_fill_content_width" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_aspect_ratio(2.0),
-    TextMeasure::{ text_content: "HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(
     Style::default().with_size(Size(width=auto(), height=length(20.0))),
@@ -82,7 +82,7 @@ test "upstream/generated/grid/grid_aspect_ratio_fill_child_max_height" {
     Style::default()
     .with_max_size(Size(width=length(40.0), height=auto()))
     .with_aspect_ratio(2.0),
-    TextMeasure::{
+    {
       text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH\u{200B}HH\u{200B}HH",
       writing_mode: Vertical,
     },
@@ -106,7 +106,7 @@ test "upstream/generated/grid/grid_aspect_ratio_fill_child_max_width" {
     Style::default()
     .with_max_size(Size(width=auto(), height=length(20.0)))
     .with_aspect_ratio(2.0),
-    TextMeasure::{
+    {
       text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
       writing_mode: Horizontal,
     },
@@ -560,11 +560,11 @@ test "upstream/generated/grid/grid_auto_takes_precedence_over_fr" {
 test "upstream/generated/grid/grid_available_space_greater_than_max_content" {
   // Ported from taffy-reference/tests/generated/grid/grid_available_space_greater_than_max_content.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
     writing_mode: Horizontal,
   })
-  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node1 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -598,11 +598,11 @@ test "upstream/generated/grid/grid_available_space_greater_than_max_content" {
 test "upstream/generated/grid/grid_available_space_smaller_than_max_content" {
   // Ported from taffy-reference/tests/generated/grid/grid_available_space_smaller_than_max_content.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
     writing_mode: Horizontal,
   })
-  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node1 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -636,11 +636,11 @@ test "upstream/generated/grid/grid_available_space_smaller_than_max_content" {
 test "upstream/generated/grid/grid_available_space_smaller_than_min_content" {
   // Ported from taffy-reference/tests/generated/grid/grid_available_space_smaller_than_min_content.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HHHH\u{200B}HHHH",
     writing_mode: Horizontal,
   })
-  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node1 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HHHH\u{200B}HHHH",
     writing_mode: Horizontal,
   })

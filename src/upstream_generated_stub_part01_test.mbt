@@ -119,7 +119,7 @@ test "upstream/generated/block/block_absolute_aspect_ratio_fill_max_height" {
     .with_position(position_absolute())
     .with_max_size(Size(width=length(50.0), height=auto()))
     .with_aspect_ratio(3.0),
-    TextMeasure::{
+    {
       text_content: "HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH",
       writing_mode: Horizontal,
     },
@@ -150,7 +150,7 @@ test "upstream/generated/block/block_absolute_aspect_ratio_fill_max_width" {
     .with_position(position_absolute())
     .with_max_size(Size(width=auto(), height=length(50.0)))
     .with_aspect_ratio(0.5),
-    TextMeasure::{
+    {
       text_content: "HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH",
       writing_mode: Horizontal,
     },

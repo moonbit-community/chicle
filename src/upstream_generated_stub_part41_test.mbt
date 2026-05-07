@@ -16,19 +16,19 @@
 test "upstream/generated/gridflex/gridflex_row_integration" {
   // Ported from taffy-reference/tests/generated/gridflex/gridflex_row_integration.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node00 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node00 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
-  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node01 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
-  let node02 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node02 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
-  let node03 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node03 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
@@ -88,10 +88,7 @@ test "upstream/generated/leaf/leaf_overflow_scrollbars_affect_available_space_x_
     .with_overflow(Point(x=overflow_scroll(), y=overflow_visible()))
     .with_scrollbar_width(15.0)
     .with_size(Size(width=length(45.0), height=length(45.0))),
-    TextMeasure::{
-      text_content: "HHHHHHHHHHHHHHHHHHHHH",
-      writing_mode: Horizontal,
-    },
+    { text_content: "HHHHHHHHHHHHHHHHHHHHH", writing_mode: Horizontal },
   )
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
   let l_node = taffy.layout(node)
@@ -110,10 +107,7 @@ test "upstream/generated/leaf/leaf_overflow_scrollbars_affect_available_space_y_
     .with_overflow(Point(x=overflow_visible(), y=overflow_scroll()))
     .with_scrollbar_width(15.0)
     .with_size(Size(width=length(45.0), height=length(45.0))),
-    TextMeasure::{
-      text_content: "HHHHHHHHHHHHHHHHHHHHH",
-      writing_mode: Horizontal,
-    },
+    { text_content: "HHHHHHHHHHHHHHHHHHHHH", writing_mode: Horizontal },
   )
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
   let l_node = taffy.layout(node)
@@ -194,7 +188,7 @@ test "upstream/generated/leaf/leaf_overflow_scrollbars_take_up_space_both_axis" 
     Style::default()
     .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
     .with_scrollbar_width(15.0),
-    TextMeasure::{ text_content: "HH", writing_mode: Horizontal },
+    { text_content: "HH", writing_mode: Horizontal },
   )
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
   let l_node = taffy.layout(node)
@@ -212,7 +206,7 @@ test "upstream/generated/leaf/leaf_overflow_scrollbars_take_up_space_x_axis" {
     Style::default()
     .with_overflow(Point(x=overflow_scroll(), y=overflow_visible()))
     .with_scrollbar_width(15.0),
-    TextMeasure::{ text_content: "HH", writing_mode: Horizontal },
+    { text_content: "HH", writing_mode: Horizontal },
   )
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
   let l_node = taffy.layout(node)
@@ -230,7 +224,7 @@ test "upstream/generated/leaf/leaf_overflow_scrollbars_take_up_space_y_axis" {
     Style::default()
     .with_overflow(Point(x=overflow_visible(), y=overflow_scroll()))
     .with_scrollbar_width(15.0),
-    TextMeasure::{ text_content: "HH", writing_mode: Horizontal },
+    { text_content: "HH", writing_mode: Horizontal },
   )
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
   let l_node = taffy.layout(node)
@@ -349,7 +343,7 @@ test "upstream/generated/leaf/leaf_with_content_and_border" {
         bottom=length(6.0),
       ),
     ),
-    TextMeasure::{ text_content: "HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH", writing_mode: Horizontal },
   )
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
   let l_node = taffy.layout(node)
@@ -372,7 +366,7 @@ test "upstream/generated/leaf/leaf_with_content_and_padding" {
         bottom=length(6.0),
       ),
     ),
-    TextMeasure::{ text_content: "HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH", writing_mode: Horizontal },
   )
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
   let l_node = taffy.layout(node)
@@ -404,7 +398,7 @@ test "upstream/generated/leaf/leaf_with_content_and_padding_border" {
         bottom=length(5.0),
       ),
     ),
-    TextMeasure::{ text_content: "HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH", writing_mode: Horizontal },
   )
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
   let l_node = taffy.layout(node)

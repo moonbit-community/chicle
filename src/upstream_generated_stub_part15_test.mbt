@@ -844,7 +844,7 @@ test "upstream/generated/flex/aspect_ratio_flex_column_fill_max_height" {
     Style::default()
     .with_max_size(Size(width=length(40.0), height=auto()))
     .with_aspect_ratio(2.0),
-    TextMeasure::{
+    {
       text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH",
       writing_mode: Horizontal,
     },
@@ -878,7 +878,7 @@ test "upstream/generated/flex/aspect_ratio_flex_column_fill_max_width" {
     Style::default()
     .with_max_size(Size(width=auto(), height=length(20.0)))
     .with_aspect_ratio(2.0),
-    TextMeasure::{
+    {
       text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
       writing_mode: Horizontal,
     },
@@ -942,7 +942,7 @@ test "upstream/generated/flex/aspect_ratio_flex_column_fill_min_width" {
     Style::default()
     .with_min_size(Size(width=auto(), height=length(40.0)))
     .with_aspect_ratio(2.0),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -1061,7 +1061,7 @@ test "upstream/generated/flex/aspect_ratio_flex_column_stretch_fill_max_height" 
     Style::default()
     .with_max_size(Size(width=length(40.0), height=auto()))
     .with_aspect_ratio(2.0),
-    TextMeasure::{
+    {
       text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH",
       writing_mode: Horizontal,
     },

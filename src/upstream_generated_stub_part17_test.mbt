@@ -18,7 +18,7 @@ test "upstream/generated/flex/bevy_issue_9530_reduced2" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node00 = taffy.new_leaf_with_context(
     Style::default().with_flex_grow(1.0),
-    TextMeasure::{
+    {
       text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH",
       writing_mode: Horizontal,
     },
@@ -75,7 +75,7 @@ test "upstream/generated/flex/bevy_issue_9530_reduced3" {
         bottom=length(0.0),
       ),
     ),
-    TextMeasure::{
+    {
       text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH",
       writing_mode: Horizontal,
     },
@@ -112,7 +112,7 @@ test "upstream/generated/flex/bevy_issue_9530_reduced4" {
         bottom=length(20.0),
       ),
     ),
-    TextMeasure::{
+    {
       text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH",
       writing_mode: Horizontal,
     },
@@ -145,7 +145,7 @@ test "upstream/generated/flex/blitz_issue_88" {
     .with_display(display_block())
     .with_flex_grow(1.0)
     .with_flex_basis(length(0.0)),
-    TextMeasure::{
+    {
       text_content: "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH",
       writing_mode: Horizontal,
     },
@@ -485,7 +485,7 @@ test "upstream/generated/flex/content_size" {
     .with_inset(
       Rect(left=auto(), right=auto(), top=length(-10.0), bottom=auto()),
     ),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node0 = taffy.new_with_children(
     Style::default().with_size(Size(width=auto(), height=length(30.0))),

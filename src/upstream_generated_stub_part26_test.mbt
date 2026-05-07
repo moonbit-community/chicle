@@ -71,7 +71,7 @@ test "upstream/generated/flex/overflow_main_axis_shrink_hidden" {
     .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
     .with_scrollbar_width(15.0)
     .with_flex_shrink(1.0),
-    TextMeasure::{ text_content: "HHHHHHHHHH", writing_mode: Horizontal },
+    { text_content: "HHHHHHHHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
@@ -91,7 +91,7 @@ test "upstream/generated/flex/overflow_main_axis_shrink_scroll" {
     .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
     .with_scrollbar_width(15.0)
     .with_flex_shrink(1.0),
-    TextMeasure::{ text_content: "HHHHHHHHHH", writing_mode: Horizontal },
+    { text_content: "HHHHHHHHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
@@ -108,7 +108,7 @@ test "upstream/generated/flex/overflow_main_axis_shrink_visible" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_flex_shrink(1.0),
-    TextMeasure::{ text_content: "HHHHHHHHHH", writing_mode: Horizontal },
+    { text_content: "HHHHHHHHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default().with_size(Size(width=length(50.0), height=length(50.0))),

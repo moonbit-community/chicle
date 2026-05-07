@@ -18,7 +18,7 @@ test "upstream/generated/blockgrid/blockgrid_block_in_grid_auto" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_display(display_block()),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default().with_display(display_block()))
   let node = taffy.new_with_children(
@@ -51,7 +51,7 @@ test "upstream/generated/blockgrid/blockgrid_block_in_grid_fixed_fit_content_lar
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_display(display_block()),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default().with_display(display_block()))
   let node = taffy.new_with_children(
@@ -84,7 +84,7 @@ test "upstream/generated/blockgrid/blockgrid_block_in_grid_fixed_fit_content_mid
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_display(display_block()),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default().with_display(display_block()))
   let node = taffy.new_with_children(
@@ -117,7 +117,7 @@ test "upstream/generated/blockgrid/blockgrid_block_in_grid_fixed_fit_content_sma
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_display(display_block()),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default().with_display(display_block()))
   let node = taffy.new_with_children(
@@ -150,7 +150,7 @@ test "upstream/generated/blockgrid/blockgrid_block_in_grid_fixed_larger" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_display(display_block()),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default().with_display(display_block()))
   let node = taffy.new_with_children(
@@ -183,7 +183,7 @@ test "upstream/generated/blockgrid/blockgrid_block_in_grid_fixed_middle" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_display(display_block()),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default().with_display(display_block()))
   let node = taffy.new_with_children(
@@ -216,7 +216,7 @@ test "upstream/generated/blockgrid/blockgrid_block_in_grid_fixed_smaller" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_display(display_block()),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default().with_display(display_block()))
   let node = taffy.new_with_children(
@@ -249,7 +249,7 @@ test "upstream/generated/blockgrid/blockgrid_block_in_grid_fr" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_display(display_block()),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default().with_display(display_block()))
   let node = taffy.new_with_children(
@@ -282,7 +282,7 @@ test "upstream/generated/blockgrid/blockgrid_block_in_grid_max_content" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_display(display_block()),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default().with_display(display_block()))
   let node = taffy.new_with_children(
@@ -315,7 +315,7 @@ test "upstream/generated/blockgrid/blockgrid_block_in_grid_min_content" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_display(display_block()),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default().with_display(display_block()))
   let node = taffy.new_with_children(
@@ -701,7 +701,7 @@ test "upstream/generated/flex/absolute_aspect_ratio_fill_max_height" {
     .with_position(position_absolute())
     .with_max_size(Size(width=length(50.0), height=auto()))
     .with_aspect_ratio(3.0),
-    TextMeasure::{
+    {
       text_content: "HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH",
       writing_mode: Horizontal,
     },
@@ -734,7 +734,7 @@ test "upstream/generated/flex/absolute_aspect_ratio_fill_max_width" {
     .with_position(position_absolute())
     .with_max_size(Size(width=auto(), height=length(50.0)))
     .with_aspect_ratio(0.5),
-    TextMeasure::{
+    {
       text_content: "HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH\u{200B}HHHH",
       writing_mode: Horizontal,
     },

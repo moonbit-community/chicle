@@ -780,7 +780,7 @@ test "upstream/generated/block/block_margin_y_collapse_through_blocked_by_line_b
         bottom=length(10.0),
       ),
     ),
-    TextMeasure::{ text_content: "HH", writing_mode: Horizontal },
+    { text_content: "HH", writing_mode: Horizontal },
   )
   let node2 = taffy.new_leaf(
     Style::default()
@@ -853,7 +853,7 @@ test "upstream/generated/block/block_margin_y_collapse_through_blocked_by_line_b
         bottom=length(10.0),
       ),
     ),
-    TextMeasure::{ text_content: "HH", writing_mode: Horizontal },
+    { text_content: "HH", writing_mode: Horizontal },
   )
   let node2 = taffy.new_leaf(
     Style::default()
@@ -926,7 +926,7 @@ test "upstream/generated/block/block_margin_y_collapse_through_blocked_by_line_b
         bottom=length(10.0),
       ),
     ),
-    TextMeasure::{ text_content: "HH", writing_mode: Horizontal },
+    { text_content: "HH", writing_mode: Horizontal },
   )
   let node2 = taffy.new_leaf(
     Style::default()

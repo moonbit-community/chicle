@@ -111,7 +111,7 @@ fn[C] compute_block_layout_with_measure(
     ),
     vert_non_scroll_inset,
   )
-  tree.nodes[node_id].layout = Layout::{
+  tree.nodes[node_id].layout = {
     location: absolute_origin,
     size: Size(width=border_box_width, height=border_box_height),
   }
@@ -782,7 +782,7 @@ fn[C] compute_block_layout_with_measure(
         )
     }
   }
-  tree.nodes[node_id].layout = Layout::{
+  tree.nodes[node_id].layout = {
     location: absolute_origin,
     size: Size(width=final_border_box_width, height=final_border_box_height),
   }

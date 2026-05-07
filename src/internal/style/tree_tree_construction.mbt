@@ -28,7 +28,7 @@ fn[C] Node::new(
   children : Array[NodeId],
   context : C?,
 ) -> Node[C] {
-  Node::{
+  {
     style,
     children,
     parent: None,

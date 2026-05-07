@@ -13,6 +13,9 @@
 // limitations under the License.
 
 ///|
+type JsonDecodeError = @json.JsonDecodeError
+
+///|
 pub impl ToJson for Dimension with to_json(self) {
   match self {
     DimAuto => Json::string("Auto")
@@ -36,8 +39,7 @@ pub impl @json.FromJson for Dimension with from_json(json, path) {
         "Auto" => DimAuto
         "MinContent" => DimMinContent
         "MaxContent" => DimMaxContent
-        _ =>
-          raise @json.JsonDecodeError((path, "Dimension: unsupported string"))
+        _ => raise JsonDecodeError((path, "Dimension: unsupported string"))
       }
     Object(obj) =>
       match obj.get("Length") {
@@ -76,19 +78,19 @@ pub impl @json.FromJson for Dimension with from_json(json, path) {
                                       ),
                                     )
                                   } else {
-                                    raise @json.JsonDecodeError(
+                                    raise JsonDecodeError(
                                       (
                                         path, "Dimension: MinMax expects 2 values",
                                       ),
                                     )
                                   }
                                 _ =>
-                                  raise @json.JsonDecodeError(
+                                  raise JsonDecodeError(
                                     (path, "Dimension: MinMax expects array"),
                                   )
                               }
                             None =>
-                              raise @json.JsonDecodeError(
+                              raise JsonDecodeError(
                                 (path, "Dimension: unsupported object"),
                               )
                           }
@@ -97,7 +99,7 @@ pub impl @json.FromJson for Dimension with from_json(json, path) {
               }
           }
       }
-    _ => raise @json.JsonDecodeError((path, "Dimension: unsupported json"))
+    _ => raise JsonDecodeError((path, "Dimension: unsupported json"))
   }
 }
 
@@ -116,10 +118,7 @@ pub impl @json.FromJson for GridPlacement with from_json(json, path) {
     String(s) =>
       match s {
         "Auto" => PlaceAuto
-        _ =>
-          raise @json.JsonDecodeError(
-            (path, "GridPlacement: unsupported string"),
-          )
+        _ => raise JsonDecodeError((path, "GridPlacement: unsupported string"))
       }
     Object(obj) =>
       match obj.get("Line") {
@@ -128,12 +127,10 @@ pub impl @json.FromJson for GridPlacement with from_json(json, path) {
           match obj.get("Span") {
             Some(v) => PlaceSpan(@json.from_json(v, path=path.add_key("Span")))
             None =>
-              raise @json.JsonDecodeError(
-                (path, "GridPlacement: unsupported object"),
-              )
+              raise JsonDecodeError((path, "GridPlacement: unsupported object"))
           }
       }
-    _ => raise @json.JsonDecodeError((path, "GridPlacement: unsupported json"))
+    _ => raise JsonDecodeError((path, "GridPlacement: unsupported json"))
   }
 }
 
@@ -142,9 +139,9 @@ fn parse_dimension_rect_partial(
   json : Json,
   base : Rect[Dimension],
   path : @json.JsonPath,
-) -> Rect[Dimension] raise @json.JsonDecodeError {
+) -> Rect[Dimension] raise JsonDecodeError {
   guard json is Object(obj) else {
-    raise @json.JsonDecodeError((path, "Rect<Dimension>: expected object"))
+    raise JsonDecodeError((path, "Rect<Dimension>: expected object"))
   }
   let mut out = base
   match obj.get("left") {
@@ -175,9 +172,9 @@ fn parse_dimension_size_partial(
   json : Json,
   base : Size[Dimension],
   path : @json.JsonPath,
-) -> Size[Dimension] raise @json.JsonDecodeError {
+) -> Size[Dimension] raise JsonDecodeError {
   guard json is Object(obj) else {
-    raise @json.JsonDecodeError((path, "Size<Dimension>: expected object"))
+    raise JsonDecodeError((path, "Size<Dimension>: expected object"))
   }
   let mut out = base
   match obj.get("width") {
@@ -198,9 +195,9 @@ fn parse_grid_line_partial(
   json : Json,
   base : Line[GridPlacement],
   path : @json.JsonPath,
-) -> Line[GridPlacement] raise @json.JsonDecodeError {
+) -> Line[GridPlacement] raise JsonDecodeError {
   guard json is Object(obj) else {
-    raise @json.JsonDecodeError((path, "Line<GridPlacement>: expected object"))
+    raise JsonDecodeError((path, "Line<GridPlacement>: expected object"))
   }
   let mut out = base
   match obj.get("start") {
@@ -273,7 +270,7 @@ pub impl ToJson for Style with to_json(self) {
 ///|
 pub impl @json.FromJson for Style with from_json(json, path) {
   guard json is Object(obj) else {
-    raise @json.JsonDecodeError((path, "Style: expected object"))
+    raise JsonDecodeError((path, "Style: expected object"))
   }
   let mut style = Style::default()
   match obj.get("inset") {

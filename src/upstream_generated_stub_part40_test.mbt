@@ -30,7 +30,7 @@ test "upstream/generated/grid/grid_span_2_max_content_fit_content_10px_indefinit
     Style::default()
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -66,7 +66,7 @@ test "upstream/generated/grid/grid_span_2_max_content_fit_content_10px_indefinit
     .with_scrollbar_width(15.0)
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -100,7 +100,7 @@ test "upstream/generated/grid/grid_span_2_max_content_fit_content_80px_indefinit
     Style::default()
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -136,7 +136,7 @@ test "upstream/generated/grid/grid_span_2_max_content_fit_content_80px_indefinit
     .with_scrollbar_width(15.0)
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -170,7 +170,7 @@ test "upstream/generated/grid/grid_span_2_max_content_max_content_indefinite" {
     Style::default()
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -194,7 +194,7 @@ test "upstream/generated/grid/grid_span_2_min_content_auto_indefinite" {
   let node1 = taffy.new_leaf(Style::default())
   let node2 = taffy.new_leaf_with_context(
     Style::default().with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -221,7 +221,7 @@ test "upstream/generated/grid/grid_span_2_min_content_auto_indefinite_hidden" {
     .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
     .with_scrollbar_width(15.0)
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -255,7 +255,7 @@ test "upstream/generated/grid/grid_span_2_min_content_fit_content_10px_indefinit
     Style::default()
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -291,7 +291,7 @@ test "upstream/generated/grid/grid_span_2_min_content_fit_content_10px_indefinit
     .with_scrollbar_width(15.0)
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -325,7 +325,7 @@ test "upstream/generated/grid/grid_span_2_min_content_fit_content_30px_indefinit
     Style::default()
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -361,7 +361,7 @@ test "upstream/generated/grid/grid_span_2_min_content_fit_content_30px_indefinit
     .with_scrollbar_width(15.0)
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -395,7 +395,7 @@ test "upstream/generated/grid/grid_span_2_min_content_fit_content_80px_indefinit
     Style::default()
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -431,7 +431,7 @@ test "upstream/generated/grid/grid_span_2_min_content_fit_content_80px_indefinit
     .with_scrollbar_width(15.0)
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -465,7 +465,7 @@ test "upstream/generated/grid/grid_span_2_min_content_max_content_indefinite" {
     Style::default()
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -499,7 +499,7 @@ test "upstream/generated/grid/grid_span_2_min_content_min_content_indefinite" {
     Style::default()
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=span(2))),
-    TextMeasure::{ text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
+    { text_content: "HHHH\u{200b}HHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -521,10 +521,7 @@ test "upstream/generated/grid/grid_span_6_all_non_flex_indefinite" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_grid_column(Line(start=line(1), end=span(6))),
-    TextMeasure::{
-      text_content: "HHHHHHHH\u{200b}HHHHHHHH",
-      writing_mode: Horizontal,
-    },
+    { text_content: "HHHHHHHH\u{200b}HHHHHHHH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default())
   let node2 = taffy.new_leaf(Style::default())
@@ -566,10 +563,7 @@ test "upstream/generated/grid/grid_span_6_all_non_flex_indefinite_hidden" {
     .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
     .with_scrollbar_width(15.0)
     .with_grid_column(Line(start=line(1), end=span(6))),
-    TextMeasure::{
-      text_content: "HHHHHHHH\u{200b}HHHHHHHH",
-      writing_mode: Horizontal,
-    },
+    { text_content: "HHHHHHHH\u{200b}HHHHHHHH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default())
   let node2 = taffy.new_leaf(Style::default())
@@ -608,10 +602,7 @@ test "upstream/generated/grid/grid_span_8_all_track_types_indefinite" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_grid_column(Line(start=line(1), end=span(8))),
-    TextMeasure::{
-      text_content: "HHHHHHHH\u{200b}HHHHHHHH",
-      writing_mode: Horizontal,
-    },
+    { text_content: "HHHHHHHH\u{200b}HHHHHHHH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf(Style::default())
   let node2 = taffy.new_leaf(Style::default())
@@ -699,19 +690,19 @@ test "upstream/generated/grid/mod" {
 test "upstream/generated/gridflex/gridflex_column_integration" {
   // Ported from taffy-reference/tests/generated/gridflex/gridflex_column_integration.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node00 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node00 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
-  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node01 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
-  let node02 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node02 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
-  let node03 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node03 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
@@ -786,15 +777,15 @@ test "upstream/generated/gridflex/gridflex_kitchen_sink" {
     [node0010],
   )
   let node00 = taffy.new_with_children(Style::default(), [node000, node001])
-  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node01 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
-  let node02 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node02 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
-  let node03 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node03 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })

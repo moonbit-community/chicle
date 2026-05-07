@@ -29,33 +29,12 @@ fn[C] compute_node_layout_with_measure(
     Some(n) => n
     None => raise InvalidNodeId(node_id)
   }
-  let can_use_layout_cache = node.children.length() <= 1 &&
-    double_approx_equal(absolute_origin.x, 0.0) &&
-    double_approx_equal(absolute_origin.y, 0.0)
-  if can_use_layout_cache {
-    match
-      find_node_layout_cache(
-        node.node_layout_cache,
-        known_dimensions,
-        available_space,
-        absolute_origin,
-        is_layout_root,
-      ) {
-      Some(entry) => {
-        tree.nodes[node_id].layout = Layout::{
-          location: entry.location,
-          size: entry.size,
-        }
-        tree.nodes[node_id].effective_margin_top = entry.effective_margin_top
-        tree.nodes[node_id].effective_margin_bottom = entry.effective_margin_bottom
-        tree.nodes[node_id].effective_margin_top_max_pos = entry.effective_margin_top_max_pos
-        tree.nodes[node_id].effective_margin_top_min_neg = entry.effective_margin_top_min_neg
-        tree.nodes[node_id].effective_margin_bottom_max_pos = entry.effective_margin_bottom_max_pos
-        tree.nodes[node_id].effective_margin_bottom_min_neg = entry.effective_margin_bottom_min_neg
-        return
-      }
-      None => ()
-    }
+  let can_use_layout_cache = can_use_node_layout_cache(node, absolute_origin)
+  if restore_node_layout_from_cache(
+      tree, node_id, known_dimensions, available_space, absolute_origin, is_layout_root,
+      can_use_layout_cache,
+    ) {
+    return
   }
   match node.style.display {
     DisplayNone => compute_hidden_layout(tree, node_id, absolute_origin)
@@ -93,54 +72,128 @@ fn[C] compute_node_layout_with_measure(
       }
   }
 
-  // Position::Relative: apply inset as a final offset without affecting sibling layout.
-  // `display: none` nodes must remain at zero-size/zero-offset.
-  if !(node.style.display is DisplayNone) {
-    match node.style.position {
-      PosRelative => {
-        let inset = node.style.inset
-        let dx = match
-          resolve_optional_dimension(inset.left, available_space.width) {
-          Some(v) => v
-          None =>
-            match
-              resolve_optional_dimension(inset.right, available_space.width) {
-              Some(v) => -v
-              None => 0.0
-            }
-        }
-        let dy = match
-          resolve_optional_dimension(inset.top, available_space.height) {
-          Some(v) => v
-          None =>
-            match
-              resolve_optional_dimension(inset.bottom, available_space.height) {
-              Some(v) => -v
-              None => 0.0
-            }
-        }
-        if dx != 0.0 || dy != 0.0 {
-          offset_subtree(tree, node_id, dx, dy)
-        }
-      }
-      PosAbsolute => ()
-    }
+  apply_relative_inset_after_layout(tree, node_id, node.style, available_space)
+  save_node_layout_cache(
+    tree, node_id, known_dimensions, available_space, absolute_origin, is_layout_root,
+    can_use_layout_cache,
+  )
+}
+
+///|
+fn[C] can_use_node_layout_cache(
+  node : Node[C],
+  absolute_origin : Point[Double],
+) -> Bool {
+  node.children.length() <= 1 &&
+  double_approx_equal(absolute_origin.x, 0.0) &&
+  double_approx_equal(absolute_origin.y, 0.0)
+}
+
+///|
+fn[C] restore_node_layout_from_cache(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  known_dimensions : Size[Double?],
+  available_space : Size[AvailableSpace],
+  absolute_origin : Point[Double],
+  is_layout_root : Bool,
+  can_use_layout_cache : Bool,
+) -> Bool {
+  if !can_use_layout_cache {
+    return false
   }
-  if can_use_layout_cache {
-    let layout = tree.nodes[node_id].layout
-    tree.nodes[node_id].node_layout_cache.push(NodeLayoutCacheEntry::{
+  let node = tree.nodes[node_id]
+  match
+    find_node_layout_cache(
+      node.node_layout_cache,
       known_dimensions,
       available_space,
       absolute_origin,
       is_layout_root,
-      location: layout.location,
-      size: layout.size,
-      effective_margin_top: tree.nodes[node_id].effective_margin_top,
-      effective_margin_bottom: tree.nodes[node_id].effective_margin_bottom,
-      effective_margin_top_max_pos: tree.nodes[node_id].effective_margin_top_max_pos,
-      effective_margin_top_min_neg: tree.nodes[node_id].effective_margin_top_min_neg,
-      effective_margin_bottom_max_pos: tree.nodes[node_id].effective_margin_bottom_max_pos,
-      effective_margin_bottom_min_neg: tree.nodes[node_id].effective_margin_bottom_min_neg,
-    })
+    ) {
+    Some(entry) => {
+      tree.nodes[node_id].layout = {
+        location: entry.location,
+        size: entry.size,
+      }
+      tree.nodes[node_id].effective_margin_top = entry.effective_margin_top
+      tree.nodes[node_id].effective_margin_bottom = entry.effective_margin_bottom
+      tree.nodes[node_id].effective_margin_top_max_pos = entry.effective_margin_top_max_pos
+      tree.nodes[node_id].effective_margin_top_min_neg = entry.effective_margin_top_min_neg
+      tree.nodes[node_id].effective_margin_bottom_max_pos = entry.effective_margin_bottom_max_pos
+      tree.nodes[node_id].effective_margin_bottom_min_neg = entry.effective_margin_bottom_min_neg
+      true
+    }
+    None => false
   }
+}
+
+///|
+fn[C] apply_relative_inset_after_layout(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  style : Style,
+  available_space : Size[AvailableSpace],
+) -> Unit raise TaffyError {
+  if style.display is DisplayNone {
+    return
+  }
+  match style.position {
+    PosRelative => {
+      let inset = style.inset
+      let dx = match
+        resolve_optional_dimension(inset.left, available_space.width) {
+        Some(v) => v
+        None =>
+          match resolve_optional_dimension(inset.right, available_space.width) {
+            Some(v) => -v
+            None => 0.0
+          }
+      }
+      let dy = match
+        resolve_optional_dimension(inset.top, available_space.height) {
+        Some(v) => v
+        None =>
+          match
+            resolve_optional_dimension(inset.bottom, available_space.height) {
+            Some(v) => -v
+            None => 0.0
+          }
+      }
+      if dx != 0.0 || dy != 0.0 {
+        offset_subtree(tree, node_id, dx, dy)
+      }
+    }
+    PosAbsolute => ()
+  }
+}
+
+///|
+fn[C] save_node_layout_cache(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  known_dimensions : Size[Double?],
+  available_space : Size[AvailableSpace],
+  absolute_origin : Point[Double],
+  is_layout_root : Bool,
+  can_use_layout_cache : Bool,
+) -> Unit {
+  if !can_use_layout_cache {
+    return
+  }
+  let layout = tree.nodes[node_id].layout
+  tree.nodes[node_id].node_layout_cache.push({
+    known_dimensions,
+    available_space,
+    absolute_origin,
+    is_layout_root,
+    location: layout.location,
+    size: layout.size,
+    effective_margin_top: tree.nodes[node_id].effective_margin_top,
+    effective_margin_bottom: tree.nodes[node_id].effective_margin_bottom,
+    effective_margin_top_max_pos: tree.nodes[node_id].effective_margin_top_max_pos,
+    effective_margin_top_min_neg: tree.nodes[node_id].effective_margin_top_min_neg,
+    effective_margin_bottom_max_pos: tree.nodes[node_id].effective_margin_bottom_max_pos,
+    effective_margin_bottom_min_neg: tree.nodes[node_id].effective_margin_bottom_min_neg,
+  })
 }

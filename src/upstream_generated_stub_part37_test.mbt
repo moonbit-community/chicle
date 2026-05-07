@@ -19,10 +19,7 @@ test "upstream/generated/grid/grid_max_content_single_item_span_2_gap_percent_in
   let node0 = taffy.new_leaf(Style::default())
   let node1 = taffy.new_leaf_with_context(
     Style::default().with_grid_column(Line(start=span(2), end=place_auto())),
-    TextMeasure::{
-      text_content: "HH\u{200B}HH\u{200B}HH",
-      writing_mode: Horizontal,
-    },
+    { text_content: "HH\u{200B}HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node2 = taffy.new_leaf(Style::default())
   let node3 = taffy.new_leaf(Style::default())
@@ -65,11 +62,11 @@ test "upstream/generated/grid/grid_max_content_single_item_span_2_gap_percent_in
 test "upstream/generated/grid/grid_max_width_greater_than_max_content" {
   // Ported from taffy-reference/tests/generated/grid/grid_max_width_greater_than_max_content.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node00 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node00 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
     writing_mode: Horizontal,
   })
-  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node01 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -97,11 +94,11 @@ test "upstream/generated/grid/grid_max_width_greater_than_max_content" {
 test "upstream/generated/grid/grid_max_width_less_than_max_content_with_min_content" {
   // Ported from taffy-reference/tests/generated/grid/grid_max_width_less_than_max_content_with_min_content.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node00 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node00 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
     writing_mode: Horizontal,
   })
-  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node01 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -129,11 +126,11 @@ test "upstream/generated/grid/grid_max_width_less_than_max_content_with_min_cont
 test "upstream/generated/grid/grid_max_width_smaller_than_max_content" {
   // Ported from taffy-reference/tests/generated/grid/grid_max_width_smaller_than_max_content.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node00 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node00 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
     writing_mode: Horizontal,
   })
-  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node01 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -161,11 +158,11 @@ test "upstream/generated/grid/grid_max_width_smaller_than_max_content" {
 test "upstream/generated/grid/grid_max_width_smaller_than_min_content" {
   // Ported from taffy-reference/tests/generated/grid/grid_max_width_smaller_than_min_content.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node00 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node00 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HHHH\u{200B}HHHH",
     writing_mode: Horizontal,
   })
-  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node01 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HHHH\u{200B}HHHH",
     writing_mode: Horizontal,
   })
@@ -193,15 +190,15 @@ test "upstream/generated/grid/grid_max_width_smaller_than_min_content" {
 test "upstream/generated/grid/grid_min_content_flex_column" {
   // Ported from taffy-reference/tests/generated/grid/grid_min_content_flex_column.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node00 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node00 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
-  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node01 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
-  let node02 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node02 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -230,15 +227,15 @@ test "upstream/generated/grid/grid_min_content_flex_column" {
 test "upstream/generated/grid/grid_min_content_flex_row" {
   // Ported from taffy-reference/tests/generated/grid/grid_min_content_flex_row.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node00 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node00 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
-  let node01 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node01 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
-  let node02 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node02 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -273,7 +270,7 @@ test "upstream/generated/grid/grid_min_content_flex_single_item" {
   let node3 = taffy.new_leaf(Style::default())
   let node4 = taffy.new_leaf_with_context(
     Style::default().with_grid_column(Line(start=span(2), end=place_auto())),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node5 = taffy.new_leaf(Style::default())
   let node6 = taffy.new_leaf(Style::default())
@@ -320,7 +317,7 @@ test "upstream/generated/grid/grid_min_content_flex_single_item_margin_auto" {
     Style::default()
     .with_grid_column(Line(start=span(2), end=place_auto()))
     .with_margin(all_auto_margin),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node5 = taffy.new_leaf(Style::default())
   let node6 = taffy.new_leaf(Style::default())
@@ -367,7 +364,7 @@ test "upstream/generated/grid/grid_min_content_flex_single_item_margin_fixed" {
     Style::default()
     .with_grid_column(Line(start=span(2), end=place_auto()))
     .with_margin(fixed_margin),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node5 = taffy.new_leaf(Style::default())
   let node6 = taffy.new_leaf(Style::default())
@@ -414,7 +411,7 @@ test "upstream/generated/grid/grid_min_content_flex_single_item_margin_percent" 
     Style::default()
     .with_grid_column(Line(start=span(2), end=place_auto()))
     .with_margin(percent_margin),
-    TextMeasure::{ text_content: "HH\u{200B}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200B}HH", writing_mode: Horizontal },
   )
   let node5 = taffy.new_leaf(Style::default())
   let node6 = taffy.new_leaf(Style::default())
@@ -444,7 +441,7 @@ test "upstream/generated/grid/grid_min_content_maximum_single_item" {
   // Ported from taffy-reference/tests/generated/grid/grid_min_content_maximum_single_item.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf(Style::default())
-  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node1 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -484,7 +481,7 @@ test "upstream/generated/grid/grid_min_content_single_item" {
   // Ported from taffy-reference/tests/generated/grid/grid_min_content_single_item.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf(Style::default())
-  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node1 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -519,7 +516,7 @@ test "upstream/generated/grid/grid_min_content_single_item" {
 test "upstream/generated/grid/grid_minmax_auto_fixed_10px" {
   // Ported from taffy-reference/tests/generated/grid/grid_minmax_auto_fixed_10px.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -539,7 +536,7 @@ test "upstream/generated/grid/grid_minmax_auto_fixed_10px" {
 test "upstream/generated/grid/grid_minmax_auto_max_content" {
   // Ported from taffy-reference/tests/generated/grid/grid_minmax_auto_max_content.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -559,7 +556,7 @@ test "upstream/generated/grid/grid_minmax_auto_max_content" {
 test "upstream/generated/grid/grid_minmax_auto_min_content" {
   // Ported from taffy-reference/tests/generated/grid/grid_minmax_auto_min_content.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -579,7 +576,7 @@ test "upstream/generated/grid/grid_minmax_auto_min_content" {
 test "upstream/generated/grid/grid_minmax_auto_percent_definite" {
   // Ported from taffy-reference/tests/generated/grid/grid_minmax_auto_percent_definite.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -600,7 +597,7 @@ test "upstream/generated/grid/grid_minmax_auto_percent_definite" {
 test "upstream/generated/grid/grid_minmax_auto_percent_indefinite" {
   // Ported from taffy-reference/tests/generated/grid/grid_minmax_auto_percent_indefinite.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })
@@ -797,7 +794,7 @@ test "upstream/generated/grid/grid_minmax_column_with_fr_fixed" {
 test "upstream/generated/grid/grid_minmax_max_content_1fr" {
   // Ported from taffy-reference/tests/generated/grid/grid_minmax_max_content_1fr.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200B}HH",
     writing_mode: Horizontal,
   })

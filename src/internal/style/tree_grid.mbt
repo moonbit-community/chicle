@@ -1182,7 +1182,7 @@ fn[C] compute_grid_layout_with_measure(
       used_rows = used_rows + row_gap * (row_count - 1).to_double()
     }
   }
-  tree.nodes[node_id].layout = Layout::{
+  tree.nodes[node_id].layout = {
     location: absolute_origin,
     size: Size(width=border_box_width, height=border_box_height),
   }

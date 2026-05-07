@@ -511,7 +511,7 @@ fn[C] compute_flex_layout_with_measure(
     node.style.max_size.height,
     available_space.height,
   )
-  tree.nodes[node_id].layout = Layout::{
+  tree.nodes[node_id].layout = {
     location: absolute_origin,
     size: Size(width=border_box_width, height=border_box_height),
   }
@@ -688,7 +688,7 @@ fn[C] compute_flex_layout_with_measure(
         )
         content_height = max_double(border_box_height - vert_inset, 0.0)
       }
-      tree.nodes[node_id].layout = Layout::{
+      tree.nodes[node_id].layout = {
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
       }
@@ -1151,7 +1151,7 @@ fn[C] compute_flex_layout_with_measure(
           content_width = max_double(border_box_width - horiz_inset, 0.0)
           container_main = content_width
         }
-        tree.nodes[node_id].layout = Layout::{
+        tree.nodes[node_id].layout = {
           location: absolute_origin,
           size: Size(width=border_box_width, height=border_box_height),
         }
@@ -1721,7 +1721,7 @@ fn[C] compute_flex_layout_with_measure(
         )
         content_height = max_double(border_box_height - vert_inset, 0.0)
       }
-      tree.nodes[node_id].layout = Layout::{
+      tree.nodes[node_id].layout = {
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
       }
@@ -1857,7 +1857,7 @@ fn[C] compute_flex_layout_with_measure(
       resized = true
     }
     if resized {
-      tree.nodes[node_id].layout = Layout::{
+      tree.nodes[node_id].layout = {
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
       }
@@ -1996,7 +1996,7 @@ fn[C] compute_flex_layout_with_measure(
       content_width = max_double(border_box_width - horiz_inset, 0.0)
       container_main = content_width
     }
-    tree.nodes[node_id].layout = Layout::{
+    tree.nodes[node_id].layout = {
       location: absolute_origin,
       size: Size(width=border_box_width, height=border_box_height),
     }
@@ -2038,7 +2038,7 @@ fn[C] compute_flex_layout_with_measure(
         content_height = max_double(border_box_height - vert_inset, 0.0)
         container_cross = content_height
       }
-      tree.nodes[node_id].layout = Layout::{
+      tree.nodes[node_id].layout = {
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
       }

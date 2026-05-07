@@ -166,9 +166,9 @@ pub struct Style {
 
 ///|
 pub fn Style::default() -> Style {
-  Style::{
+  {
     display: DisplayFlex,
-    overflow: Point::{ x: OverflowVisible, y: OverflowVisible },
+    overflow: { x: OverflowVisible, y: OverflowVisible },
     scrollbar_width: 0.0,
     position: PosRelative,
     inset: Rect(left=DimAuto, right=DimAuto, top=DimAuto, bottom=DimAuto),

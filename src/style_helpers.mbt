@@ -76,11 +76,6 @@ pub fn repeat(
 }
 
 ///|
-pub fn grid_auto_flow_row() -> GridAutoFlow {
-  @style.grid_auto_flow_row()
-}
-
-///|
 pub fn grid_auto_flow_column() -> GridAutoFlow {
   @style.grid_auto_flow_column()
 }
@@ -121,11 +116,6 @@ pub fn max_content() -> AvailableSpace {
 }
 
 ///|
-pub fn min_content() -> AvailableSpace {
-  @style.min_content()
-}
-
-///|
 pub fn display_flex() -> Display {
   @style.display_flex()
 }
@@ -161,11 +151,6 @@ pub fn overflow_visible() -> Overflow {
 }
 
 ///|
-pub fn overflow_clip() -> Overflow {
-  @style.overflow_clip()
-}
-
-///|
 pub fn overflow_hidden() -> Overflow {
   @style.overflow_hidden()
 }
@@ -193,11 +178,6 @@ pub fn flex_direction_row_reverse() -> FlexDirection {
 ///|
 pub fn flex_direction_column_reverse() -> FlexDirection {
   @style.flex_direction_column_reverse()
-}
-
-///|
-pub fn flex_wrap_no_wrap() -> FlexWrap {
-  @style.flex_wrap_no_wrap()
 }
 
 ///|
@@ -313,11 +293,6 @@ pub fn justify_content_start() -> JustifyContent {
 ///|
 pub fn justify_content_end() -> JustifyContent {
   @style.justify_content_end()
-}
-
-///|
-pub fn justify_content_stretch() -> JustifyContent {
-  @style.justify_content_stretch()
 }
 
 ///|

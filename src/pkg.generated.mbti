@@ -60,8 +60,6 @@ pub fn flex_direction_row() -> @style.FlexDirection
 
 pub fn flex_direction_row_reverse() -> @style.FlexDirection
 
-pub fn flex_wrap_no_wrap() -> @style.FlexWrap
-
 pub fn flex_wrap_wrap() -> @style.FlexWrap
 
 pub fn flex_wrap_wrap_reverse() -> @style.FlexWrap
@@ -71,8 +69,6 @@ pub fn fr(Double) -> @style.Dimension
 pub fn grid_auto_flow_column() -> @style.GridAutoFlow
 
 pub fn grid_auto_flow_column_dense() -> @style.GridAutoFlow
-
-pub fn grid_auto_flow_row() -> @style.GridAutoFlow
 
 pub fn grid_auto_flow_row_dense() -> @style.GridAutoFlow
 
@@ -96,19 +92,13 @@ pub fn justify_content_space_evenly() -> @style.AlignContent
 
 pub fn justify_content_start() -> @style.AlignContent
 
-pub fn justify_content_stretch() -> @style.AlignContent
-
 pub fn length(Double) -> @style.Dimension
 
 pub fn line(Int) -> @style.GridPlacement
 
 pub fn max_content() -> @style.AvailableSpace
 
-pub fn min_content() -> @style.AvailableSpace
-
 pub fn minmax(@style.Dimension, @style.Dimension) -> @style.Dimension
-
-pub fn overflow_clip() -> @style.Overflow
 
 pub fn overflow_hidden() -> @style.Overflow
 

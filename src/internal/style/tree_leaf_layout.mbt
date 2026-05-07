@@ -136,7 +136,7 @@ fn[C] compute_leaf_layout_with_measure(
         node.context,
         node.style,
       )
-      tree.nodes[node_id].leaf_measure_cache.push(LeafMeasureCacheEntry::{
+      tree.nodes[node_id].leaf_measure_cache.push({
         known_dimensions: measure_known_dimensions,
         available_space: measure_available_space,
         measured: m,
@@ -265,7 +265,7 @@ fn[C] compute_leaf_layout_with_measure(
       }
     None => ()
   }
-  tree.nodes[node_id].layout = Layout::{
+  tree.nodes[node_id].layout = {
     location: absolute_origin,
     size: border_box_size,
   }

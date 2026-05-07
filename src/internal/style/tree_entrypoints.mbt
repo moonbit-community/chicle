@@ -31,7 +31,7 @@ pub struct Layout {
 
 ///|
 pub fn Layout::zero() -> Layout {
-  Layout::{ location: Point::zero(), size: Size::zero() }
+  { location: Point::zero(), size: Size::zero() }
 }
 
 ///|

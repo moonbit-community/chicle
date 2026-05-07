@@ -428,7 +428,7 @@ fn grid_track_base_state(
       }
     _ => ()
   }
-  GridTrackState::{
+  {
     dimension,
     base_size,
     base_size_planned_increase: 0.0,

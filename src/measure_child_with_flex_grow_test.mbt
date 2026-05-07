@@ -18,7 +18,7 @@ test "measure_child_with_flex_grow (upstream: generated/flex/measure_child_with_
   let node0 = taffy.new_leaf(
     Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
   )
-  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node1 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "H\u{200B}H\u{200B}H\u{200B}H\u{200B}H",
     writing_mode: Horizontal,
   })

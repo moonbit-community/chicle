@@ -597,7 +597,7 @@ test "upstream/generated/flex/intrinsic_sizing_cross_size_column" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node = taffy.new_leaf_with_context(
     Style::default().with_flex_direction(flex_direction_column()),
-    TextMeasure::{ text_content: "HH\u{200b}HH", writing_mode: Horizontal },
+    { text_content: "HH\u{200b}HH", writing_mode: Horizontal },
   )
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
   let lnode = taffy.layout(node)
@@ -613,7 +613,7 @@ test "upstream/generated/flex/intrinsic_sizing_main_size_column" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node = taffy.new_leaf_with_context(
     Style::default().with_flex_direction(flex_direction_column()),
-    TextMeasure::{ text_content: "HH\u{200b}HH", writing_mode: Vertical },
+    { text_content: "HH\u{200b}HH", writing_mode: Vertical },
   )
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
   let lnode = taffy.layout(node)
@@ -629,7 +629,7 @@ test "upstream/generated/flex/intrinsic_sizing_main_size_column_nested" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_flex_direction(flex_direction_column()),
-    TextMeasure::{ text_content: "HH\u{200b}HH", writing_mode: Vertical },
+    { text_content: "HH\u{200b}HH", writing_mode: Vertical },
   )
   let node = taffy.new_with_children(
     Style::default().with_flex_direction(flex_direction_column()),
@@ -654,11 +654,11 @@ test "upstream/generated/flex/intrinsic_sizing_main_size_column_wrap" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_flex_direction(flex_direction_column()),
-    TextMeasure::{ text_content: "HH\u{200b}HH", writing_mode: Vertical },
+    { text_content: "HH\u{200b}HH", writing_mode: Vertical },
   )
   let node1 = taffy.new_leaf_with_context(
     Style::default().with_flex_direction(flex_direction_column()),
-    TextMeasure::{ text_content: "HH\u{200b}HH", writing_mode: Vertical },
+    { text_content: "HH\u{200b}HH", writing_mode: Vertical },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -688,7 +688,7 @@ test "upstream/generated/flex/intrinsic_sizing_main_size_column_wrap" {
 test "upstream/generated/flex/intrinsic_sizing_main_size_row" {
   // Ported from taffy-reference/tests/generated/flex/intrinsic_sizing_main_size_row.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200b}HH",
     writing_mode: Horizontal,
   })
@@ -704,7 +704,7 @@ test "upstream/generated/flex/intrinsic_sizing_main_size_row" {
 test "upstream/generated/flex/intrinsic_sizing_main_size_row_nested" {
   // Ported from taffy-reference/tests/generated/flex/intrinsic_sizing_main_size_row_nested.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200b}HH",
     writing_mode: Horizontal,
   })
@@ -726,11 +726,11 @@ test "upstream/generated/flex/intrinsic_sizing_main_size_row_nested" {
 test "upstream/generated/flex/intrinsic_sizing_main_size_row_wrap" {
   // Ported from taffy-reference/tests/generated/flex/intrinsic_sizing_main_size_row_wrap.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200b}HH",
     writing_mode: Horizontal,
   })
-  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node1 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH\u{200b}HH",
     writing_mode: Horizontal,
   })

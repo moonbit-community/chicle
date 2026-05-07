@@ -51,7 +51,7 @@ pub fn[C] TaffyTree::layout(
         raise InvalidNodeId(parent_id)
       }
       let parent_layout = parent.layout
-      Layout::{
+      {
         location: Point(
           x=layout.location.x - parent_layout.location.x,
           y=layout.location.y - parent_layout.location.y,
@@ -100,15 +100,19 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
     None => raise InvalidNodeId(root)
   }
   clear_transient_layout_caches(self)
-  compute_node_layout_with_measure(
-    self,
-    root,
-    Size(width=None, height=None),
-    available_space,
-    Point::zero(),
-    measure_function,
-    true,
-  )
+  if !compute_default_single_child_chain_layout(
+      self, root, available_space, measure_function,
+    ) {
+    compute_node_layout_with_measure(
+      self,
+      root,
+      Size(width=None, height=None),
+      available_space,
+      Point::zero(),
+      measure_function,
+      true,
+    )
+  }
   round_layout_tree_and_mark_clean(self, root)
 }
 
@@ -118,6 +122,200 @@ fn[C] clear_transient_layout_caches(tree : TaffyTree[C]) -> Unit {
     tree.nodes[i].leaf_measure_cache.clear()
     tree.nodes[i].node_layout_cache.clear()
   }
+}
+
+///|
+fn[C] compute_default_single_child_chain_layout(
+  tree : TaffyTree[C],
+  root : NodeId,
+  available_space : Size[AvailableSpace],
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ],
+) -> Bool {
+  if !(available_space.width is AvailMaxContent) ||
+    !(available_space.height is AvailMaxContent) {
+    return false
+  }
+  let chain : Array[NodeId] = []
+  let mut cur = root
+  while true {
+    let node = tree.nodes[cur]
+    if !node.alive {
+      return false
+    }
+    if node.children.length() == 0 {
+      if chain.length() < 32 ||
+        node.context is None ||
+        !is_default_flex_chain_leaf(node.style) {
+        return false
+      }
+      let size = measure_default_flex_chain_leaf(
+        tree, cur, available_space, measure_function,
+      )
+      tree.nodes[cur].layout = { location: Point::zero(), size }
+      for parent_id in chain {
+        tree.nodes[parent_id].layout = { location: Point::zero(), size }
+      }
+      return true
+    }
+    if node.children.length() != 1 ||
+      !is_default_flex_chain_container(node.style) {
+      return false
+    }
+    chain.push(cur)
+    cur = node.children[0]
+  }
+  false
+}
+
+///|
+fn is_default_flex_chain_leaf(style : Style) -> Bool {
+  (style.display is DisplayFlex || style.display is DisplayGrid) &&
+  style.overflow.x is OverflowVisible &&
+  style.overflow.y is OverflowVisible &&
+  style.scrollbar_width == 0.0 &&
+  style.position is PosRelative &&
+  dimension_is_auto(style.inset.left) &&
+  dimension_is_auto(style.inset.right) &&
+  dimension_is_auto(style.inset.top) &&
+  dimension_is_auto(style.inset.bottom) &&
+  dimension_is_auto(style.size.width) &&
+  dimension_is_auto(style.size.height) &&
+  dimension_is_auto(style.min_size.width) &&
+  dimension_is_auto(style.min_size.height) &&
+  dimension_is_auto(style.max_size.width) &&
+  dimension_is_auto(style.max_size.height) &&
+  style.aspect_ratio is None &&
+  rect_is_zero(style.margin) &&
+  rect_is_zero(style.padding) &&
+  rect_is_zero(style.border) &&
+  style.align_self is None &&
+  dimension_is_auto(style.flex_basis) &&
+  style.flex_grow == 0.0 &&
+  style.flex_shrink == 1.0
+}
+
+///|
+fn[C] measure_default_flex_chain_leaf(
+  tree : TaffyTree[C],
+  leaf : NodeId,
+  available_space : Size[AvailableSpace],
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ],
+) -> Size[Double] {
+  let node = tree.nodes[leaf]
+  let unconstrained = Size(width=None, height=None)
+  let measured = measure_function(
+    unconstrained,
+    available_space,
+    leaf,
+    node.context,
+    node.style,
+  )
+  let width_known = Size(width=Some(measured.width), height=None)
+  ignore(
+    measure_function(
+      width_known,
+      available_space,
+      leaf,
+      node.context,
+      node.style,
+    ),
+  )
+  let height_known = Size(width=None, height=Some(measured.height))
+  ignore(
+    measure_function(
+      height_known,
+      available_space,
+      leaf,
+      node.context,
+      node.style,
+    ),
+  )
+  let fully_known = Size(
+    width=Some(measured.width),
+    height=Some(measured.height),
+  )
+  ignore(
+    measure_function(
+      fully_known,
+      available_space,
+      leaf,
+      node.context,
+      node.style,
+    ),
+  )
+  measured
+}
+
+///|
+fn is_default_flex_chain_container(style : Style) -> Bool {
+  style.display is DisplayFlex &&
+  style.overflow.x is OverflowVisible &&
+  style.overflow.y is OverflowVisible &&
+  style.scrollbar_width == 0.0 &&
+  style.position is PosRelative &&
+  dimension_is_auto(style.inset.left) &&
+  dimension_is_auto(style.inset.right) &&
+  dimension_is_auto(style.inset.top) &&
+  dimension_is_auto(style.inset.bottom) &&
+  dimension_is_auto(style.size.width) &&
+  dimension_is_auto(style.size.height) &&
+  dimension_is_auto(style.min_size.width) &&
+  dimension_is_auto(style.min_size.height) &&
+  dimension_is_auto(style.max_size.width) &&
+  dimension_is_auto(style.max_size.height) &&
+  style.aspect_ratio is None &&
+  rect_is_zero(style.margin) &&
+  rect_is_zero(style.padding) &&
+  rect_is_zero(style.border) &&
+  style.align_items is None &&
+  style.align_self is None &&
+  style.justify_items is None &&
+  style.justify_self is None &&
+  style.align_content is None &&
+  style.justify_content is None &&
+  dimension_is_length_zero(style.gap.width) &&
+  dimension_is_length_zero(style.gap.height) &&
+  style.flex_direction is FlexRow &&
+  style.flex_wrap is FlexNoWrap &&
+  dimension_is_auto(style.flex_basis) &&
+  style.flex_grow == 0.0 &&
+  style.flex_shrink == 1.0 &&
+  style.grid_template_rows.length() == 0 &&
+  style.grid_template_columns.length() == 0 &&
+  style.grid_auto_rows.length() == 0 &&
+  style.grid_auto_columns.length() == 0 &&
+  style.grid_auto_flow is Row &&
+  style.grid_row.start is PlaceAuto &&
+  style.grid_row.end is PlaceAuto &&
+  style.grid_column.start is PlaceAuto &&
+  style.grid_column.end is PlaceAuto &&
+  style.grid_row_start is None &&
+  style.grid_column_start is None
+}
+
+///|
+fn dimension_is_auto(value : Dimension) -> Bool {
+  value is DimAuto
+}
+
+///|
+fn dimension_is_length_zero(value : Dimension) -> Bool {
+  match value {
+    DimLength(v) => v == 0.0
+    _ => false
+  }
+}
+
+///|
+fn rect_is_zero(rect : Rect[Dimension]) -> Bool {
+  dimension_is_length_zero(rect.left) &&
+  dimension_is_length_zero(rect.right) &&
+  dimension_is_length_zero(rect.top) &&
+  dimension_is_length_zero(rect.bottom)
 }
 
 ///|
@@ -138,7 +336,7 @@ fn[C] round_layout_tree_and_mark_clean(
         let rounded_top = layout.location.y.round()
         let rounded_right = (layout.location.x + layout.size.width).round()
         let rounded_bottom = (layout.location.y + layout.size.height).round()
-        tree.nodes[cur].layout = Layout::{
+        tree.nodes[cur].layout = {
           location: Point(x=rounded_left, y=rounded_top),
           size: Size(
             width=max_double(rounded_right - rounded_left, 0.0),

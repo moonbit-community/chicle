@@ -758,7 +758,7 @@ test "upstream/generated/flex/align_items_center_justify_content_center" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node000 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=length(10.0), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node00 = taffy.new_with_children(
     Style::default()

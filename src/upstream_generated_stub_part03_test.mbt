@@ -611,7 +611,7 @@ test "upstream/generated/block/block_aspect_ratio_fill_max_height" {
     .with_display(display_block())
     .with_max_size(Size(width=length(40.0), height=auto()))
     .with_aspect_ratio(2.0),
-    TextMeasure::{
+    {
       text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH\u{200B}HH\u{200B}HH\u{200B}HH\u{200B}HH\u{200B}HH\u{200B}HH\u{200B}HH",
       writing_mode: Horizontal,
     },
@@ -642,7 +642,7 @@ test "upstream/generated/block/block_aspect_ratio_fill_max_width" {
     .with_display(display_block())
     .with_max_size(Size(width=auto(), height=length(20.0)))
     .with_aspect_ratio(2.0),
-    TextMeasure::{
+    {
       text_content: "HH\u{200B}HH\u{200B}HH\u{200B}HH",
       writing_mode: Horizontal,
     },
@@ -700,7 +700,7 @@ test "upstream/generated/block/block_aspect_ratio_fill_min_width" {
     .with_display(display_block())
     .with_min_size(Size(width=auto(), height=length(40.0)))
     .with_aspect_ratio(2.0),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let root = taffy.new_with_children(
     Style::default()
@@ -752,11 +752,11 @@ test "upstream/generated/block/block_basic" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -788,11 +788,11 @@ test "upstream/generated/block/block_border_fixed_size" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -832,11 +832,11 @@ test "upstream/generated/block/block_border_intrinsic_size" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=length(50.0), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -877,7 +877,7 @@ test "upstream/generated/block/block_border_percentage_fixed_size" {
     Style::default()
     .with_display(display_block())
     .with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node0 = taffy.new_with_children(
     Style::default().with_display(display_block()),
@@ -915,7 +915,7 @@ test "upstream/generated/block/block_border_percentage_intrinsic_size" {
     Style::default()
     .with_display(display_block())
     .with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node0 = taffy.new_with_children(
     Style::default().with_display(display_block()),
@@ -949,17 +949,17 @@ test "upstream/generated/block/block_display_none" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf_with_context(
     Style::default()
     .with_display(display_none())
     .with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node2 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -996,11 +996,11 @@ test "upstream/generated/block/block_display_none_with_child" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node10 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=length(20.0), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node1 = taffy.new_with_children(
     Style::default().with_display(display_none()),
@@ -1008,7 +1008,7 @@ test "upstream/generated/block/block_display_none_with_child" {
   )
   let node2 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -1050,7 +1050,7 @@ test "upstream/generated/block/block_display_none_with_inset" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=auto(), height=length(10.0))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node1 = taffy.new_leaf_with_context(
     Style::default()
@@ -1059,7 +1059,7 @@ test "upstream/generated/block/block_display_none_with_inset" {
     .with_inset(
       Rect(left=auto(), right=auto(), top=length(10.0), bottom=auto()),
     ),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()

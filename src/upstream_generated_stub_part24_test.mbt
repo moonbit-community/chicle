@@ -546,7 +546,7 @@ test "upstream/generated/flex/max_width_overrides_width_on_root" {
 test "upstream/generated/flex/measure_child" {
   // Ported from taffy-reference/tests/generated/flex/measure_child.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HHHHHH",
     writing_mode: Horizontal,
   })
@@ -570,7 +570,7 @@ test "upstream/generated/flex/measure_child_absolute" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_position(position_absolute()),
-    TextMeasure::{ text_content: "HHHHHH", writing_mode: Horizontal },
+    { text_content: "HHHHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
@@ -593,7 +593,7 @@ test "upstream/generated/flex/measure_child_absolute" {
 test "upstream/generated/flex/measure_child_constraint" {
   // Ported from taffy-reference/tests/generated/flex/measure_child_constraint.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH",
     writing_mode: Horizontal,
   })
@@ -618,7 +618,7 @@ test "upstream/generated/flex/measure_child_constraint" {
 test "upstream/generated/flex/measure_child_constraint_padding_parent" {
   // Ported from taffy-reference/tests/generated/flex/measure_child_constraint_padding_parent.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH",
     writing_mode: Horizontal,
   })
@@ -655,7 +655,7 @@ test "upstream/generated/flex/measure_child_with_flex_grow" {
   let node0 = taffy.new_leaf(
     Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
   )
-  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node1 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "H\u{200b}H\u{200b}H\u{200b}H\u{200b}H",
     writing_mode: Horizontal,
   })
@@ -688,7 +688,7 @@ test "upstream/generated/flex/measure_child_with_flex_shrink" {
   let node0 = taffy.new_leaf(
     Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
   )
-  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node1 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH",
     writing_mode: Horizontal,
   })
@@ -725,7 +725,7 @@ test "upstream/generated/flex/measure_child_with_flex_shrink_hidden" {
     Style::default()
     .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
     .with_scrollbar_width(15.0),
-    TextMeasure::{
+    {
       text_content: "HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH",
       writing_mode: Horizontal,
     },
@@ -746,10 +746,7 @@ test "upstream/generated/flex/measure_child_with_min_size_greater_than_available
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_min_size(Size(width=length(200.0), height=auto())),
-    TextMeasure::{
-      text_content: "HHHHHHHH\u{200b}HHHHHHHH",
-      writing_mode: Horizontal,
-    },
+    { text_content: "HHHHHHHH\u{200b}HHHHHHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()

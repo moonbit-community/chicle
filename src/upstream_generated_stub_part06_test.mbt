@@ -104,7 +104,7 @@ test "upstream/generated/block/block_margin_y_collapse_through_with_absolute_chi
     Style::default()
     .with_position(position_absolute())
     .with_display(display_block()),
-    TextMeasure::{ text_content: "HH", writing_mode: Horizontal },
+    { text_content: "HH", writing_mode: Horizontal },
   )
   let node1 = taffy.new_with_children(
     Style::default()

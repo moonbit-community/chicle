@@ -705,7 +705,7 @@ test "upstream/generated/block/block_absolute_margin_bottom_left_with_inset" {
         bottom=length(20.0),
       ),
     ),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()
@@ -743,7 +743,7 @@ test "upstream/generated/block/block_absolute_margin_bottom_left_without_inset" 
         bottom=length(10.0),
       ),
     ),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()

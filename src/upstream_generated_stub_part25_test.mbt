@@ -16,7 +16,7 @@
 test "upstream/generated/flex/measure_flex_basis_overrides_measure" {
   // Ported from taffy-reference/tests/generated/flex/measure_flex_basis_overrides_measure.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "H",
     writing_mode: Horizontal,
   })
@@ -43,7 +43,7 @@ test "upstream/generated/flex/measure_height_overrides_measure" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=auto(), height=length(5.0))),
-    TextMeasure::{ text_content: "H", writing_mode: Horizontal },
+    { text_content: "H", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(Style::default(), [node0])
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
@@ -66,7 +66,7 @@ test "upstream/generated/flex/measure_remeasure_child_after_growing" {
   let node0 = taffy.new_leaf(
     Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
   )
-  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node1 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
@@ -103,7 +103,7 @@ test "upstream/generated/flex/measure_remeasure_child_after_shrinking" {
     .with_flex_shrink(0.0)
     .with_size(Size(width=length(50.0), height=length(50.0))),
   )
-  let node1 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node1 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
@@ -135,7 +135,7 @@ test "upstream/generated/flex/measure_remeasure_child_after_shrinking" {
 test "upstream/generated/flex/measure_remeasure_child_after_stretching" {
   // Ported from taffy-reference/tests/generated/flex/measure_remeasure_child_after_stretching.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node0 = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node0 = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HH",
     writing_mode: Horizontal,
   })
@@ -160,7 +160,7 @@ test "upstream/generated/flex/measure_remeasure_child_after_stretching" {
 test "upstream/generated/flex/measure_root" {
   // Ported from taffy-reference/tests/generated/flex/measure_root.rs
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node = taffy.new_leaf_with_context(Style::default(), {
     text_content: "HHHHHH",
     writing_mode: Horizontal,
   })
@@ -181,7 +181,7 @@ test "upstream/generated/flex/measure_stretch_overrides_measure" {
   )
   let node1 = taffy.new_leaf_with_context(
     Style::default().with_flex_grow(1.0).with_flex_basis(length(5.0)),
-    TextMeasure::{ text_content: "H", writing_mode: Horizontal },
+    { text_content: "H", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default().with_size(Size(width=length(20.0), height=length(10.0))),
@@ -211,7 +211,7 @@ test "upstream/generated/flex/measure_width_overrides_measure" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
   let node0 = taffy.new_leaf_with_context(
     Style::default().with_size(Size(width=length(50.0), height=auto())),
-    TextMeasure::{ text_content: "HHHHHHHHHH", writing_mode: Horizontal },
+    { text_content: "HHHHHHHHHH", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(Style::default(), [node0])
   taffy.compute_layout_with_measure(node, Size::max_content(), measure_text)
@@ -413,7 +413,7 @@ test "upstream/generated/flex/min_max_percent_different_width_height" {
     Style::default()
     .with_min_size(Size(width=percent(0.1), height=percent(0.1)))
     .with_max_size(Size(width=percent(0.1), height=percent(0.1))),
-    TextMeasure::{ text_content: "", writing_mode: Horizontal },
+    { text_content: "", writing_mode: Horizontal },
   )
   let node = taffy.new_with_children(
     Style::default()

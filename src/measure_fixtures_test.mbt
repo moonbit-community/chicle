@@ -159,7 +159,7 @@ fn measure_text(
 ///|
 test "measure_text_vertical_smoke" {
   let taffy : TaffyTree[TextMeasure] = TaffyTree()
-  let node = taffy.new_leaf_with_context(Style::default(), TextMeasure::{
+  let node = taffy.new_leaf_with_context(Style::default(), {
     text_content: "H\u{200B}H\u{200B}H\u{200B}H\u{200B}H",
     writing_mode: Vertical,
   })

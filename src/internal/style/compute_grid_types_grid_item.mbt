@@ -16,6 +16,7 @@
 priv struct GridItem {
   node : NodeId
   source_order : Int
+  style : Style
   mut placed : Bool
   mut row : Int
   mut column : Int
@@ -24,10 +25,15 @@ priv struct GridItem {
 }
 
 ///|
-fn GridItem::GridItem(node~ : NodeId, source_order~ : Int) -> GridItem {
+fn GridItem::GridItem(
+  node~ : NodeId,
+  source_order~ : Int,
+  style~ : Style,
+) -> GridItem {
   {
     node,
     source_order,
+    style,
     placed: false,
     row: 0,
     column: 0,
@@ -52,19 +58,47 @@ fn GridItem::place(
 }
 
 ///|
-fn make_grid_items(children : Array[NodeId]) -> Array[GridItem] {
+fn[C] make_grid_items(
+  tree : TaffyTree[C],
+  children : Array[NodeId],
+) -> Array[GridItem] raise TaffyError {
   let items : Array[GridItem] = []
   for i, node in children {
-    items.push(GridItem(node~, source_order=i))
+    let node_data = match tree.nodes.get(node) {
+      Some(data) => data
+      None => raise InvalidNodeId(node)
+    }
+    items.push(GridItem(node~, source_order=i, style=node_data.style))
   }
   items
+}
+
+///|
+fn GridItem::participates_in_grid(self : GridItem) -> Bool {
+  !(self.style.display is DisplayNone) && self.style.position is PosRelative
+}
+
+///|
+fn GridItem::placement_indexes_and_spans(
+  self : GridItem,
+  explicit_cols : Int,
+  explicit_rows : Int,
+  negative_cols : Int,
+  negative_rows : Int,
+) -> (Int?, Int, Int?, Int) {
+  child_start_indexes_and_spans(
+    self.style,
+    explicit_cols,
+    explicit_rows,
+    negative_cols,
+    negative_rows,
+  )
 }
 
 ///|
 fn grid_items_placed(items : Array[GridItem]) -> Array[Bool] {
   let values : Array[Bool] = []
   for item in items {
-    ignore(item.node)
     ignore(item.source_order)
     values.push(item.placed)
   }

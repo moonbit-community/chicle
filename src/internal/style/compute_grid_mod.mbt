@@ -186,7 +186,7 @@ fn[C] compute_grid_layout(
   )
 
   let placement_count = tree.children[node_id].length()
-  let grid_items = make_grid_items(tree.children[node_id])
+  let grid_items = make_grid_items(tree, tree.children[node_id])
   let occ = matrix_make(row_tracks.length(), col_tracks.length())
 
   // Placement algorithm: CSS Grid auto-placement for explicit and implicit tracks.
@@ -201,46 +201,31 @@ fn[C] compute_grid_layout(
 
   // Pass 1: both axes definite.
   for i in 0..<placement_count {
-    let child_id = tree.children[node_id][i]
-    let child = match tree.nodes.get(child_id) {
-      Some(c) => c
-      None => raise InvalidNodeId(child_id)
-    }
-    match child.style.display {
-      DisplayNone => ()
-      _ => {
-        match child.style.position {
-          PosAbsolute => continue
-          PosRelative => ()
-        }
-        let def = child_start_indexes_and_spans(
-          child.style,
-          explicit_col_count,
-          explicit_row_count,
-          negative_cols,
-          negative_rows,
-        )
-        match (def.0, def.2) {
-          (Some(r), Some(c)) =>
-            mark_grid_item_placed(
-              grid_items,
-              occ,
-              row_tracks,
-              col_tracks,
-              auto_rows,
-              auto_cols,
-              negative_rows,
-              negative_cols,
-              explicit_row_count,
-              explicit_col_count,
-              i,
-              r,
-              c,
-              def.1,
-              def.3,
-            )
-          _ => ()
-        }
+    let item = grid_items[i]
+    if item.participates_in_grid() {
+      let def = item.placement_indexes_and_spans(
+        explicit_col_count, explicit_row_count, negative_cols, negative_rows,
+      )
+      match (def.0, def.2) {
+        (Some(r), Some(c)) =>
+          mark_grid_item_placed(
+            grid_items,
+            occ,
+            row_tracks,
+            col_tracks,
+            auto_rows,
+            auto_cols,
+            negative_rows,
+            negative_cols,
+            explicit_row_count,
+            explicit_col_count,
+            i,
+            r,
+            c,
+            def.1,
+            def.3,
+          )
+        _ => ()
       }
     }
   }
@@ -250,99 +235,84 @@ fn[C] compute_grid_layout(
     if grid_items[i].placed {
       continue
     }
-    let child_id = tree.children[node_id][i]
-    let child = match tree.nodes.get(child_id) {
-      Some(c) => c
-      None => raise InvalidNodeId(child_id)
-    }
-    match child.style.display {
-      DisplayNone => ()
-      _ => {
-        match child.style.position {
-          PosAbsolute => continue
-          PosRelative => ()
+    let item = grid_items[i]
+    if item.participates_in_grid() {
+      let def = item.placement_indexes_and_spans(
+        explicit_col_count, explicit_row_count, negative_cols, negative_rows,
+      )
+      if primary_is_col {
+        // Flow rows: primary axis is columns, secondary axis is rows.
+        match (def.0, def.2) {
+          (Some(r), None) => {
+            let row_span = def.1
+            let col_span = def.3
+            let mut c = 0
+            while true {
+              ensure_rows(
+                occ,
+                row_tracks,
+                auto_rows,
+                negative_rows,
+                explicit_row_count,
+                r + row_span - 1,
+              )
+              ensure_cols(
+                occ,
+                col_tracks,
+                auto_cols,
+                negative_cols,
+                explicit_col_count,
+                c + col_span - 1,
+              )
+              if region_is_free(occ, r, c, row_span, col_span) {
+                mark_grid_item_placed(
+                  grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                  negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                  i, r, c, row_span, col_span,
+                )
+                break
+              }
+              c = c + 1
+            }
+          }
+          _ => ()
         }
-        let def = child_start_indexes_and_spans(
-          child.style,
-          explicit_col_count,
-          explicit_row_count,
-          negative_cols,
-          negative_rows,
-        )
-        if primary_is_col {
-          // Flow rows: primary axis is columns, secondary axis is rows.
-          match (def.0, def.2) {
-            (Some(r), None) => {
-              let row_span = def.1
-              let col_span = def.3
-              let mut c = 0
-              while true {
-                ensure_rows(
-                  occ,
-                  row_tracks,
-                  auto_rows,
-                  negative_rows,
-                  explicit_row_count,
-                  r + row_span - 1,
+      } else {
+        // Flow columns: primary axis is rows, secondary axis is columns.
+        match (def.0, def.2) {
+          (None, Some(c)) => {
+            let row_span = def.1
+            let col_span = def.3
+            let mut r = 0
+            while true {
+              ensure_rows(
+                occ,
+                row_tracks,
+                auto_rows,
+                negative_rows,
+                explicit_row_count,
+                r + row_span - 1,
+              )
+              ensure_cols(
+                occ,
+                col_tracks,
+                auto_cols,
+                negative_cols,
+                explicit_col_count,
+                c + col_span - 1,
+              )
+              if region_is_free(occ, r, c, row_span, col_span) {
+                mark_grid_item_placed(
+                  grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                  negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                  i, r, c, row_span, col_span,
                 )
-                ensure_cols(
-                  occ,
-                  col_tracks,
-                  auto_cols,
-                  negative_cols,
-                  explicit_col_count,
-                  c + col_span - 1,
-                )
-                if region_is_free(occ, r, c, row_span, col_span) {
-                  mark_grid_item_placed(
-                    grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
-                    negative_rows, negative_cols, explicit_row_count, explicit_col_count,
-                    i, r, c, row_span, col_span,
-                  )
-                  break
-                }
-                c = c + 1
+                break
               }
+              r = r + 1
             }
-            _ => ()
           }
-        } else {
-          // Flow columns: primary axis is rows, secondary axis is columns.
-          match (def.0, def.2) {
-            (None, Some(c)) => {
-              let row_span = def.1
-              let col_span = def.3
-              let mut r = 0
-              while true {
-                ensure_rows(
-                  occ,
-                  row_tracks,
-                  auto_rows,
-                  negative_rows,
-                  explicit_row_count,
-                  r + row_span - 1,
-                )
-                ensure_cols(
-                  occ,
-                  col_tracks,
-                  auto_cols,
-                  negative_cols,
-                  explicit_col_count,
-                  c + col_span - 1,
-                )
-                if region_is_free(occ, r, c, row_span, col_span) {
-                  mark_grid_item_placed(
-                    grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
-                    negative_rows, negative_cols, explicit_row_count, explicit_col_count,
-                    i, r, c, row_span, col_span,
-                  )
-                  break
-                }
-                r = r + 1
-              }
-            }
-            _ => ()
-          }
+          _ => ()
         }
       }
     }
@@ -357,229 +327,214 @@ fn[C] compute_grid_layout(
     if grid_items[i].placed {
       continue
     }
-    let child_id = tree.children[node_id][i]
-    let child = match tree.nodes.get(child_id) {
-      Some(c) => c
-      None => raise InvalidNodeId(child_id)
-    }
-    match child.style.display {
-      DisplayNone => ()
-      _ => {
-        match child.style.position {
-          PosAbsolute => continue
-          PosRelative => ()
-        }
-        let def = child_start_indexes_and_spans(
-          child.style,
-          explicit_col_count,
-          explicit_row_count,
-          negative_cols,
-          negative_rows,
-        )
-        let row_span = def.1
-        let col_span = def.3
-        let mut sec = if dense { 0 } else { cursor_sec }
-        while true {
-          if primary_is_col {
-            // Auto-flow rows: scan row-by-row
-            let fixed_col = def.2
-            match fixed_col {
-              Some(c0) =>
-                while true {
-                  if !dense && sec == cursor_sec && c0 < cursor_prim {
-                    sec = sec + 1
-                  }
-                  ensure_rows(
-                    occ,
-                    row_tracks,
-                    auto_rows,
-                    negative_rows,
-                    explicit_row_count,
-                    sec + row_span - 1,
-                  )
-                  ensure_cols(
-                    occ,
-                    col_tracks,
-                    auto_cols,
-                    negative_cols,
-                    explicit_col_count,
-                    c0 + col_span - 1,
-                  )
-                  if region_is_free(occ, sec, c0, row_span, col_span) {
-                    mark_grid_item_placed(
-                      grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
-                      negative_rows, negative_cols, explicit_row_count, explicit_col_count,
-                      i, sec, c0, row_span, col_span,
-                    )
-                    if !dense {
-                      cursor_sec = sec
-                      cursor_prim = c0 + col_span
-                      if cursor_prim >= col_tracks.length() {
-                        cursor_sec = cursor_sec + 1
-                        cursor_prim = 0
-                      }
-                    }
-                    sec = -1
-                    break
-                  }
+    let item = grid_items[i]
+    if item.participates_in_grid() {
+      let def = item.placement_indexes_and_spans(
+        explicit_col_count, explicit_row_count, negative_cols, negative_rows,
+      )
+      let row_span = def.1
+      let col_span = def.3
+      let mut sec = if dense { 0 } else { cursor_sec }
+      while true {
+        if primary_is_col {
+          // Auto-flow rows: scan row-by-row
+          let fixed_col = def.2
+          match fixed_col {
+            Some(c0) =>
+              while true {
+                if !dense && sec == cursor_sec && c0 < cursor_prim {
                   sec = sec + 1
                 }
-              None => {
-                ensure_cols(
-                  occ,
-                  col_tracks,
-                  auto_cols,
-                  negative_cols,
-                  explicit_col_count,
-                  col_span - 1,
-                )
-                while true {
-                  ensure_rows(
-                    occ,
-                    row_tracks,
-                    auto_rows,
-                    negative_rows,
-                    explicit_row_count,
-                    sec + row_span - 1,
-                  )
-                  let mut prim = if dense || sec != cursor_sec {
-                    0
-                  } else {
-                    cursor_prim
-                  }
-                  let max_prim = col_tracks.length() - col_span + 1
-                  let mut found = false
-                  while prim < max_prim {
-                    if region_is_free(occ, sec, prim, row_span, col_span) {
-                      mark_grid_item_placed(
-                        grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
-                        negative_rows, negative_cols, explicit_row_count, explicit_col_count,
-                        i, sec, prim, row_span, col_span,
-                      )
-                      if !dense {
-                        cursor_sec = sec
-                        cursor_prim = prim + col_span
-                        if cursor_prim >= col_tracks.length() {
-                          cursor_sec = cursor_sec + 1
-                          cursor_prim = 0
-                        }
-                      }
-                      found = true
-                      break
-                    }
-                    prim = prim + 1
-                  }
-                  if found {
-                    sec = -1
-                    break
-                  }
-                  sec = sec + 1
-                }
-              }
-            }
-            if sec == -1 {
-              break
-            }
-          } else {
-            // Auto-flow columns: scan col-by-col
-            let fixed_row = def.0
-            match fixed_row {
-              Some(r0) =>
-                while true {
-                  if !dense && sec == cursor_sec && r0 < cursor_prim {
-                    sec = sec + 1
-                  }
-                  ensure_cols(
-                    occ,
-                    col_tracks,
-                    auto_cols,
-                    negative_cols,
-                    explicit_col_count,
-                    sec + col_span - 1,
-                  )
-                  ensure_rows(
-                    occ,
-                    row_tracks,
-                    auto_rows,
-                    negative_rows,
-                    explicit_row_count,
-                    r0 + row_span - 1,
-                  )
-                  if region_is_free(occ, r0, sec, row_span, col_span) {
-                    mark_grid_item_placed(
-                      grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
-                      negative_rows, negative_cols, explicit_row_count, explicit_col_count,
-                      i, r0, sec, row_span, col_span,
-                    )
-                    if !dense {
-                      cursor_sec = sec
-                      cursor_prim = r0 + row_span
-                      if cursor_prim >= row_tracks.length() {
-                        cursor_sec = cursor_sec + 1
-                        cursor_prim = 0
-                      }
-                    }
-                    sec = -1
-                    break
-                  }
-                  sec = sec + 1
-                }
-              None => {
                 ensure_rows(
                   occ,
                   row_tracks,
                   auto_rows,
                   negative_rows,
                   explicit_row_count,
-                  row_span - 1,
+                  sec + row_span - 1,
                 )
-                while true {
-                  ensure_cols(
-                    occ,
-                    col_tracks,
-                    auto_cols,
-                    negative_cols,
-                    explicit_col_count,
-                    sec + col_span - 1,
+                ensure_cols(
+                  occ,
+                  col_tracks,
+                  auto_cols,
+                  negative_cols,
+                  explicit_col_count,
+                  c0 + col_span - 1,
+                )
+                if region_is_free(occ, sec, c0, row_span, col_span) {
+                  mark_grid_item_placed(
+                    grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                    negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                    i, sec, c0, row_span, col_span,
                   )
-                  let mut prim = if dense || sec != cursor_sec {
-                    0
-                  } else {
-                    cursor_prim
-                  }
-                  let max_prim = row_tracks.length() - row_span + 1
-                  let mut found = false
-                  while prim < max_prim {
-                    if region_is_free(occ, prim, sec, row_span, col_span) {
-                      mark_grid_item_placed(
-                        grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
-                        negative_rows, negative_cols, explicit_row_count, explicit_col_count,
-                        i, prim, sec, row_span, col_span,
-                      )
-                      if !dense {
-                        cursor_sec = sec
-                        cursor_prim = prim + row_span
-                        if cursor_prim >= row_tracks.length() {
-                          cursor_sec = cursor_sec + 1
-                          cursor_prim = 0
-                        }
-                      }
-                      found = true
-                      break
+                  if !dense {
+                    cursor_sec = sec
+                    cursor_prim = c0 + col_span
+                    if cursor_prim >= col_tracks.length() {
+                      cursor_sec = cursor_sec + 1
+                      cursor_prim = 0
                     }
-                    prim = prim + 1
                   }
-                  if found {
-                    sec = -1
+                  sec = -1
+                  break
+                }
+                sec = sec + 1
+              }
+            None => {
+              ensure_cols(
+                occ,
+                col_tracks,
+                auto_cols,
+                negative_cols,
+                explicit_col_count,
+                col_span - 1,
+              )
+              while true {
+                ensure_rows(
+                  occ,
+                  row_tracks,
+                  auto_rows,
+                  negative_rows,
+                  explicit_row_count,
+                  sec + row_span - 1,
+                )
+                let mut prim = if dense || sec != cursor_sec {
+                  0
+                } else {
+                  cursor_prim
+                }
+                let max_prim = col_tracks.length() - col_span + 1
+                let mut found = false
+                while prim < max_prim {
+                  if region_is_free(occ, sec, prim, row_span, col_span) {
+                    mark_grid_item_placed(
+                      grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                      negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                      i, sec, prim, row_span, col_span,
+                    )
+                    if !dense {
+                      cursor_sec = sec
+                      cursor_prim = prim + col_span
+                      if cursor_prim >= col_tracks.length() {
+                        cursor_sec = cursor_sec + 1
+                        cursor_prim = 0
+                      }
+                    }
+                    found = true
                     break
                   }
-                  sec = sec + 1
+                  prim = prim + 1
                 }
+                if found {
+                  sec = -1
+                  break
+                }
+                sec = sec + 1
               }
             }
-            if sec == -1 {
-              break
+          }
+          if sec == -1 {
+            break
+          }
+        } else {
+          // Auto-flow columns: scan col-by-col
+          let fixed_row = def.0
+          match fixed_row {
+            Some(r0) =>
+              while true {
+                if !dense && sec == cursor_sec && r0 < cursor_prim {
+                  sec = sec + 1
+                }
+                ensure_cols(
+                  occ,
+                  col_tracks,
+                  auto_cols,
+                  negative_cols,
+                  explicit_col_count,
+                  sec + col_span - 1,
+                )
+                ensure_rows(
+                  occ,
+                  row_tracks,
+                  auto_rows,
+                  negative_rows,
+                  explicit_row_count,
+                  r0 + row_span - 1,
+                )
+                if region_is_free(occ, r0, sec, row_span, col_span) {
+                  mark_grid_item_placed(
+                    grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                    negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                    i, r0, sec, row_span, col_span,
+                  )
+                  if !dense {
+                    cursor_sec = sec
+                    cursor_prim = r0 + row_span
+                    if cursor_prim >= row_tracks.length() {
+                      cursor_sec = cursor_sec + 1
+                      cursor_prim = 0
+                    }
+                  }
+                  sec = -1
+                  break
+                }
+                sec = sec + 1
+              }
+            None => {
+              ensure_rows(
+                occ,
+                row_tracks,
+                auto_rows,
+                negative_rows,
+                explicit_row_count,
+                row_span - 1,
+              )
+              while true {
+                ensure_cols(
+                  occ,
+                  col_tracks,
+                  auto_cols,
+                  negative_cols,
+                  explicit_col_count,
+                  sec + col_span - 1,
+                )
+                let mut prim = if dense || sec != cursor_sec {
+                  0
+                } else {
+                  cursor_prim
+                }
+                let max_prim = row_tracks.length() - row_span + 1
+                let mut found = false
+                while prim < max_prim {
+                  if region_is_free(occ, prim, sec, row_span, col_span) {
+                    mark_grid_item_placed(
+                      grid_items, occ, row_tracks, col_tracks, auto_rows, auto_cols,
+                      negative_rows, negative_cols, explicit_row_count, explicit_col_count,
+                      i, prim, sec, row_span, col_span,
+                    )
+                    if !dense {
+                      cursor_sec = sec
+                      cursor_prim = prim + row_span
+                      if cursor_prim >= row_tracks.length() {
+                        cursor_sec = cursor_sec + 1
+                        cursor_prim = 0
+                      }
+                    }
+                    found = true
+                    break
+                  }
+                  prim = prim + 1
+                }
+                if found {
+                  sec = -1
+                  break
+                }
+                sec = sec + 1
+              }
             }
+          }
+          if sec == -1 {
+            break
           }
         }
       }
@@ -609,11 +564,9 @@ fn[C] compute_grid_layout(
     if !grid_items[i].placed {
       continue
     }
-    let child_id = tree.children[node_id][i]
-    let child = match tree.nodes.get(child_id) {
-      Some(c0) => c0
-      None => raise InvalidNodeId(child_id)
-    }
+    let item = grid_items[i]
+    let child_id = item.node
+    let child_style = item.style
     let c = placed_col[i]
     let col_span = placed_col_span[i]
     let r = placed_row[i]
@@ -638,7 +591,7 @@ fn[C] compute_grid_layout(
     )
     let max_sz = tree.nodes[child_id].unrounded_layout.size
     let resolved_margin = resolve_rect_width_basis(
-      child.style.margin,
+      child_style.margin,
       Size(width=AvailMaxContent, height=AvailMaxContent),
     )
     let max_needed = max_double(
@@ -657,7 +610,7 @@ fn[C] compute_grid_layout(
       false,
     )
     let min_col_raw = tree.nodes[child_id].unrounded_layout.size.width
-    let min_col = match (child.style.overflow.x, child.style.overflow.y) {
+    let min_col = match (child_style.overflow.x, child_style.overflow.y) {
       (OverflowVisible, OverflowVisible) => min_col_raw
       _ => 0.0
     }
@@ -725,11 +678,9 @@ fn[C] compute_grid_layout(
     if !grid_items[i].placed {
       continue
     }
-    let child_id = tree.children[node_id][i]
-    let child = match tree.nodes.get(child_id) {
-      Some(c0) => c0
-      None => raise InvalidNodeId(child_id)
-    }
+    let item = grid_items[i]
+    let child_id = item.node
+    let child_style = item.style
     let c = placed_col[i]
     let col_span = placed_col_span[i]
     let r = placed_row[i]
@@ -743,13 +694,13 @@ fn[C] compute_grid_layout(
     }
     let row_gap_total = row_gap * (row_span - 1).to_double()
     let resolved_margin = resolve_rect_width_basis(
-      child.style.margin,
+      child_style.margin,
       Size(width=AvailDefinite(col_w), height=AvailMaxContent),
     )
-    let margin_left_auto = child.style.margin.left is DimAuto
-    let margin_right_auto = child.style.margin.right is DimAuto
+    let margin_left_auto = child_style.margin.left is DimAuto
+    let margin_right_auto = child_style.margin.right is DimAuto
     let has_auto_margin_x = margin_left_auto || margin_right_auto
-    let justify = match child.style.justify_self {
+    let justify = match child_style.justify_self {
       Some(v) => v
       None => default_justify_items_for_contrib
     }
@@ -758,11 +709,11 @@ fn[C] compute_grid_layout(
       0.0,
     )
     let mut known_w_for_contrib = resolve_optional_dimension(
-      child.style.size.width,
+      child_style.size.width,
       AvailDefinite(col_w),
     )
     if known_w_for_contrib is None &&
-      child.style.size.width is DimAuto &&
+      child_style.size.width is DimAuto &&
       justify is ItemsStretch &&
       !has_auto_margin_x {
       known_w_for_contrib = Some(available_w_for_item)
@@ -797,7 +748,7 @@ fn[C] compute_grid_layout(
       false,
     )
     let min_h_raw = tree.nodes[child_id].unrounded_layout.size.height
-    let min_h = match (child.style.overflow.x, child.style.overflow.y) {
+    let min_h = match (child_style.overflow.x, child_style.overflow.y) {
       (OverflowVisible, OverflowVisible) => min_h_raw
       _ => 0.0
     }
@@ -927,11 +878,9 @@ fn[C] compute_grid_layout(
       if !grid_items[i].placed {
         continue
       }
-      let child_id = tree.children[node_id][i]
-      let child = match tree.nodes.get(child_id) {
-        Some(c0) => c0
-        None => raise InvalidNodeId(child_id)
-      }
+      let item = grid_items[i]
+      let child_id = item.node
+      let child_style = item.style
       let c = placed_col[i]
       let col_span = placed_col_span[i]
       let gap_total = col_gap * (col_span - 1).to_double()
@@ -944,7 +893,7 @@ fn[C] compute_grid_layout(
       )
       let max_sz = tree.nodes[child_id].unrounded_layout.size
       let resolved_margin = resolve_rect_width_basis(
-        child.style.margin,
+        child_style.margin,
         Size(width=AvailMaxContent, height=AvailMaxContent),
       )
       let max_needed = max_double(
@@ -962,7 +911,7 @@ fn[C] compute_grid_layout(
         false,
       )
       let min_col_raw = tree.nodes[child_id].unrounded_layout.size.width
-      let min_col = match (child.style.overflow.x, child.style.overflow.y) {
+      let min_col = match (child_style.overflow.x, child_style.overflow.y) {
         (OverflowVisible, OverflowVisible) => min_col_raw
         _ => 0.0
       }
@@ -986,11 +935,9 @@ fn[C] compute_grid_layout(
       if !grid_items[i].placed {
         continue
       }
-      let child_id = tree.children[node_id][i]
-      let child = match tree.nodes.get(child_id) {
-        Some(c0) => c0
-        None => raise InvalidNodeId(child_id)
-      }
+      let item = grid_items[i]
+      let child_id = item.node
+      let child_style = item.style
       let c = placed_col[i]
       let col_span = placed_col_span[i]
       let r = placed_row[i]
@@ -1004,13 +951,13 @@ fn[C] compute_grid_layout(
       }
       let row_gap_total = row_gap * (row_span - 1).to_double()
       let resolved_margin = resolve_rect_width_basis(
-        child.style.margin,
+        child_style.margin,
         Size(width=AvailDefinite(col_w), height=AvailMaxContent),
       )
-      let margin_left_auto = child.style.margin.left is DimAuto
-      let margin_right_auto = child.style.margin.right is DimAuto
+      let margin_left_auto = child_style.margin.left is DimAuto
+      let margin_right_auto = child_style.margin.right is DimAuto
       let has_auto_margin_x = margin_left_auto || margin_right_auto
-      let justify = match child.style.justify_self {
+      let justify = match child_style.justify_self {
         Some(v) => v
         None => default_justify_items_for_contrib
       }
@@ -1019,11 +966,11 @@ fn[C] compute_grid_layout(
         0.0,
       )
       let mut known_w_for_contrib = resolve_optional_dimension(
-        child.style.size.width,
+        child_style.size.width,
         AvailDefinite(col_w),
       )
       if known_w_for_contrib is None &&
-        child.style.size.width is DimAuto &&
+        child_style.size.width is DimAuto &&
         justify is ItemsStretch &&
         !has_auto_margin_x {
         known_w_for_contrib = Some(available_w_for_item)
@@ -1054,7 +1001,7 @@ fn[C] compute_grid_layout(
         false,
       )
       let min_h_raw = tree.nodes[child_id].unrounded_layout.size.height
-      let min_h = match (child.style.overflow.x, child.style.overflow.y) {
+      let min_h = match (child_style.overflow.x, child_style.overflow.y) {
         (OverflowVisible, OverflowVisible) => min_h_raw
         _ => 0.0
       }
@@ -1319,16 +1266,14 @@ fn[C] compute_grid_layout(
     if !grid_items[i].placed {
       continue
     }
-    let child_id = tree.children[node_id][i]
-    let child = match tree.nodes.get(child_id) {
-      Some(c) => c
-      None => raise InvalidNodeId(child_id)
-    }
-    match child.style.display {
+    let item = grid_items[i]
+    let child_id = item.node
+    let child_style = item.style
+    match child_style.display {
       DisplayNone => continue
       _ => ()
     }
-    match child.style.position {
+    match child_style.position {
       PosAbsolute => continue
       PosRelative => ()
     }
@@ -1341,7 +1286,7 @@ fn[C] compute_grid_layout(
     if row < 0 || col < 0 || row_end >= row_count || col_end >= col_count {
       continue
     }
-    let align = match child.style.align_self {
+    let align = match child_style.align_self {
       Some(v) => v
       None => default_align_items
     }
@@ -1371,13 +1316,13 @@ fn[C] compute_grid_layout(
       height=AvailDefinite(cell_h),
     )
     let resolved_margin = resolve_rect_width_basis(
-      child.style.margin,
+      child_style.margin,
       child_available,
     )
-    let margin_left_auto = child.style.margin.left is DimAuto
-    let margin_right_auto = child.style.margin.right is DimAuto
-    let margin_top_auto = child.style.margin.top is DimAuto
-    let margin_bottom_auto = child.style.margin.bottom is DimAuto
+    let margin_left_auto = child_style.margin.left is DimAuto
+    let margin_right_auto = child_style.margin.right is DimAuto
+    let margin_top_auto = child_style.margin.top is DimAuto
+    let margin_bottom_auto = child_style.margin.bottom is DimAuto
     let has_auto_margin_x = margin_left_auto || margin_right_auto
     let has_auto_margin_y = margin_top_auto || margin_bottom_auto
     if has_auto_margin_y {
@@ -1395,12 +1340,12 @@ fn[C] compute_grid_layout(
       width=AvailDefinite(available_w_for_item),
       height=AvailDefinite(available_h_for_item),
     )
-    let justify = match child.style.justify_self {
+    let justify = match child_style.justify_self {
       Some(v) => v
       None => default_justify_items
     }
     let stretch_fit_limit_w = if col_span == 1 {
-      match child.style.overflow.x {
+      match child_style.overflow.x {
         OverflowVisible => None
         _ =>
           match col_tracks[col] {
@@ -1414,7 +1359,7 @@ fn[C] compute_grid_layout(
     }
     let known_w = match justify {
       ItemsStretch =>
-        if child.style.size.width is DimAuto && !has_auto_margin_x {
+        if child_style.size.width is DimAuto && !has_auto_margin_x {
           match stretch_fit_limit_w {
             Some(limit_w) =>
               Some(
@@ -1433,7 +1378,7 @@ fn[C] compute_grid_layout(
     }
     // Percent sizes resolve against the containing block size (the grid area), not the
     // remaining space after subtracting margins.
-    let known_w = match (known_w, child.style.size.width) {
+    let known_w = match (known_w, child_style.size.width) {
       (None, DimPercent(p)) => Some(cell_w * p)
       _ => known_w
     }
@@ -1468,12 +1413,10 @@ fn[C] compute_grid_layout(
     }
   }
   for i in 0..<placement_count {
-    let child_id = tree.children[node_id][i]
-    let child = match tree.nodes.get(child_id) {
-      Some(c) => c
-      None => raise InvalidNodeId(child_id)
-    }
-    match child.style.display {
+    let item = grid_items[i]
+    let child_id = item.node
+    let child_style = item.style
+    match child_style.display {
       DisplayNone => compute_hidden_layout(tree, child_id, Point::zero())
       _ => {
         if !grid_items[i].placed {
@@ -1481,7 +1424,7 @@ fn[C] compute_grid_layout(
         } else {
           ()
         }
-        match child.style.position {
+        match child_style.position {
           PosAbsolute => continue
           PosRelative => ()
         }
@@ -1522,13 +1465,13 @@ fn[C] compute_grid_layout(
         )
         // Grid item margins apply inside the cell and contribute to track sizing.
         let resolved_margin = resolve_rect_width_basis(
-          child.style.margin,
+          child_style.margin,
           child_available,
         )
-        let margin_left_auto = child.style.margin.left is DimAuto
-        let margin_right_auto = child.style.margin.right is DimAuto
-        let margin_top_auto = child.style.margin.top is DimAuto
-        let margin_bottom_auto = child.style.margin.bottom is DimAuto
+        let margin_left_auto = child_style.margin.left is DimAuto
+        let margin_right_auto = child_style.margin.right is DimAuto
+        let margin_top_auto = child_style.margin.top is DimAuto
+        let margin_bottom_auto = child_style.margin.bottom is DimAuto
         let has_auto_margin_x = margin_left_auto || margin_right_auto
         let has_auto_margin_y = margin_top_auto || margin_bottom_auto
         let available_w_for_item = max_double(
@@ -1543,16 +1486,16 @@ fn[C] compute_grid_layout(
           width=AvailDefinite(available_w_for_item),
           height=AvailDefinite(available_h_for_item),
         )
-        let justify = match child.style.justify_self {
+        let justify = match child_style.justify_self {
           Some(v) => v
           None => default_justify_items
         }
-        let align = match child.style.align_self {
+        let align = match child_style.align_self {
           Some(v) => v
           None => default_align_items
         }
         let stretch_fit_limit_w = if col_span == 1 {
-          match child.style.overflow.x {
+          match child_style.overflow.x {
             OverflowVisible => None
             _ =>
               match col_tracks[col] {
@@ -1569,7 +1512,7 @@ fn[C] compute_grid_layout(
         }
         let mut known_w = match justify {
           ItemsStretch =>
-            if child.style.size.width is DimAuto && !has_auto_margin_x {
+            if child_style.size.width is DimAuto && !has_auto_margin_x {
               match stretch_fit_limit_w {
                 Some(limit_w) =>
                   Some(
@@ -1588,9 +1531,9 @@ fn[C] compute_grid_layout(
         }
         let mut known_h = match align {
           ItemsStretch =>
-            if child.style.size.height is DimAuto &&
+            if child_style.size.height is DimAuto &&
               !has_auto_margin_y &&
-              child.style.aspect_ratio is None {
+              child_style.aspect_ratio is None {
               Some(available_h_for_item)
             } else {
               None
@@ -1599,11 +1542,11 @@ fn[C] compute_grid_layout(
         }
         // Percent sizes resolve against the containing block size (the grid area), not the
         // remaining space after subtracting margins.
-        match (known_w, child.style.size.width) {
+        match (known_w, child_style.size.width) {
           (None, DimPercent(p)) => known_w = Some(cell_w * p)
           _ => ()
         }
-        match (known_h, child.style.size.height) {
+        match (known_h, child_style.size.height) {
           (None, DimPercent(p)) => known_h = Some(cell_h * p)
           _ => ()
         }
@@ -1616,7 +1559,7 @@ fn[C] compute_grid_layout(
           Point::zero(),
           false,
         )
-        match (align, child.style.aspect_ratio, child.style.size.height) {
+        match (align, child_style.aspect_ratio, child_style.size.height) {
           (ItemsStretch, Some(ratio), DimAuto) =>
             if ratio > 0.0 &&
               known_w is Some(_) &&
@@ -1624,7 +1567,7 @@ fn[C] compute_grid_layout(
               !has_auto_margin_y {
               let intrinsic_after_stretch = tree.nodes[child_id].unrounded_layout.size
               let max_height = resolve_optional_dimension(
-                child.style.max_size.height,
+                child_style.max_size.height,
                 item_available.height,
               )
               match max_height {

@@ -318,6 +318,155 @@ fn shrink_grid_tracks_to_minimum(
 }
 
 ///|
+fn expand_flexible_grid_tracks(
+  state : GridTrackSizingState,
+  available : Double,
+) -> Bool {
+  let sizes = state.sizes
+  let min_sizes = state.min_sizes
+  let fr_weights = state.fr_weights
+  let mut sum_fr = 0.0
+  for weight in fr_weights {
+    sum_fr = sum_fr + weight
+  }
+  if sum_fr <= 0.0 {
+    return false
+  }
+  let mut fixed_used = 0.0
+  for i in 0..<sizes.length() {
+    if fr_weights[i] <= 0.0 {
+      fixed_used = fixed_used + sizes[i]
+    }
+  }
+  let mut remaining_for_fr = max_double(available - fixed_used, 0.0)
+  let mut unresolved : Array[Int] = []
+  for i in 0..<sizes.length() {
+    if fr_weights[i] > 0.0 {
+      unresolved.push(i)
+      sizes[i] = min_sizes[i]
+    }
+  }
+  while unresolved.length() > 0 {
+    let mut unresolved_sum = 0.0
+    for idx in unresolved {
+      unresolved_sum = unresolved_sum + fr_weights[idx]
+    }
+    let denom = if unresolved_sum < 1.0 { 1.0 } else { unresolved_sum }
+    let flex_fraction = remaining_for_fr / denom
+    let mut froze_any = false
+    let next_unresolved : Array[Int] = []
+    for idx in unresolved {
+      let proposed = flex_fraction * fr_weights[idx]
+      if proposed + 0.000001 < min_sizes[idx] {
+        sizes[idx] = min_sizes[idx]
+        remaining_for_fr = max_double(remaining_for_fr - min_sizes[idx], 0.0)
+        froze_any = true
+      } else {
+        next_unresolved.push(idx)
+      }
+    }
+    if !froze_any {
+      let total_fr_space = if unresolved_sum < 1.0 {
+        remaining_for_fr * unresolved_sum
+      } else {
+        remaining_for_fr
+      }
+      if is_near_int(total_fr_space) {
+        let total_int = total_fr_space.floor().to_int()
+        let raw_bases : Array[Int] = []
+        let raw_fracs : Array[Double] = []
+        let mut sum_bases = 0
+        for idx in unresolved {
+          let raw = flex_fraction * fr_weights[idx]
+          let base = raw.floor().to_int()
+          raw_bases.push(base)
+          raw_fracs.push(raw - base.to_double())
+          sum_bases = sum_bases + base
+        }
+        let mut remainder = total_int - sum_bases
+        while remainder > 0 {
+          let mut best_j = 0
+          let mut best_frac = -1.0
+          for j in 0..<raw_fracs.length() {
+            if raw_fracs[j] > best_frac {
+              best_frac = raw_fracs[j]
+              best_j = j
+            }
+          }
+          raw_bases[best_j] = raw_bases[best_j] + 1
+          raw_fracs[best_j] = -1.0
+          remainder = remainder - 1
+        }
+        for j in 0..<unresolved.length() {
+          sizes[unresolved[j]] = raw_bases[j].to_double()
+        }
+      } else {
+        for idx in unresolved {
+          sizes[idx] = flex_fraction * fr_weights[idx]
+        }
+      }
+      break
+    }
+    unresolved = next_unresolved
+  }
+  true
+}
+
+///|
+fn grow_auto_like_grid_tracks(
+  state : GridTrackSizingState,
+  free : Double,
+) -> Unit {
+  let sizes = state.sizes
+  let is_auto = state.is_auto
+  let max_limits = state.max_limits
+  let mut remaining = free
+  let mut growable : Array[Int] = []
+  for i in 0..<sizes.length() {
+    if is_auto[i] && sizes[i] + 0.000001 < max_limits[i] {
+      growable.push(i)
+    }
+  }
+  while remaining > 0.000001 && growable.length() > 0 {
+    let extra = remaining / growable.length().to_double()
+    let mut used_extra = 0.0
+    let next : Array[Int] = []
+    for idx in growable {
+      let cap = max_limits[idx] - sizes[idx]
+      let increase = if cap < extra { cap } else { extra }
+      if increase > 0.0 {
+        sizes[idx] = sizes[idx] + increase
+        used_extra = used_extra + increase
+      }
+      if sizes[idx] + 0.000001 < max_limits[idx] {
+        next.push(idx)
+      }
+    }
+    if used_extra <= 0.0 {
+      break
+    }
+    remaining = remaining - used_extra
+    growable = next
+  }
+}
+
+///|
+fn distribute_grid_track_free_space(
+  state : GridTrackSizingState,
+  available : Double,
+  gap : Double,
+) -> Unit {
+  let used = grid_track_used_size(state, gap)
+  let free = available - used
+  if free <= 0.0 {
+    return
+  }
+  if !expand_flexible_grid_tracks(state, available) {
+    grow_auto_like_grid_tracks(state, free)
+  }
+}
+
+///|
 fn compute_grid_track_sizes_with_contributions(
   tracks : Array[Dimension],
   available : Double,
@@ -332,9 +481,6 @@ fn compute_grid_track_sizes_with_contributions(
   )
   let sizes = state.sizes
   let min_sizes = state.min_sizes
-  let fr_weights = state.fr_weights
-  let is_auto = state.is_auto
-  let max_limits = state.max_limits
 
   // Intrinsic sizing for flexible tracks: derive a flex fraction from content contributions.
   // This matches taffy 0.5 behavior for `fr` tracks under indefinite available space.
@@ -346,125 +492,8 @@ fn compute_grid_track_sizes_with_contributions(
   shrink_grid_tracks_to_minimum(state, available, gap)
 
   // Distribute any remaining free space (only when the grid container has a definite size).
-  let used = grid_track_used_size(state, gap)
-  let free = available - used
-  if expand_to_fill && free > 0.0 {
-    let mut sum_fr = 0.0
-    for w in fr_weights {
-      sum_fr = sum_fr + w
-    }
-    if sum_fr > 0.0 {
-      let mut fixed_used = 0.0
-      for i in 0..<count {
-        if fr_weights[i] <= 0.0 {
-          fixed_used = fixed_used + sizes[i]
-        }
-      }
-      let mut remaining_for_fr = max_double(available - fixed_used, 0.0)
-      let mut unresolved : Array[Int] = []
-      for i in 0..<count {
-        if fr_weights[i] > 0.0 {
-          unresolved.push(i)
-          sizes[i] = min_sizes[i]
-        }
-      }
-      while unresolved.length() > 0 {
-        let mut unresolved_sum = 0.0
-        for idx in unresolved {
-          unresolved_sum = unresolved_sum + fr_weights[idx]
-        }
-        let denom = if unresolved_sum < 1.0 { 1.0 } else { unresolved_sum }
-        let flex_fraction = remaining_for_fr / denom
-        let mut froze_any = false
-        let next_unresolved : Array[Int] = []
-        for idx in unresolved {
-          let proposed = flex_fraction * fr_weights[idx]
-          if proposed + 0.000001 < min_sizes[idx] {
-            sizes[idx] = min_sizes[idx]
-            remaining_for_fr = max_double(
-              remaining_for_fr - min_sizes[idx],
-              0.0,
-            )
-            froze_any = true
-          } else {
-            next_unresolved.push(idx)
-          }
-        }
-        if !froze_any {
-          let total_fr_space = if unresolved_sum < 1.0 {
-            remaining_for_fr * unresolved_sum
-          } else {
-            remaining_for_fr
-          }
-          if is_near_int(total_fr_space) {
-            let total_int = total_fr_space.floor().to_int()
-            let raw_bases : Array[Int] = []
-            let raw_fracs : Array[Double] = []
-            let mut sum_bases = 0
-            for idx in unresolved {
-              let raw = flex_fraction * fr_weights[idx]
-              let base = raw.floor().to_int()
-              raw_bases.push(base)
-              raw_fracs.push(raw - base.to_double())
-              sum_bases = sum_bases + base
-            }
-            let mut remainder = total_int - sum_bases
-            while remainder > 0 {
-              let mut best_j = 0
-              let mut best_frac = -1.0
-              for j in 0..<raw_fracs.length() {
-                if raw_fracs[j] > best_frac {
-                  best_frac = raw_fracs[j]
-                  best_j = j
-                }
-              }
-              raw_bases[best_j] = raw_bases[best_j] + 1
-              raw_fracs[best_j] = -1.0
-              remainder = remainder - 1
-            }
-            for j in 0..<unresolved.length() {
-              sizes[unresolved[j]] = raw_bases[j].to_double()
-            }
-          } else {
-            for idx in unresolved {
-              sizes[idx] = flex_fraction * fr_weights[idx]
-            }
-          }
-          break
-        }
-        unresolved = next_unresolved
-      }
-    } else {
-      // Distribute remaining free space evenly to auto-like tracks, respecting fit-content/minmax caps.
-      let mut remaining = free
-      let mut growable : Array[Int] = []
-      for i in 0..<count {
-        if is_auto[i] && sizes[i] + 0.000001 < max_limits[i] {
-          growable.push(i)
-        }
-      }
-      while remaining > 0.000001 && growable.length() > 0 {
-        let extra = remaining / growable.length().to_double()
-        let mut used_extra = 0.0
-        let next : Array[Int] = []
-        for idx in growable {
-          let cap = max_limits[idx] - sizes[idx]
-          let inc = if cap < extra { cap } else { extra }
-          if inc > 0.0 {
-            sizes[idx] = sizes[idx] + inc
-            used_extra = used_extra + inc
-          }
-          if sizes[idx] + 0.000001 < max_limits[idx] {
-            next.push(idx)
-          }
-        }
-        if used_extra <= 0.0 {
-          break
-        }
-        remaining = remaining - used_extra
-        growable = next
-      }
-    }
+  if expand_to_fill {
+    distribute_grid_track_free_space(state, available, gap)
   }
 
   // Ensure no track is below its min size.

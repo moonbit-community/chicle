@@ -33,14 +33,93 @@ fn is_near_int(v : Double) -> Bool {
 }
 
 ///|
-fn compute_grid_track_sizes_with_contributions(
+priv struct GridTrackSizingState {
+  sizes : Array[Double]
+  min_sizes : Array[Double]
+  fr_weights : Array[Double]
+  is_auto : Array[Bool]
+  max_limits : Array[Double]
+  inf : Double
+}
+
+///|
+fn clamp_track_size(v : Double, lo : Double, hi : Double) -> Double {
+  let clamped_lo = if v < lo { lo } else { v }
+  if clamped_lo > hi {
+    hi
+  } else {
+    clamped_lo
+  }
+}
+
+///|
+fn grid_track_min_function_value(
+  d : Dimension,
+  available : Double,
+  min_c : Double,
+  max_c : Double,
+) -> Double {
+  match d {
+    DimAuto => 0.0
+    DimMinContent => min_c
+    DimMaxContent => max_c
+    DimFitContent(limit) => {
+      let lim = resolve_track_dimension(limit, available)
+      let max_limited = if max_c < lim { max_c } else { lim }
+      if max_limited < min_c {
+        min_c
+      } else {
+        max_limited
+      }
+    }
+    DimFr(_) => 0.0
+    DimRepeat(_, _) => 0.0
+    _ => {
+      let v = resolve_track_dimension(d, available)
+      if v > 0.0 {
+        v
+      } else {
+        0.0
+      }
+    }
+  }
+}
+
+///|
+fn grid_track_max_function_value_and_limit(
+  d : Dimension,
+  available : Double,
+  min_c : Double,
+  max_c : Double,
+  inf : Double,
+) -> (Double, Double, Double) {
+  match d {
+    DimAuto => (max_c, inf, 0.0)
+    DimMinContent => (min_c, inf, 0.0)
+    DimMaxContent => (max_c, inf, 0.0)
+    DimFitContent(limit) => {
+      let lim = resolve_track_dimension(limit, available)
+      let preferred = if max_c < lim { max_c } else { lim }
+      let preferred = if preferred < min_c { min_c } else { preferred }
+      (preferred, preferred, 0.0)
+    }
+    DimFr(w) => (0.0, inf, if w > 0.0 { w } else { 0.0 })
+    DimRepeat(_, _) => (0.0, inf, 0.0)
+    _ => {
+      let v = resolve_track_dimension(d, available)
+      let v = if v > 0.0 { v } else { 0.0 }
+      (v, v, 0.0)
+    }
+  }
+}
+
+///|
+fn initialize_grid_track_sizing_state(
   tracks : Array[Dimension],
   available : Double,
-  gap : Double,
   min_contrib : Array[Double],
   max_contrib : Array[Double],
-  expand_to_fill : Bool,
-) -> Array[Double] {
+) -> GridTrackSizingState {
   let count = tracks.length()
   let sizes : Array[Double] = Array::make(count, 0.0)
   let min_sizes : Array[Double] = Array::make(count, 0.0)
@@ -48,74 +127,6 @@ fn compute_grid_track_sizes_with_contributions(
   let is_auto : Array[Bool] = Array::make(count, false)
   let max_limits : Array[Double] = Array::make(count, 0.0)
   let inf = 1.0e30
-  fn clamp_minmax(v : Double, lo : Double, hi : Double) -> Double {
-    let v = if v < lo { lo } else { v }
-    if v > hi {
-      hi
-    } else {
-      v
-    }
-  }
-
-  fn min_function_value(
-    d : Dimension,
-    available : Double,
-    min_c : Double,
-    max_c : Double,
-  ) -> Double {
-    match d {
-      DimAuto => 0.0
-      DimMinContent => min_c
-      DimMaxContent => max_c
-      DimFitContent(limit) => {
-        let lim = resolve_track_dimension(limit, available)
-        let max_limited = if max_c < lim { max_c } else { lim }
-        if max_limited < min_c {
-          min_c
-        } else {
-          max_limited
-        }
-      }
-      DimFr(_) => 0.0
-      DimRepeat(_, _) => 0.0
-      _ => {
-        let v = resolve_track_dimension(d, available)
-        if v > 0.0 {
-          v
-        } else {
-          0.0
-        }
-      }
-    }
-  }
-
-  fn max_function_value_and_limit(
-    d : Dimension,
-    available : Double,
-    min_c : Double,
-    max_c : Double,
-    inf : Double,
-  ) -> (Double, Double, Double) {
-    match d {
-      DimAuto => (max_c, inf, 0.0)
-      DimMinContent => (min_c, inf, 0.0)
-      DimMaxContent => (max_c, inf, 0.0)
-      DimFitContent(limit) => {
-        let lim = resolve_track_dimension(limit, available)
-        let preferred = if max_c < lim { max_c } else { lim }
-        let preferred = if preferred < min_c { min_c } else { preferred }
-        (preferred, preferred, 0.0)
-      }
-      DimFr(w) => (0.0, inf, if w > 0.0 { w } else { 0.0 })
-      DimRepeat(_, _) => (0.0, inf, 0.0)
-      _ => {
-        let v = resolve_track_dimension(d, available)
-        let v = if v > 0.0 { v } else { 0.0 }
-        (v, v, 0.0)
-      }
-    }
-  }
-
   for i in 0..<count {
     let min_c = if i < min_contrib.length() { min_contrib[i] } else { 0.0 }
     let max_c = if i < max_contrib.length() { max_contrib[i] } else { 0.0 }
@@ -166,8 +177,10 @@ fn compute_grid_track_sizes_with_contributions(
         max_limits[i] = inf
       }
       DimMinMax(min_d, max_d) => {
-        let min_v = min_function_value(min_d, available, min_c, max_c)
-        let max_r = max_function_value_and_limit(
+        let min_v = grid_track_min_function_value(
+          min_d, available, min_c, max_c,
+        )
+        let max_r = grid_track_max_function_value_and_limit(
           max_d, available, min_c, max_c, inf,
         )
         let max_v = max_r.0
@@ -197,6 +210,28 @@ fn compute_grid_track_sizes_with_contributions(
       }
     }
   }
+  { sizes, min_sizes, fr_weights, is_auto, max_limits, inf }
+}
+
+///|
+fn compute_grid_track_sizes_with_contributions(
+  tracks : Array[Dimension],
+  available : Double,
+  gap : Double,
+  min_contrib : Array[Double],
+  max_contrib : Array[Double],
+  expand_to_fill : Bool,
+) -> Array[Double] {
+  let count = tracks.length()
+  let state = initialize_grid_track_sizing_state(
+    tracks, available, min_contrib, max_contrib,
+  )
+  let sizes = state.sizes
+  let min_sizes = state.min_sizes
+  let fr_weights = state.fr_weights
+  let is_auto = state.is_auto
+  let max_limits = state.max_limits
+  let inf = state.inf
 
   // Intrinsic sizing for flexible tracks: derive a flex fraction from content contributions.
   // This matches taffy 0.5 behavior for `fr` tracks under indefinite available space.
@@ -404,7 +439,7 @@ fn compute_grid_track_sizes_with_contributions(
 
   // Ensure no track is below its min size.
   for i in 0..<count {
-    sizes[i] = clamp_minmax(sizes[i], min_sizes[i], inf)
+    sizes[i] = clamp_track_size(sizes[i], min_sizes[i], inf)
   }
   sizes
 }

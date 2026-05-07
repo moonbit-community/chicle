@@ -260,6 +260,64 @@ fn apply_intrinsic_flexible_track_sizing(
 }
 
 ///|
+fn grid_track_used_size(state : GridTrackSizingState, gap : Double) -> Double {
+  let sizes = state.sizes
+  let mut used = 0.0
+  for size in sizes {
+    used = used + size
+  }
+  let count = sizes.length()
+  if count > 1 {
+    used + gap * (count - 1).to_double()
+  } else {
+    used
+  }
+}
+
+///|
+fn shrink_grid_tracks_to_minimum(
+  state : GridTrackSizingState,
+  available : Double,
+  gap : Double,
+) -> Unit {
+  let sizes = state.sizes
+  let min_sizes = state.min_sizes
+  let used = grid_track_used_size(state, gap)
+  if used <= available {
+    return
+  }
+  let eps = 0.000001
+  let mut over = used - available
+  let mut shrinkable : Array[Int] = []
+  for i in 0..<sizes.length() {
+    if sizes[i] > min_sizes[i] + eps {
+      shrinkable.push(i)
+    }
+  }
+  while over > eps && shrinkable.length() > 0 {
+    let per_track = over / shrinkable.length().to_double()
+    let mut shrunk = 0.0
+    let next : Array[Int] = []
+    for idx in shrinkable {
+      let can_shrink = sizes[idx] - min_sizes[idx]
+      let shrink = if can_shrink < per_track { can_shrink } else { per_track }
+      if shrink > 0.0 {
+        sizes[idx] = sizes[idx] - shrink
+        shrunk = shrunk + shrink
+      }
+      if sizes[idx] > min_sizes[idx] + eps {
+        next.push(idx)
+      }
+    }
+    if shrunk <= 0.0 {
+      break
+    }
+    over = over - shrunk
+    shrinkable = next
+  }
+}
+
+///|
 fn compute_grid_track_sizes_with_contributions(
   tracks : Array[Dimension],
   available : Double,
@@ -285,53 +343,10 @@ fn compute_grid_track_sizes_with_contributions(
   }
 
   // Shrink tracks down to their min-content contributions if the sum of preferred sizes overflows.
-  let mut used = 0.0
-  for s in sizes {
-    used = used + s
-  }
-  if count > 1 {
-    used = used + gap * (count - 1).to_double()
-  }
-  if used > available {
-    let eps = 0.000001
-    let mut over = used - available
-    let mut shrinkable : Array[Int] = []
-    for i in 0..<count {
-      if sizes[i] > min_sizes[i] + eps {
-        shrinkable.push(i)
-      }
-    }
-    while over > eps && shrinkable.length() > 0 {
-      let per = over / shrinkable.length().to_double()
-      let mut shrunk = 0.0
-      let next : Array[Int] = []
-      for idx in shrinkable {
-        let can = sizes[idx] - min_sizes[idx]
-        let s = if can < per { can } else { per }
-        if s > 0.0 {
-          sizes[idx] = sizes[idx] - s
-          shrunk = shrunk + s
-        }
-        if sizes[idx] > min_sizes[idx] + eps {
-          next.push(idx)
-        }
-      }
-      if shrunk <= 0.0 {
-        break
-      }
-      over = over - shrunk
-      shrinkable = next
-    }
-  }
+  shrink_grid_tracks_to_minimum(state, available, gap)
 
   // Distribute any remaining free space (only when the grid container has a definite size).
-  used = 0.0
-  for s in sizes {
-    used = used + s
-  }
-  if count > 1 {
-    used = used + gap * (count - 1).to_double()
-  }
+  let used = grid_track_used_size(state, gap)
   let free = available - used
   if expand_to_fill && free > 0.0 {
     let mut sum_fr = 0.0

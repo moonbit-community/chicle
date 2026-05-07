@@ -370,7 +370,7 @@ fn spanned_definite_len(
 }
 
 ///|
-fn col_min_sizing_kind(track : Dimension) -> Int {
+fn track_min_sizing_kind(track : Dimension) -> Int {
   // 0 = fixed/other, 1 = min-content, 2 = max-content, 3 = auto
   match track {
     DimMinContent => 1
@@ -395,6 +395,12 @@ priv struct GridTrackState {
   mut base_size : Double
   mut base_size_planned_increase : Double
   mut item_incurred_increase : Double
+}
+
+///|
+priv enum IntrinsicContributionType {
+  TrackMinimumContribution
+  TrackMaximumContribution
 }
 
 ///|
@@ -626,7 +632,7 @@ fn distribute_item_space_to_base_size(
   space : Double,
   should_affect : (GridTrackState) -> Bool,
   limit_of : (GridTrackState) -> Double,
-  contribution_is_maximum : Bool,
+  contribution_type : IntrinsicContributionType,
   percent_basis : Double?,
   eps : Double,
   inf : Double,
@@ -662,11 +668,12 @@ fn distribute_item_space_to_base_size(
     let mut matching_affected = false
     for j in start..<(start + span) {
       let dimension = states[j].dimension
-      let matches_beyond = if contribution_is_maximum {
-        track_has_max_content_or_fit_max(dimension) ||
-        col_min_sizing_kind(dimension) == 2
-      } else {
-        track_has_intrinsic_max(dimension, percent_basis)
+      let matches_beyond = match contribution_type {
+        TrackMaximumContribution =>
+          track_has_max_content_or_fit_max(dimension) ||
+          track_min_sizing_kind(dimension) == 2
+        TrackMinimumContribution =>
+          track_has_intrinsic_max(dimension, percent_basis)
       }
       if should_affect(states[j]) && matches_beyond {
         matching_affected = true
@@ -675,11 +682,12 @@ fn distribute_item_space_to_base_size(
     }
     let beyond_filter = fn(state : GridTrackState) -> Bool {
       if matching_affected {
-        if contribution_is_maximum {
-          track_has_max_content_or_fit_max(state.dimension) ||
-          col_min_sizing_kind(state.dimension) == 2
-        } else {
-          track_has_intrinsic_max(state.dimension, percent_basis)
+        match contribution_type {
+          TrackMaximumContribution =>
+            track_has_max_content_or_fit_max(state.dimension) ||
+            track_min_sizing_kind(state.dimension) == 2
+          TrackMinimumContribution =>
+            track_has_intrinsic_max(state.dimension, percent_basis)
         }
       } else {
         true
@@ -798,7 +806,7 @@ fn compute_intrinsic_base_sizes_max_content(
           track_has_intrinsic_min(state.dimension, percent_basis)
         },
         limit_of,
-        false,
+        TrackMinimumContribution,
         percent_basis,
         eps,
         inf,
@@ -828,11 +836,11 @@ fn compute_intrinsic_base_sizes_max_content(
         sp,
         min_content_needed[i],
         fn(state : GridTrackState) -> Bool {
-          let k = col_min_sizing_kind(state.dimension)
+          let k = track_min_sizing_kind(state.dimension)
           k == 1 || k == 2
         },
         limit_of,
-        false,
+        TrackMinimumContribution,
         percent_basis,
         eps,
         inf,
@@ -851,7 +859,7 @@ fn compute_intrinsic_base_sizes_max_content(
       let max_space = max_needed[i]
       let mut has_max_content = false
       for j in s..<(s + sp) {
-        if col_min_sizing_kind(states[j].dimension) == 2 {
+        if track_min_sizing_kind(states[j].dimension) == 2 {
           has_max_content = true
           break
         }
@@ -870,11 +878,11 @@ fn compute_intrinsic_base_sizes_max_content(
         sp,
         max_space,
         fn(state : GridTrackState) -> Bool {
-          col_min_sizing_kind(state.dimension) == affect_kind &&
+          track_min_sizing_kind(state.dimension) == affect_kind &&
           !track_max_is_min_content(state.dimension)
         },
         limit_of,
-        true,
+        TrackMaximumContribution,
         percent_basis,
         eps,
         inf,
@@ -896,10 +904,10 @@ fn compute_intrinsic_base_sizes_max_content(
         sp,
         max_needed[i],
         fn(state : GridTrackState) -> Bool {
-          col_min_sizing_kind(state.dimension) == 2
+          track_min_sizing_kind(state.dimension) == 2
         },
         fn(_state : GridTrackState) -> Double { inf },
-        true,
+        TrackMaximumContribution,
         percent_basis,
         eps,
         inf,
@@ -1001,7 +1009,7 @@ fn compute_max_content_spanning_track_sizes(
     if track_has_flexible_max(track) {
       has_flexible_track = true
     }
-    if col_min_sizing_kind(track) != 0 {
+    if track_min_sizing_kind(track) != 0 {
       has_intrinsic_track = true
     }
   }

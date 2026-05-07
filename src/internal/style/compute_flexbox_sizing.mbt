@@ -14,15 +14,13 @@
 
 ///|
 fn[C] resolve_flex_auto_min_main(
-  tree : TaffyTree[C],
+  view : TaffyView[C],
   child_id : NodeId,
   is_col : Bool,
   parent_available_for_children : Size[AvailableSpace],
   main_axis_available : AvailableSpace,
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
 ) -> Double raise TaffyError {
+  let tree = view.tree
   let child = match tree.nodes.get(child_id) {
     Some(c) => c
     None => raise InvalidNodeId(child_id)
@@ -50,8 +48,8 @@ fn[C] resolve_flex_auto_min_main(
   } else {
     Size(width=AvailMinContent, height=parent_available_for_children.height)
   }
-  let min_content_main = measure_child_size_with_measure(
-    tree,
+  let min_content_main = measure_child_size(
+    view,
     child_id,
     Size(width=None, height=None),
     Size(width=None, height=None),
@@ -64,7 +62,6 @@ fn[C] resolve_flex_auto_min_main(
     },
     Line(start=false, end=false),
     Point::zero(),
-    measure_function,
   )
   tree.nodes[child_id].style = original_style
   tree.nodes[child_id].unrounded_layout = original_layout
@@ -100,7 +97,7 @@ fn[C] resolve_flex_auto_min_main(
 
 ///|
 fn[C] resolve_wrap_line_main_sizes(
-  tree : TaffyTree[C],
+  view : TaffyView[C],
   flow_children : Array[NodeId],
   indices : Array[Int],
   is_col : Bool,
@@ -115,10 +112,8 @@ fn[C] resolve_wrap_line_main_sizes(
   max_main_sizes : Array[Double?],
   main_available_pre : AvailableSpace,
   parent_available_for_children : Size[AvailableSpace],
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
 ) -> Array[Double] raise TaffyError {
+  let tree = view.tree
   let flow_count = flow_children.length()
   let count = indices.length()
   let line_main_sizes : Array[Double] = Array::make(flow_count, 0.0)
@@ -228,12 +223,11 @@ fn[C] resolve_wrap_line_main_sizes(
         min_main_sizes[idx] < 0.0 &&
         should_resolve_auto_min {
         let auto_min = resolve_flex_auto_min_main(
-          tree,
+          view,
           flow_children[idx],
           is_col,
           parent_available_for_children,
           main_available_pre,
-          measure_function,
         )
         min_main_sizes[idx] = auto_min
       }

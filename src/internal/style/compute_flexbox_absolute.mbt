@@ -14,7 +14,7 @@
 
 ///|
 fn[C] compute_flex_absolute_and_hidden_children(
-  tree : TaffyTree[C],
+  view : TaffyView[C],
   abs_children : Array[NodeId],
   hidden_children : Array[NodeId],
   absolute_origin : Point[Double],
@@ -29,10 +29,8 @@ fn[C] compute_flex_absolute_and_hidden_children(
   is_reverse : Bool,
   is_wrap_reverse : Bool,
   align_items : AlignItems?,
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
 ) -> Unit raise TaffyError {
+  let tree = view.tree
   // Absolute positioned children: compute after container size is known, and do not affect flow layout.
   // Follow the same sizing rules as the block layout absolute-positioning pass:
   // inset constraints can determine auto sizes, and aspect-ratio participates in sizing.
@@ -221,13 +219,12 @@ fn[C] compute_flex_absolute_and_hidden_children(
     let intrinsic = match (used_width, used_height) {
       (Some(w), Some(h)) => Size(width=w, height=h)
       _ => {
-        compute_node_layout_with_measure(
-          tree,
+        compute_node_layout(
+          view,
           child_id,
           Size(width=None, height=None),
           abs_available,
           Point::zero(),
-          measure_function,
           false,
         )
         tree.nodes[child_id].unrounded_layout.size
@@ -271,13 +268,12 @@ fn[C] compute_flex_absolute_and_hidden_children(
     }
 
     // Second pass: compute final size (may be clamped by min/max).
-    compute_node_layout_with_measure(
-      tree,
+    compute_node_layout(
+      view,
       child_id,
       Size(width=Some(clamped_final_width), height=Some(clamped_final_height)),
       abs_available,
       Point::zero(),
-      measure_function,
       false,
     )
     let final_size = tree.nodes[child_id].unrounded_layout.size
@@ -431,8 +427,8 @@ fn[C] compute_flex_absolute_and_hidden_children(
             padding.top + (if is_col { static_main } else { static_cross })
         }
     }
-    compute_node_layout_with_measure(
-      tree,
+    compute_node_layout(
+      view,
       child_id,
       Size(width=Some(final_size.width), height=Some(final_size.height)),
       abs_available,
@@ -440,20 +436,18 @@ fn[C] compute_flex_absolute_and_hidden_children(
         x=padding_origin.x + x_in_padding,
         y=padding_origin.y + y_in_padding,
       ),
-      measure_function,
       false,
     )
   }
 
   // Ensure `display: none` children get laid out (to zero) as well.
   for child_id in hidden_children {
-    compute_node_layout_with_measure(
-      tree,
+    compute_node_layout(
+      view,
       child_id,
       Size(width=None, height=None),
       abs_available,
       Point::zero(),
-      measure_function,
       false,
     )
   }

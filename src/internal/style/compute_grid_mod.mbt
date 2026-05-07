@@ -13,17 +13,15 @@
 // limitations under the License.
 
 ///|
-fn[C] compute_grid_layout_with_measure(
-  tree : TaffyTree[C],
+fn[C] compute_grid_layout(
+  view : TaffyView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
   is_layout_root : Bool,
 ) -> Unit raise TaffyError {
+  let tree = view.tree
   ignore(is_layout_root)
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
@@ -703,13 +701,12 @@ fn[C] compute_grid_layout_with_measure(
     }
 
     // Max-content contribution in the column axis
-    compute_node_layout_with_measure(
-      tree,
+    compute_node_layout(
+      view,
       child_id,
       Size(width=None, height=None),
       Size(width=AvailMaxContent, height=contrib_available_height),
       Point::zero(),
-      measure_function,
       false,
     )
     let max_sz = tree.nodes[child_id].unrounded_layout.size
@@ -725,13 +722,12 @@ fn[C] compute_grid_layout_with_measure(
     apply_col_contribution(col_tracks, c, col_span, max_needed, col_max_contrib)
 
     // Min-content contribution in the column axis
-    compute_node_layout_with_measure(
-      tree,
+    compute_node_layout(
+      view,
       child_id,
       Size(width=None, height=None),
       Size(width=AvailMinContent, height=contrib_available_height),
       Point::zero(),
-      measure_function,
       false,
     )
     let min_col_raw = tree.nodes[child_id].unrounded_layout.size.width
@@ -847,13 +843,12 @@ fn[C] compute_grid_layout_with_measure(
     }
 
     // Max-content contribution in the row axis under the column width constraint.
-    compute_node_layout_with_measure(
-      tree,
+    compute_node_layout(
+      view,
       child_id,
       Size(width=known_w_for_contrib, height=None),
       Size(width=AvailDefinite(col_w), height=AvailMaxContent),
       Point::zero(),
-      measure_function,
       false,
     )
     let max_h = tree.nodes[child_id].unrounded_layout.size.height
@@ -869,13 +864,12 @@ fn[C] compute_grid_layout_with_measure(
     }
 
     // Min-content contribution in the row axis under the column width constraint.
-    compute_node_layout_with_measure(
-      tree,
+    compute_node_layout(
+      view,
       child_id,
       Size(width=known_w_for_contrib, height=None),
       Size(width=AvailDefinite(col_w), height=AvailMinContent),
       Point::zero(),
-      measure_function,
       false,
     )
     let min_h_raw = tree.nodes[child_id].unrounded_layout.size.height
@@ -1017,13 +1011,12 @@ fn[C] compute_grid_layout_with_measure(
       let c = placed_col[i]
       let col_span = placed_col_span[i]
       let gap_total = col_gap * (col_span - 1).to_double()
-      compute_node_layout_with_measure(
-        tree,
+      compute_node_layout(
+        view,
         child_id,
         Size(width=None, height=None),
         Size(width=AvailMaxContent, height=rerun_col_contrib_available_height),
         Point::zero(),
-        measure_function,
         false,
       )
       let max_sz = tree.nodes[child_id].unrounded_layout.size
@@ -1038,13 +1031,12 @@ fn[C] compute_grid_layout_with_measure(
       apply_col_contribution(
         col_tracks, c, col_span, max_needed, col_max_contrib,
       )
-      compute_node_layout_with_measure(
-        tree,
+      compute_node_layout(
+        view,
         child_id,
         Size(width=None, height=None),
         Size(width=AvailMinContent, height=rerun_col_contrib_available_height),
         Point::zero(),
-        measure_function,
         false,
       )
       let min_col_raw = tree.nodes[child_id].unrounded_layout.size.width
@@ -1114,13 +1106,12 @@ fn[C] compute_grid_layout_with_measure(
         !has_auto_margin_x {
         known_w_for_contrib = Some(available_w_for_item)
       }
-      compute_node_layout_with_measure(
-        tree,
+      compute_node_layout(
+        view,
         child_id,
         Size(width=known_w_for_contrib, height=None),
         Size(width=AvailDefinite(col_w), height=AvailMaxContent),
         Point::zero(),
-        measure_function,
         false,
       )
       let max_h = tree.nodes[child_id].unrounded_layout.size.height
@@ -1134,13 +1125,12 @@ fn[C] compute_grid_layout_with_measure(
           row_max_contrib[j] = max_share
         }
       }
-      compute_node_layout_with_measure(
-        tree,
+      compute_node_layout(
+        view,
         child_id,
         Size(width=known_w_for_contrib, height=None),
         Size(width=AvailDefinite(col_w), height=AvailMinContent),
         Point::zero(),
-        measure_function,
         false,
       )
       let min_h_raw = tree.nodes[child_id].unrounded_layout.size.height
@@ -1527,13 +1517,12 @@ fn[C] compute_grid_layout_with_measure(
       (None, DimPercent(p)) => Some(cell_w * p)
       _ => known_w
     }
-    compute_node_layout_with_measure(
-      tree,
+    compute_node_layout(
+      view,
       child_id,
       Size(width=known_w, height=None),
       item_available,
       Point::zero(),
-      measure_function,
       false,
     )
     let baseline = grid_item_baseline_offset_y(tree, child_id)
@@ -1701,13 +1690,12 @@ fn[C] compute_grid_layout_with_measure(
         }
 
         // First pass: compute the item's intrinsic size within the cell constraints.
-        compute_node_layout_with_measure(
-          tree,
+        compute_node_layout(
+          view,
           child_id,
           Size(width=known_w, height=known_h),
           child_available,
           Point::zero(),
-          measure_function,
           false,
         )
         match (align, child.style.aspect_ratio, child.style.size.height) {
@@ -1739,13 +1727,12 @@ fn[C] compute_grid_layout_with_measure(
                   }
                 }
               }
-              compute_node_layout_with_measure(
-                tree,
+              compute_node_layout(
+                view,
                 child_id,
                 Size(width=known_w, height=known_h),
                 child_available,
                 Point::zero(),
-                measure_function,
                 false,
               )
             } else {
@@ -1802,8 +1789,8 @@ fn[C] compute_grid_layout_with_measure(
         }
 
         // Second pass: position the item within the cell.
-        compute_node_layout_with_measure(
-          tree,
+        compute_node_layout(
+          view,
           child_id,
           Size(width=known_w, height=known_h),
           child_available,
@@ -1811,7 +1798,6 @@ fn[C] compute_grid_layout_with_measure(
             x=base_x + x + margin_left + offset_x,
             y=base_y + y + margin_top + offset_y,
           ),
-          measure_function,
           false,
         )
       }
@@ -1865,7 +1851,7 @@ fn[C] compute_grid_layout_with_measure(
     None => ItemsStretch
   }
   compute_grid_absolute_children(
-    tree,
+    view,
     tree.children[node_id],
     explicit_col_lines,
     explicit_row_lines,
@@ -1874,7 +1860,6 @@ fn[C] compute_grid_layout_with_measure(
     padding_box_height,
     default_abs_align,
     default_abs_justify,
-    measure_function,
   )
   let resolved_margin = resolve_rect_width_basis(
     node.style.margin,

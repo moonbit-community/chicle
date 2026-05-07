@@ -13,17 +13,15 @@
 // limitations under the License.
 
 ///|
-fn[C] compute_node_layout_with_measure(
-  tree : TaffyTree[C],
+fn[C] compute_node_layout(
+  view : TaffyView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
   is_layout_root : Bool,
 ) -> Unit raise TaffyError {
+  let tree = view.tree
   let inputs = match tree.nodes.get(node_id) {
     Some(node) =>
       if node.style.display is DisplayNone {
@@ -34,23 +32,19 @@ fn[C] compute_node_layout_with_measure(
     None => layout_input_for_perform_layout(known_dimensions, available_space)
   }
   ignore(
-    compute_child_layout_with_measure(
-      tree, node_id, inputs, absolute_origin, measure_function, is_layout_root,
-    ),
+    compute_child_layout(view, node_id, inputs, absolute_origin, is_layout_root),
   )
 }
 
 ///|
-fn[C] compute_child_layout_with_measure(
-  tree : TaffyTree[C],
+fn[C] compute_child_layout(
+  view : TaffyView[C],
   node_id : NodeId,
   inputs : LayoutInput,
   absolute_origin : Point[Double],
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
   is_layout_root : Bool,
 ) -> LayoutOutput raise TaffyError {
+  let tree = view.tree
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
     None => raise InvalidNodeId(node_id)
@@ -91,64 +85,58 @@ fn[C] compute_child_layout_with_measure(
       DisplayNone => compute_hidden_layout(tree, node_id, absolute_origin)
       DisplayGrid =>
         if tree.children[node_id].length() == 0 {
-          compute_leaf_layout_with_measure(
-            tree,
+          compute_leaf_layout(
+            view,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
             absolute_origin,
-            measure_function,
           )
         } else {
-          compute_grid_layout_with_measure(
-            tree,
+          compute_grid_layout(
+            view,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
             absolute_origin,
-            measure_function,
             is_layout_root,
           )
         }
       DisplayBlock =>
         if tree.children[node_id].length() == 0 {
-          compute_leaf_layout_with_measure(
-            tree,
+          compute_leaf_layout(
+            view,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
             absolute_origin,
-            measure_function,
           )
         } else {
-          compute_block_layout_with_measure(
-            tree,
+          compute_block_layout(
+            view,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
             absolute_origin,
-            measure_function,
             is_layout_root,
           )
         }
       _ =>
         if tree.children[node_id].length() == 0 {
-          compute_leaf_layout_with_measure(
-            tree,
+          compute_leaf_layout(
+            view,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
             absolute_origin,
-            measure_function,
           )
         } else {
-          compute_flex_layout_with_measure(
-            tree,
+          compute_flexbox_layout(
+            view,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
             absolute_origin,
-            measure_function,
           )
         }
     }
@@ -226,8 +214,8 @@ fn[C] finalize_layout_metadata(
 }
 
 ///|
-fn[C] measure_child_size_with_measure(
-  tree : TaffyTree[C],
+fn[C] measure_child_size(
+  view : TaffyView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   parent_size : Size[Double?],
@@ -236,9 +224,6 @@ fn[C] measure_child_size_with_measure(
   axis : AbsoluteAxis,
   vertical_margins_are_collapsible : Line[Bool],
   absolute_origin : Point[Double],
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
 ) -> Double raise TaffyError {
   let inputs = layout_input_for_compute_size(
     known_dimensions,
@@ -248,8 +233,8 @@ fn[C] measure_child_size_with_measure(
     requested_axis_from_absolute(axis),
     vertical_margins_are_collapsible,
   )
-  let output = compute_child_layout_with_measure(
-    tree, node_id, inputs, absolute_origin, measure_function, false,
+  let output = compute_child_layout(
+    view, node_id, inputs, absolute_origin, false,
   )
   let size = output.outer_size()
   match axis {

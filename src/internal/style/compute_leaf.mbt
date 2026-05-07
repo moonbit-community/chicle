@@ -13,16 +13,14 @@
 // limitations under the License.
 
 ///|
-fn[C] compute_leaf_layout_with_measure(
-  tree : TaffyTree[C],
+fn[C] compute_leaf_layout(
+  view : TaffyView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
 ) -> Unit raise TaffyError {
+  let tree = view.tree
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
     None => raise InvalidNodeId(node_id)
@@ -130,7 +128,7 @@ fn[C] compute_leaf_layout_with_measure(
     ) {
     Some(output) => output.size
     None => {
-      let m = measure_function(
+      let m = (view.measure_function)(
         measure_known_dimensions,
         measure_available_space,
         node_id,

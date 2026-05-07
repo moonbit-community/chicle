@@ -130,19 +130,13 @@ fn[C] TaffyView::compute_root_layout(
   // algorithm. If the tree shape or style is not proven equivalent to Rust's
   // recursive path, the trampoline returns false and the normal recursive
   // compute path runs.
-  if !compute_default_single_child_chain_trampoline(
-      tree,
-      root,
-      available_space,
-      self.measure_function,
-    ) {
-    compute_node_layout_with_measure(
-      tree,
+  if !compute_default_single_child_chain_trampoline(self, root, available_space) {
+    compute_node_layout(
+      self,
       root,
       Size(width=None, height=None),
       available_space,
       Point::zero(),
-      self.measure_function,
       true,
     )
   }
@@ -178,13 +172,11 @@ fn[C] TaffyView::compute_root_layout(
 // it requires a proof that the resulting layout and measure-call behavior remain
 // identical to upstream taffy.
 fn[C] compute_default_single_child_chain_trampoline(
-  tree : TaffyTree[C],
+  view : TaffyView[C],
   root : NodeId,
   available_space : Size[AvailableSpace],
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
 ) -> Bool {
+  let tree = view.tree
   if !(available_space.width is AvailMaxContent) ||
     !(available_space.height is AvailMaxContent) {
     return false
@@ -202,9 +194,7 @@ fn[C] compute_default_single_child_chain_trampoline(
         !is_default_flex_chain_leaf(node.style) {
         return false
       }
-      let size = measure_default_flex_chain_leaf(
-        tree, cur, available_space, measure_function,
-      )
+      let size = measure_default_flex_chain_leaf(view, cur, available_space)
       tree.nodes[cur].unrounded_layout = {
         ..Layout::zero(),
         location: Point::zero(),
@@ -258,17 +248,15 @@ fn is_default_flex_chain_leaf(style : Style) -> Bool {
 
 ///|
 fn[C] measure_default_flex_chain_leaf(
-  tree : TaffyTree[C],
+  view : TaffyView[C],
   leaf : NodeId,
   available_space : Size[AvailableSpace],
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
 ) -> Size[Double] {
+  let tree = view.tree
   let node = tree.nodes[leaf]
   let context = tree.node_context_data[leaf]
   let unconstrained = Size(width=None, height=None)
-  let measured = measure_function(
+  let measured = (view.measure_function)(
     unconstrained,
     available_space,
     leaf,
@@ -277,18 +265,36 @@ fn[C] measure_default_flex_chain_leaf(
   )
   let width_known = Size(width=Some(measured.width), height=None)
   ignore(
-    measure_function(width_known, available_space, leaf, context, node.style),
+    (view.measure_function)(
+      width_known,
+      available_space,
+      leaf,
+      context,
+      node.style,
+    ),
   )
   let height_known = Size(width=None, height=Some(measured.height))
   ignore(
-    measure_function(height_known, available_space, leaf, context, node.style),
+    (view.measure_function)(
+      height_known,
+      available_space,
+      leaf,
+      context,
+      node.style,
+    ),
   )
   let fully_known = Size(
     width=Some(measured.width),
     height=Some(measured.height),
   )
   ignore(
-    measure_function(fully_known, available_space, leaf, context, node.style),
+    (view.measure_function)(
+      fully_known,
+      available_space,
+      leaf,
+      context,
+      node.style,
+    ),
   )
   measured
 }

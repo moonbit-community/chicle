@@ -14,7 +14,7 @@
 
 ///|
 fn[C] compute_grid_absolute_children(
-  tree : TaffyTree[C],
+  view : TaffyView[C],
   children : Array[NodeId],
   explicit_col_lines : Array[Double],
   explicit_row_lines : Array[Double],
@@ -23,10 +23,8 @@ fn[C] compute_grid_absolute_children(
   padding_box_height : Double,
   default_abs_align : AlignItems,
   default_abs_justify : AlignItems,
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
 ) -> Unit raise TaffyError {
+  let tree = view.tree
   for child_id in children {
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
@@ -227,13 +225,12 @@ fn[C] compute_grid_absolute_children(
             let intrinsic = match (used_width, used_height) {
               (Some(w), Some(h)) => Size(width=w, height=h)
               _ => {
-                compute_node_layout_with_measure(
-                  tree,
+                compute_node_layout(
+                  view,
                   child_id,
                   Size(width=None, height=None),
                   abs_available,
                   Point::zero(),
-                  measure_function,
                   false,
                 )
                 tree.nodes[child_id].unrounded_layout.size
@@ -277,8 +274,8 @@ fn[C] compute_grid_absolute_children(
                 }
               None => ()
             }
-            compute_node_layout_with_measure(
-              tree,
+            compute_node_layout(
+              view,
               child_id,
               Size(
                 width=Some(clamped_final_width),
@@ -286,7 +283,6 @@ fn[C] compute_grid_absolute_children(
               ),
               abs_available,
               Point::zero(),
-              measure_function,
               false,
             )
             let final_size = tree.nodes[child_id].unrounded_layout.size
@@ -438,8 +434,8 @@ fn[C] compute_grid_absolute_children(
                   None => containing_y + static_y
                 }
             }
-            compute_node_layout_with_measure(
-              tree,
+            compute_node_layout(
+              view,
               child_id,
               Size(width=Some(final_size.width), height=Some(final_size.height)),
               abs_available,
@@ -447,7 +443,6 @@ fn[C] compute_grid_absolute_children(
                 x=padding_origin.x + x_in_padding,
                 y=padding_origin.y + y_in_padding,
               ),
-              measure_function,
               false,
             )
           }

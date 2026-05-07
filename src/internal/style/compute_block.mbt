@@ -13,17 +13,15 @@
 // limitations under the License.
 
 ///|
-fn[C] compute_block_layout_with_measure(
-  tree : TaffyTree[C],
+fn[C] compute_block_layout(
+  view : TaffyView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
   is_layout_root : Bool,
 ) -> Unit raise TaffyError {
+  let tree = view.tree
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
     None => raise InvalidNodeId(node_id)
@@ -379,8 +377,8 @@ fn[C] compute_block_layout_with_measure(
             )
             let mut child_y_rel_static = flow_anchor_border_bottom +
               used_before_base
-            compute_node_layout_with_measure(
-              tree,
+            compute_node_layout(
+              view,
               child_id,
               Size(width=target_width, height=None),
               margin_basis_available,
@@ -388,7 +386,6 @@ fn[C] compute_block_layout_with_measure(
                 x=content_origin.x + fixed_margin_left,
                 y=content_origin.y + child_y_rel_static,
               ),
-              measure_function,
               false,
             )
             let child_size = tree.nodes[child_id].unrounded_layout.size
@@ -677,8 +674,8 @@ fn[C] compute_block_layout_with_measure(
               )
               let mut child_y_rel_static = flow_anchor_border_bottom +
                 used_before_base
-              compute_node_layout_with_measure(
-                tree,
+              compute_node_layout(
+                view,
                 child_id,
                 Size(width=target_width, height=None),
                 flow_available2,
@@ -686,7 +683,6 @@ fn[C] compute_block_layout_with_measure(
                   x=content_origin.x + fixed_margin_left,
                   y=content_origin.y + child_y_rel_static,
                 ),
-                measure_function,
                 false,
               )
               let child_size = tree.nodes[child_id].unrounded_layout.size
@@ -794,8 +790,8 @@ fn[C] compute_block_layout_with_measure(
   }
 
   compute_block_absolute_children(
-    tree, abs_child_ids, abs_child_static_y, padding_origin, padding, border, final_border_box_width,
-    final_border_box_height, scrollbar_x, scrollbar_y, measure_function,
+    view, abs_child_ids, abs_child_static_y, padding_origin, padding, border, final_border_box_width,
+    final_border_box_height, scrollbar_x, scrollbar_y,
   )
   let effective_top_state = if collapse_top_with_child {
     let first_id = match first_in_flow_child {

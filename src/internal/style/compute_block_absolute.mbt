@@ -14,7 +14,7 @@
 
 ///|
 fn[C] compute_block_absolute_children(
-  tree : TaffyTree[C],
+  view : TaffyView[C],
   abs_child_ids : Array[NodeId],
   abs_child_static_y : Array[Double],
   padding_origin : Point[Double],
@@ -24,10 +24,8 @@ fn[C] compute_block_absolute_children(
   final_border_box_height : Double,
   scrollbar_x : Double,
   scrollbar_y : Double,
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
 ) -> Unit raise TaffyError {
+  let tree = view.tree
   // Absolute children: positioned relative to the final padding box.
   let final_padding_box_width = max_double(
     final_border_box_width - border.left - border.right - scrollbar_y,
@@ -230,13 +228,12 @@ fn[C] compute_block_absolute_children(
     let intrinsic = match (used_width, used_height) {
       (Some(w), Some(h)) => Size(width=w, height=h)
       _ => {
-        compute_node_layout_with_measure(
-          tree,
+        compute_node_layout(
+          view,
           child_id,
           Size(width=None, height=None),
           abs_available,
           Point::zero(),
-          measure_function,
           false,
         )
         tree.nodes[child_id].unrounded_layout.size
@@ -280,13 +277,12 @@ fn[C] compute_block_absolute_children(
     }
 
     // Second pass: compute final size (may be clamped by min/max).
-    compute_node_layout_with_measure(
-      tree,
+    compute_node_layout(
+      view,
       child_id,
       Size(width=Some(clamped_final_width), height=Some(clamped_final_height)),
       abs_available,
       Point::zero(),
-      measure_function,
       false,
     )
     let final_size = tree.nodes[child_id].unrounded_layout.size
@@ -395,8 +391,8 @@ fn[C] compute_block_absolute_children(
           None => padding.top + static_y + final_margin_top
         }
     }
-    compute_node_layout_with_measure(
-      tree,
+    compute_node_layout(
+      view,
       child_id,
       Size(width=Some(final_size.width), height=Some(final_size.height)),
       abs_available,
@@ -404,7 +400,6 @@ fn[C] compute_block_absolute_children(
         x=padding_origin.x + x_in_padding,
         y=padding_origin.y + y_in_padding,
       ),
-      measure_function,
       false,
     )
   }

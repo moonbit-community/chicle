@@ -13,16 +13,14 @@
 // limitations under the License.
 
 ///|
-fn[C] compute_flex_layout_with_measure(
-  tree : TaffyTree[C],
+fn[C] compute_flexbox_layout(
+  view : TaffyView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
 ) -> Unit raise TaffyError {
+  let tree = view.tree
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
     None => raise InvalidNodeId(node_id)
@@ -306,13 +304,12 @@ fn[C] compute_flex_layout_with_measure(
     } else {
       Size(width=None, height=None)
     }
-    compute_node_layout_with_measure(
-      tree,
+    compute_node_layout(
+      view,
       child_id,
       intrinsic_known_dimensions,
       child_intrinsic_available,
       Point::zero(),
-      measure_function,
       false,
     )
     let child_layout = tree.unrounded_layout(child_id)
@@ -770,9 +767,9 @@ fn[C] compute_flex_layout_with_measure(
       let line_offset = line_offsets[li]
       let baseline_before_max = line_baseline_befores[li]
       let line_main_sizes = resolve_wrap_line_main_sizes(
-        tree, flow_children, indices, is_col, container_main, gap_main, base_sizes,
+        view, flow_children, indices, is_col, container_main, gap_main, base_sizes,
         flex_grow, flex_shrink, margin_main_start, margin_main_end, min_main_sizes,
-        max_main_sizes, main_available_pre, parent_available_for_children, measure_function,
+        max_main_sizes, main_available_pre, parent_available_for_children,
       )
       let mut line_used = 0.0
       for idx in indices {
@@ -1103,13 +1100,12 @@ fn[C] compute_flex_layout_with_measure(
         } else {
           Point(x=base_x + main_pos, y=base_y + cross_offset)
         }
-        compute_node_layout_with_measure(
-          tree,
+        compute_node_layout(
+          view,
           child_id,
           Size(width=known_width, height=known_height),
           child_available_for_final,
           child_origin,
-          measure_function,
           false,
         )
       }
@@ -1260,12 +1256,11 @@ fn[C] compute_flex_layout_with_measure(
           )
         if !frozen[i] && min_main_sizes[i] < 0.0 && should_resolve_auto_min {
           let auto_min = resolve_flex_auto_min_main(
-            tree,
+            view,
             flow_children[i],
             is_col,
             parent_available_for_children,
             main_available_pre,
-            measure_function,
           )
           min_main_sizes[i] = auto_min
         }
@@ -1676,13 +1671,12 @@ fn[C] compute_flex_layout_with_measure(
       } else {
         Point(x=base_x + main_pos, y=base_y + cross_offset)
       }
-      compute_node_layout_with_measure(
-        tree,
+      compute_node_layout(
+        view,
         child_id,
         Size(width=known_width, height=known_height),
         child_available_for_final,
         child_origin,
-        measure_function,
         false,
       )
     }
@@ -1877,13 +1871,12 @@ fn[C] compute_flex_layout_with_measure(
           x=base_x + margin_main_start[0],
           y=base_y + margin_cross_start[0],
         )
-        compute_node_layout_with_measure(
-          tree,
+        compute_node_layout(
+          view,
           only_child,
           Size(width=Some(content_main_sizes[0]), height=Some(child_cross_size)),
           child_available_for_final,
           child_origin,
-          measure_function,
           false,
         )
       }
@@ -2055,7 +2048,7 @@ fn[C] compute_flex_layout_with_measure(
   }
 
   compute_flex_absolute_and_hidden_children(
-    tree,
+    view,
     abs_children,
     hidden_children,
     absolute_origin,
@@ -2070,7 +2063,6 @@ fn[C] compute_flex_layout_with_measure(
     is_reverse,
     is_wrap_reverse,
     node.style.align_items,
-    measure_function,
   )
   let resolved_margin = resolve_rect_width_basis(
     node.style.margin,

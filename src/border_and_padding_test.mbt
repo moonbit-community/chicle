@@ -13,7 +13,118 @@
 // limitations under the License.
 
 ///|
+fn border_padding_single_axis_rect(
+  axis : Int,
+  value : Dimension,
+) -> Rect[Dimension] {
+  match axis {
+    0 =>
+      Rect(left=value, right=length(0.0), top=length(0.0), bottom=length(0.0))
+    1 =>
+      Rect(left=length(0.0), right=value, top=length(0.0), bottom=length(0.0))
+    2 =>
+      Rect(left=length(0.0), right=length(0.0), top=value, bottom=length(0.0))
+    3 =>
+      Rect(left=length(0.0), right=length(0.0), top=length(0.0), bottom=value)
+    _ =>
+      Rect(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(0.0),
+        bottom=length(0.0),
+      )
+  }
+}
+
+///|
+test "border_on_a_single_axis_doesnt_increase_size" {
+  for axis in 0..<4 {
+    let taffy : TaffyTree[Unit] = TaffyTree()
+    let node = taffy.new_leaf(
+      Style::default().with_border(
+        border_padding_single_axis_rect(axis, length(10.0)),
+      ),
+    )
+    taffy.compute_layout(
+      node,
+      Size(
+        width=available_space_definite(100.0),
+        height=available_space_definite(100.0),
+      ),
+    )
+    let layout = taffy.layout(node)
+    assert_eq(layout.size.width * layout.size.height, 0.0)
+  }
+}
+
+///|
+test "padding_on_a_single_axis_doesnt_increase_size" {
+  for axis in 0..<4 {
+    let taffy : TaffyTree[Unit] = TaffyTree()
+    let node = taffy.new_leaf(
+      Style::default().with_padding(
+        border_padding_single_axis_rect(axis, length(10.0)),
+      ),
+    )
+    taffy.compute_layout(
+      node,
+      Size(
+        width=available_space_definite(100.0),
+        height=available_space_definite(100.0),
+      ),
+    )
+    let layout = taffy.layout(node)
+    assert_eq(layout.size.width * layout.size.height, 0.0)
+  }
+}
+
+///|
+test "border_and_padding_on_a_single_axis_doesnt_increase_size" {
+  for axis in 0..<4 {
+    let taffy : TaffyTree[Unit] = TaffyTree()
+    let rect = border_padding_single_axis_rect(axis, length(10.0))
+    let node = taffy.new_leaf(
+      Style::default().with_border(rect).with_padding(rect),
+    )
+    taffy.compute_layout(
+      node,
+      Size(
+        width=available_space_definite(100.0),
+        height=available_space_definite(100.0),
+      ),
+    )
+    let layout = taffy.layout(node)
+    assert_eq(layout.size.width * layout.size.height, 0.0)
+  }
+}
+
+///|
 test "vertical_padding_percentage_uses_width_as_basis" {
+  let taffy : TaffyTree[Unit] = TaffyTree()
+  let node = taffy.new_leaf(
+    Style::default().with_padding(
+      Rect(
+        left=percent(1.0),
+        right=length(0.0),
+        top=percent(1.0),
+        bottom=length(0.0),
+      ),
+    ),
+  )
+  taffy.compute_layout(
+    node,
+    Size(
+      width=available_space_definite(200.0),
+      height=available_space_definite(100.0),
+    ),
+  )
+  let layout = taffy.layout(node)
+  assert_eq(layout.size.width, 200.0)
+  assert_eq(layout.size.height, 200.0)
+}
+
+///|
+test "vertical_border_and_padding_percentage_values_use_available_space_correctly" {
   let taffy : TaffyTree[Unit] = TaffyTree()
   let node = taffy.new_leaf(
     Style::default().with_padding(

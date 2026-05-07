@@ -258,7 +258,7 @@ fn[C] compute_grid_layout_with_measure(
   let placed_col_span : Array[Int] = Array::make(placement_count, 1)
   let occ = matrix_make(row_tracks.length(), col_tracks.length())
 
-  // Placement algorithm: very small subset of CSS Grid (enough for upstream implicit/auto tracks tests).
+  // Placement algorithm: CSS Grid auto-placement for explicit and implicit tracks.
   let primary_is_col = match node.style.grid_auto_flow {
     Row | RowDense => true
     Column | ColumnDense => false

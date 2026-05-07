@@ -3,7 +3,7 @@
 MoonBit port of the Rust crate **taffy** (UI layout engine).
 
 - Upstream pinned: `taffy v0.5.2` (see `UPSTREAM.md`)
-- Current status: generated upstream layout tests are ported and passing in MoonBit.
+- Current status: generated upstream layout tests and top-level compatibility tests are ported and passing in MoonBit.
 
 ## Quick start
 

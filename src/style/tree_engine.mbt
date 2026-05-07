@@ -60,10 +60,16 @@ fn[C] compute_node_layout_with_measure(
   match node.style.display {
     DisplayNone => compute_hidden_layout(tree, node_id, absolute_origin)
     DisplayGrid =>
-      compute_grid_layout_with_measure(
-        tree, node_id, known_dimensions, available_space, absolute_origin, measure_function,
-        is_layout_root,
-      )
+      if node.children.length() == 0 {
+        compute_leaf_layout_with_measure(
+          tree, node_id, known_dimensions, available_space, absolute_origin, measure_function,
+        )
+      } else {
+        compute_grid_layout_with_measure(
+          tree, node_id, known_dimensions, available_space, absolute_origin, measure_function,
+          is_layout_root,
+        )
+      }
     DisplayBlock =>
       if node.children.length() == 0 {
         compute_leaf_layout_with_measure(

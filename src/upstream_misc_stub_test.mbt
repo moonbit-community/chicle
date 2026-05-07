@@ -135,6 +135,29 @@ test "upstream/caching/measure_count_flexbox" {
 }
 
 ///|
+test "upstream/caching/measure_count_grid" {
+  let taffy : TaffyTree[Array[Int]] = TaffyTree()
+  let leaf_counter = [0]
+  let leaf = taffy.new_leaf_with_context(
+    Style::default().with_display(display_grid()),
+    leaf_counter,
+  )
+  let mut node = taffy.new_with_children(Style::default(), [leaf])
+  for _ in 0..<100 {
+    node = taffy.new_with_children(Style::default(), [node])
+  }
+  taffy.compute_layout_with_measure(
+    node,
+    Size::max_content(),
+    misc_count_measure,
+  )
+  match taffy.node_context(leaf) {
+    Some(ctx) => assert_eq(ctx[0], 4)
+    None => panic()
+  }
+}
+
+///|
 test "upstream/measure/measure_root" {
   let taffy : TaffyTree[MiscFixedMeasure] = TaffyTree()
   let node = taffy.new_leaf_with_context(Style::default(), MiscFixedMeasure::{

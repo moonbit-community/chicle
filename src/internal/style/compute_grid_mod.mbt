@@ -74,36 +74,26 @@ fn[C] compute_grid_layout(
   let mut content_height = 0.0
   let mut border_box_width = 0.0
   let mut border_box_height = 0.0
-  match specified_width {
-    Some(w) => {
-      border_box_width = max_double(
-        clamp_dimension(
-          w,
-          node.style.min_size.width,
-          node.style.max_size.width,
-          available_space.width,
-        ),
-        horiz_non_scroll_inset,
-      )
-      content_width = max_double(border_box_width - horiz_inset, 0.0)
-    }
-    None => ()
-  }
-  match specified_height {
-    Some(h) => {
-      border_box_height = max_double(
-        clamp_dimension(
-          h,
-          node.style.min_size.height,
-          node.style.max_size.height,
-          available_space.height,
-        ),
-        vert_non_scroll_inset,
-      )
-      content_height = max_double(border_box_height - vert_inset, 0.0)
-    }
-    None => ()
-  }
+  let definite_width = grid_definite_axis_border_content_size(
+    specified_width,
+    node.style.min_size.width,
+    node.style.max_size.width,
+    available_space.width,
+    horiz_inset,
+    horiz_non_scroll_inset,
+  )
+  border_box_width = definite_width.0
+  content_width = definite_width.1
+  let definite_height = grid_definite_axis_border_content_size(
+    specified_height,
+    node.style.min_size.height,
+    node.style.max_size.height,
+    available_space.height,
+    vert_inset,
+    vert_non_scroll_inset,
+  )
+  border_box_height = definite_height.0
+  content_height = definite_height.1
 
   // Grid gaps: treat `gap.width` as column gap, and `gap.height` as row gap.
   // For `percent` gaps, follow CSS semantics and resolve against the container's inline content size (width).
@@ -765,78 +755,47 @@ fn[C] compute_grid_layout(
     row_max_contrib,
     specified_height is Some(_),
   )
-  let mut used_cols = 0.0
-  for w in col_sizes {
-    used_cols = used_cols + w
-  }
-  if col_count > 1 {
-    used_cols = used_cols + col_gap * (col_count - 1).to_double()
-  }
-  let mut used_rows = 0.0
-  for h in row_sizes {
-    used_rows = used_rows + h
-  }
-  if row_count > 1 {
-    used_rows = used_rows + row_gap * (row_count - 1).to_double()
-  }
+  let mut used_cols = grid_axis_used_size(col_sizes, col_gap)
+  let mut used_rows = grid_axis_used_size(row_sizes, row_gap)
 
   // Container sizing (border-box). If width/height are not specified, size to tracks.
   if specified_width is None {
-    // Don't force-fill definite available space for auto-sized containers.
-    // Stretch behavior should be expressed via `known_dimensions` from the parent.
-    let intrinsic_cols = match available_space.width {
-      AvailMaxContent => col_max_basis
-      AvailMinContent => col_min_basis
-      AvailDefinite(_) => used_cols
-    }
-    border_box_width = max_double(
-      clamp_dimension(
-        max_double(intrinsic_cols + horiz_inset, horiz_inset),
-        node.style.min_size.width,
-        node.style.max_size.width,
-        available_space.width,
-      ),
+    let auto_width = grid_auto_axis_border_content_size(
+      available_space.width,
+      horiz_inset,
       horiz_non_scroll_inset,
+      node.style.min_size.width,
+      node.style.max_size.width,
+      col_min_basis,
+      col_max_basis,
+      used_cols,
     )
-    content_width = max_double(border_box_width - horiz_inset, 0.0)
+    border_box_width = auto_width.0
+    content_width = auto_width.1
   }
   if specified_height is None {
-    let intrinsic_rows = match available_space.height {
-      AvailMaxContent => row_max_basis
-      AvailMinContent => row_min_basis
-      AvailDefinite(_) => used_rows
-    }
-    border_box_height = max_double(
-      clamp_dimension(
-        max_double(intrinsic_rows + vert_inset, vert_inset),
-        node.style.min_size.height,
-        node.style.max_size.height,
-        available_space.height,
-      ),
+    let auto_height = grid_auto_axis_border_content_size(
+      available_space.height,
+      vert_inset,
       vert_non_scroll_inset,
+      node.style.min_size.height,
+      node.style.max_size.height,
+      row_min_basis,
+      row_max_basis,
+      used_rows,
     )
-    content_height = max_double(border_box_height - vert_inset, 0.0)
+    border_box_height = auto_height.0
+    content_height = auto_height.1
   }
 
   // Deferred percentage gaps: if the container inline size was unknown during intrinsic sizing,
   // re-resolve percentage gaps against the computed inline content size and recompute track sizes.
-  let mut rerun_track_sizing = false
-  match gap_width_percent {
-    Some(p) =>
-      if col_gap == 0.0 && content_width > 0.0 {
-        col_gap = content_width * p
-        rerun_track_sizing = true
-      }
-    None => ()
-  }
-  match gap_height_percent {
-    Some(p) =>
-      if row_gap == 0.0 && content_width > 0.0 {
-        row_gap = content_width * p
-        rerun_track_sizing = true
-      }
-    None => ()
-  }
+  let resolved_gap_rerun = resolve_deferred_grid_percent_gaps(
+    content_width, col_gap, row_gap, gap_width_percent, gap_height_percent,
+  )
+  col_gap = resolved_gap_rerun.0
+  row_gap = resolved_gap_rerun.1
+  let rerun_track_sizing = resolved_gap_rerun.2
   if rerun_track_sizing {
     let rerun_col_contrib_available_height = match specified_height {
       Some(_) => AvailDefinite(content_height)
@@ -991,20 +950,8 @@ fn[C] compute_grid_layout(
       row_max_contrib,
       specified_height is Some(_),
     )
-    used_cols = 0.0
-    for w in col_sizes {
-      used_cols = used_cols + w
-    }
-    if col_count > 1 {
-      used_cols = used_cols + col_gap * (col_count - 1).to_double()
-    }
-    used_rows = 0.0
-    for h in row_sizes {
-      used_rows = used_rows + h
-    }
-    if row_count > 1 {
-      used_rows = used_rows + row_gap * (row_count - 1).to_double()
-    }
+    used_cols = grid_axis_used_size(col_sizes, col_gap)
+    used_rows = grid_axis_used_size(row_sizes, row_gap)
   }
   tree.set_unrounded_layout(node_id, {
     ..Layout::zero(),

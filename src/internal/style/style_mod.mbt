@@ -13,48 +13,6 @@
 // limitations under the License.
 
 ///|
-pub enum AvailableSpace {
-  AvailDefinite(Double)
-  AvailMinContent
-  AvailMaxContent
-}
-
-///|
-pub enum GridTrackRepetition {
-  RepeatCount(Int)
-  RepeatAutoFill
-  RepeatAutoFit
-}
-
-///|
-pub enum GridAutoFlow {
-  Row
-  Column
-  RowDense
-  ColumnDense
-}
-
-///|
-pub enum GridPlacement {
-  PlaceAuto
-  PlaceLine(Int)
-  PlaceSpan(Int)
-}
-
-///|
-pub enum Dimension {
-  DimAuto
-  DimLength(Double)
-  DimPercent(Double)
-  DimFr(Double)
-  DimMinMax(Dimension, Dimension)
-  DimMinContent
-  DimMaxContent
-  DimFitContent(Dimension)
-  DimRepeat(GridTrackRepetition, Array[Dimension])
-}
-
-///|
 pub enum Display {
   DisplayBlock
   DisplayFlex
@@ -75,57 +33,6 @@ pub enum Overflow {
   OverflowHidden
   OverflowScroll
 }
-
-///|
-pub enum FlexDirection {
-  FlexRow
-  FlexRowReverse
-  FlexColumn
-  FlexColumnReverse
-}
-
-///|
-pub enum FlexWrap {
-  FlexNoWrap
-  FlexWrap
-  FlexWrapReverse
-}
-
-///|
-pub enum AlignItems {
-  ItemsStart
-  ItemsEnd
-  ItemsFlexStart
-  ItemsFlexEnd
-  ItemsCenter
-  ItemsBaseline
-  ItemsStretch
-}
-
-///|
-pub type JustifyItems = AlignItems
-
-///|
-pub type AlignSelf = AlignItems
-
-///|
-pub type JustifySelf = AlignItems
-
-///|
-pub enum AlignContent {
-  AlignStart
-  AlignEnd
-  AlignFlexStart
-  AlignFlexEnd
-  AlignCenter
-  AlignStretch
-  AlignSpaceBetween
-  AlignSpaceEvenly
-  AlignSpaceAround
-}
-
-///|
-pub type JustifyContent = AlignContent
 
 ///|
 pub struct Style {

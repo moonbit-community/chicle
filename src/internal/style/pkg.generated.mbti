@@ -377,7 +377,7 @@ pub fn MinTrackSizingFunction::resolved_percentage_size(Self, Double) -> Double?
 pub fn MinTrackSizingFunction::to_dimension(Self) -> Dimension
 pub fn MinTrackSizingFunction::uses_percentage(Self) -> Bool
 
-type Node[C]
+type NodeData
 
 pub struct NonRepeatedTrackSizingFunction {
   min : MinTrackSizingFunction
@@ -528,6 +528,8 @@ pub fn[C] TaffyTree::clear_node_context(Self[C], Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::compute_layout(Self[C], Int, Size[AvailableSpace]) -> Unit raise TaffyError
 pub fn[C] TaffyTree::compute_layout_with_measure(Self[C], Int, Size[AvailableSpace], (Size[Double?], Size[AvailableSpace], Int, C?, Style) -> Size[Double]) -> Unit raise TaffyError
 pub fn[C] TaffyTree::dirty(Self[C], Int) -> Bool raise TaffyError
+pub fn[C] TaffyTree::disable_rounding(Self[C]) -> Unit
+pub fn[C] TaffyTree::enable_rounding(Self[C]) -> Unit
 pub fn[C] TaffyTree::get_child_id(Self[C], Int, Int) -> Int raise TaffyError
 pub fn[C] TaffyTree::get_final_layout(Self[C], Int) -> Layout raise TaffyError
 pub fn[C] TaffyTree::get_style(Self[C], Int) -> Style raise TaffyError

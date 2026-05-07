@@ -171,7 +171,7 @@ fn[C] compute_grid_layout_with_measure(
   let mut max_col_line = 0
   let mut min_row_line = 0
   let mut max_row_line = 0
-  for child_id in node.children {
+  for child_id in tree.children[node_id] {
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
       None => raise InvalidNodeId(child_id)
@@ -250,7 +250,7 @@ fn[C] compute_grid_layout_with_measure(
     row_tracks.push(auto_rows[i % auto_rows.length()])
   }
 
-  let placement_count = node.children.length()
+  let placement_count = tree.children[node_id].length()
   let placed : Array[Bool] = Array::make(placement_count, false)
   let placed_row : Array[Int] = Array::make(placement_count, 0)
   let placed_col : Array[Int] = Array::make(placement_count, 0)
@@ -270,7 +270,7 @@ fn[C] compute_grid_layout_with_measure(
 
   // Pass 1: both axes definite.
   for i in 0..<placement_count {
-    let child_id = node.children[i]
+    let child_id = tree.children[node_id][i]
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
       None => raise InvalidNodeId(child_id)
@@ -323,7 +323,7 @@ fn[C] compute_grid_layout_with_measure(
     if placed[i] {
       continue
     }
-    let child_id = node.children[i]
+    let child_id = tree.children[node_id][i]
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
       None => raise InvalidNodeId(child_id)
@@ -432,7 +432,7 @@ fn[C] compute_grid_layout_with_measure(
     if placed[i] {
       continue
     }
-    let child_id = node.children[i]
+    let child_id = tree.children[node_id][i]
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
       None => raise InvalidNodeId(child_id)
@@ -683,7 +683,7 @@ fn[C] compute_grid_layout_with_measure(
     if !placed[i] {
       continue
     }
-    let child_id = node.children[i]
+    let child_id = tree.children[node_id][i]
     let child = match tree.nodes.get(child_id) {
       Some(c0) => c0
       None => raise InvalidNodeId(child_id)
@@ -712,7 +712,7 @@ fn[C] compute_grid_layout_with_measure(
       measure_function,
       false,
     )
-    let max_sz = tree.nodes[child_id].layout.size
+    let max_sz = tree.nodes[child_id].unrounded_layout.size
     let resolved_margin = resolve_rect_width_basis(
       child.style.margin,
       Size(width=AvailMaxContent, height=AvailMaxContent),
@@ -734,7 +734,7 @@ fn[C] compute_grid_layout_with_measure(
       measure_function,
       false,
     )
-    let min_col_raw = tree.nodes[child_id].layout.size.width
+    let min_col_raw = tree.nodes[child_id].unrounded_layout.size.width
     let min_col = match (child.style.overflow.x, child.style.overflow.y) {
       (OverflowVisible, OverflowVisible) => min_col_raw
       _ => 0.0
@@ -803,7 +803,7 @@ fn[C] compute_grid_layout_with_measure(
     if !placed[i] {
       continue
     }
-    let child_id = node.children[i]
+    let child_id = tree.children[node_id][i]
     let child = match tree.nodes.get(child_id) {
       Some(c0) => c0
       None => raise InvalidNodeId(child_id)
@@ -856,7 +856,7 @@ fn[C] compute_grid_layout_with_measure(
       measure_function,
       false,
     )
-    let max_h = tree.nodes[child_id].layout.size.height
+    let max_h = tree.nodes[child_id].unrounded_layout.size.height
     let max_needed = max_double(
       max_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
       0.0,
@@ -878,7 +878,7 @@ fn[C] compute_grid_layout_with_measure(
       measure_function,
       false,
     )
-    let min_h_raw = tree.nodes[child_id].layout.size.height
+    let min_h_raw = tree.nodes[child_id].unrounded_layout.size.height
     let min_h = match (child.style.overflow.x, child.style.overflow.y) {
       (OverflowVisible, OverflowVisible) => min_h_raw
       _ => 0.0
@@ -1009,7 +1009,7 @@ fn[C] compute_grid_layout_with_measure(
       if !placed[i] {
         continue
       }
-      let child_id = node.children[i]
+      let child_id = tree.children[node_id][i]
       let child = match tree.nodes.get(child_id) {
         Some(c0) => c0
         None => raise InvalidNodeId(child_id)
@@ -1026,7 +1026,7 @@ fn[C] compute_grid_layout_with_measure(
         measure_function,
         false,
       )
-      let max_sz = tree.nodes[child_id].layout.size
+      let max_sz = tree.nodes[child_id].unrounded_layout.size
       let resolved_margin = resolve_rect_width_basis(
         child.style.margin,
         Size(width=AvailMaxContent, height=AvailMaxContent),
@@ -1047,7 +1047,7 @@ fn[C] compute_grid_layout_with_measure(
         measure_function,
         false,
       )
-      let min_col_raw = tree.nodes[child_id].layout.size.width
+      let min_col_raw = tree.nodes[child_id].unrounded_layout.size.width
       let min_col = match (child.style.overflow.x, child.style.overflow.y) {
         (OverflowVisible, OverflowVisible) => min_col_raw
         _ => 0.0
@@ -1072,7 +1072,7 @@ fn[C] compute_grid_layout_with_measure(
       if !placed[i] {
         continue
       }
-      let child_id = node.children[i]
+      let child_id = tree.children[node_id][i]
       let child = match tree.nodes.get(child_id) {
         Some(c0) => c0
         None => raise InvalidNodeId(child_id)
@@ -1123,7 +1123,7 @@ fn[C] compute_grid_layout_with_measure(
         measure_function,
         false,
       )
-      let max_h = tree.nodes[child_id].layout.size.height
+      let max_h = tree.nodes[child_id].unrounded_layout.size.height
       let max_needed = max_double(
         max_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
         0.0,
@@ -1143,7 +1143,7 @@ fn[C] compute_grid_layout_with_measure(
         measure_function,
         false,
       )
-      let min_h_raw = tree.nodes[child_id].layout.size.height
+      let min_h_raw = tree.nodes[child_id].unrounded_layout.size.height
       let min_h = match (child.style.overflow.x, child.style.overflow.y) {
         (OverflowVisible, OverflowVisible) => min_h_raw
         _ => 0.0
@@ -1182,7 +1182,7 @@ fn[C] compute_grid_layout_with_measure(
       used_rows = used_rows + row_gap * (row_count - 1).to_double()
     }
   }
-  tree.nodes[node_id].layout = {
+  tree.nodes[node_id].unrounded_layout = {
     ..Layout::zero(),
     location: absolute_origin,
     size: Size(width=border_box_width, height=border_box_height),
@@ -1409,7 +1409,7 @@ fn[C] compute_grid_layout_with_measure(
     if !placed[i] {
       continue
     }
-    let child_id = node.children[i]
+    let child_id = tree.children[node_id][i]
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
       None => raise InvalidNodeId(child_id)
@@ -1537,7 +1537,7 @@ fn[C] compute_grid_layout_with_measure(
       false,
     )
     let baseline = grid_item_baseline_offset_y(tree, child_id)
-    let intrinsic = tree.nodes[child_id].layout.size
+    let intrinsic = tree.nodes[child_id].unrounded_layout.size
     item_baseline_offsets[i] = baseline
     let before = resolved_margin.top + baseline
     let after = resolved_margin.bottom +
@@ -1560,7 +1560,7 @@ fn[C] compute_grid_layout_with_measure(
     }
   }
   for i in 0..<placement_count {
-    let child_id = node.children[i]
+    let child_id = tree.children[node_id][i]
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
       None => raise InvalidNodeId(child_id)
@@ -1716,7 +1716,7 @@ fn[C] compute_grid_layout_with_measure(
               known_w is Some(_) &&
               known_h is None &&
               !has_auto_margin_y {
-              let intrinsic_after_stretch = tree.nodes[child_id].layout.size
+              let intrinsic_after_stretch = tree.nodes[child_id].unrounded_layout.size
               let max_height = resolve_optional_dimension(
                 child.style.max_size.height,
                 item_available.height,
@@ -1753,7 +1753,7 @@ fn[C] compute_grid_layout_with_measure(
             }
           _ => ()
         }
-        let intrinsic = tree.nodes[child_id].layout.size
+        let intrinsic = tree.nodes[child_id].unrounded_layout.size
         let free_x = max_double(available_w_for_item - intrinsic.width, 0.0)
         let free_y = max_double(available_h_for_item - intrinsic.height, 0.0)
         let margin_left = if margin_left_auto {
@@ -1866,7 +1866,7 @@ fn[C] compute_grid_layout_with_measure(
   }
   compute_grid_absolute_children(
     tree,
-    node.children,
+    tree.children[node_id],
     explicit_col_lines,
     explicit_row_lines,
     padding_origin,

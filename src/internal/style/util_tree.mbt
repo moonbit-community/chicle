@@ -18,12 +18,12 @@ fn[C] compute_hidden_layout(
   node_id : NodeId,
   absolute_origin : Point[Double],
 ) -> Unit raise TaffyError {
-  let node = match tree.nodes.get(node_id) {
-    Some(n) => n
+  match tree.nodes.get(node_id) {
+    Some(_) => ()
     None => raise InvalidNodeId(node_id)
   }
   tree.nodes[node_id].cache.clear()
-  tree.nodes[node_id].layout = {
+  tree.nodes[node_id].unrounded_layout = {
     ..Layout::zero(),
     location: absolute_origin,
     size: Size::zero(),
@@ -34,7 +34,7 @@ fn[C] compute_hidden_layout(
   tree.nodes[node_id].effective_margin_top_min_neg = 0.0
   tree.nodes[node_id].effective_margin_bottom_max_pos = 0.0
   tree.nodes[node_id].effective_margin_bottom_min_neg = 0.0
-  for child_id in node.children {
+  for child_id in tree.children[node_id] {
     compute_hidden_layout(tree, child_id, absolute_origin)
   }
 }
@@ -50,13 +50,13 @@ fn[C] offset_subtree(
     Some(n) => n
     None => raise InvalidNodeId(node_id)
   }
-  let layout = node.layout
-  tree.nodes[node_id].layout = {
+  let layout = node.unrounded_layout
+  tree.nodes[node_id].unrounded_layout = {
     ..Layout::zero(),
     location: { x: layout.location.x + dx, y: layout.location.y + dy },
     size: layout.size,
   }
-  for child_id in node.children {
+  for child_id in tree.children[node_id] {
     offset_subtree(tree, child_id, dx, dy)
   }
 }
@@ -66,14 +66,14 @@ fn[C] subtree_has_measure_context(
   tree : TaffyTree[C],
   node_id : NodeId,
 ) -> Bool raise TaffyError {
-  let node = match tree.nodes.get(node_id) {
-    Some(n) => n
+  match tree.nodes.get(node_id) {
+    Some(_) => ()
     None => raise InvalidNodeId(node_id)
   }
-  if node.context is Some(_) {
+  if tree.node_context_data[node_id] is Some(_) {
     return true
   }
-  for child_id in node.children {
+  for child_id in tree.children[node_id] {
     if subtree_has_measure_context(tree, child_id) {
       return true
     }

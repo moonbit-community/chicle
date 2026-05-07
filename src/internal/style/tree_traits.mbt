@@ -19,7 +19,7 @@ pub fn[C] TaffyTree::child_ids(
 ) -> Array[NodeId] raise TaffyError {
   validate_node_alive(self, parent_node_id)
   let result : Array[NodeId] = []
-  for child_id in self.nodes[parent_node_id].children {
+  for child_id in self.children[parent_node_id] {
     result.push(child_id)
   }
   result
@@ -31,7 +31,7 @@ pub fn[C] TaffyTree::child_count(
   parent_node_id : NodeId,
 ) -> Int raise TaffyError {
   validate_node_alive(self, parent_node_id)
-  self.nodes[parent_node_id].children.length()
+  self.children[parent_node_id].length()
 }
 
 ///|
@@ -41,7 +41,7 @@ pub fn[C] TaffyTree::get_child_id(
   child_index : Int,
 ) -> NodeId raise TaffyError {
   validate_node_alive(self, parent_node_id)
-  match self.nodes[parent_node_id].children.get(child_index) {
+  match self.children[parent_node_id].get(child_index) {
     Some(child_id) => child_id
     None => raise ChildNotFound(parent=parent_node_id, child=child_index)
   }
@@ -63,7 +63,7 @@ pub fn[C] TaffyTree::set_unrounded_layout(
   layout : Layout,
 ) -> Unit raise TaffyError {
   validate_node_alive(self, node_id)
-  self.nodes[node_id].layout = layout
+  self.nodes[node_id].unrounded_layout = layout
 }
 
 ///|
@@ -72,7 +72,42 @@ pub fn[C] TaffyTree::get_unrounded_layout(
   node_id : NodeId,
 ) -> Layout raise TaffyError {
   validate_node_alive(self, node_id)
-  self.nodes[node_id].layout
+  self.nodes[node_id].unrounded_layout
+}
+
+///|
+fn[C] TaffyTree::unrounded_layout(
+  self : TaffyTree[C],
+  node : NodeId,
+) -> Layout raise TaffyError {
+  let node_ref = match self.nodes.get(node) {
+    Some(n) => n
+    None => raise InvalidNodeId(node)
+  }
+  if !node_ref.alive {
+    raise InvalidNodeId(node)
+  }
+  let layout = node_ref.unrounded_layout
+  match self.parents[node] {
+    None => layout
+    Some(parent_id) => {
+      let parent = match self.nodes.get(parent_id) {
+        Some(p) => p
+        None => raise InvalidNodeId(parent_id)
+      }
+      if !parent.alive {
+        raise InvalidNodeId(parent_id)
+      }
+      let parent_layout = parent.unrounded_layout
+      {
+        ..layout,
+        location: Point(
+          x=layout.location.x - parent_layout.location.x,
+          y=layout.location.y - parent_layout.location.y,
+        ),
+      }
+    }
+  }
 }
 
 ///|
@@ -81,7 +116,8 @@ pub fn[C] TaffyTree::set_final_layout(
   node_id : NodeId,
   layout : Layout,
 ) -> Unit raise TaffyError {
-  self.set_unrounded_layout(node_id, layout)
+  validate_node_alive(self, node_id)
+  self.nodes[node_id].final_layout = layout
 }
 
 ///|
@@ -89,5 +125,6 @@ pub fn[C] TaffyTree::get_final_layout(
   self : TaffyTree[C],
   node_id : NodeId,
 ) -> Layout raise TaffyError {
-  self.get_unrounded_layout(node_id)
+  validate_node_alive(self, node_id)
+  self.nodes[node_id].final_layout
 }

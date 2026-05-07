@@ -21,11 +21,11 @@ fn[C] baseline_offset_y(
     Some(n) => n
     None => raise InvalidNodeId(node_id)
   }
-  let node_layout = node.layout
+  let node_layout = node.unrounded_layout
   match node.style.display {
     DisplayBlock | DisplayGrid => node_layout.size.height
     _ =>
-      if node.children.length() == 0 {
+      if tree.children[node_id].length() == 0 {
         node_layout.size.height
       } else {
         if node.style.display is DisplayFlex &&
@@ -35,7 +35,7 @@ fn[C] baseline_offset_y(
             None => ItemsStretch
           }
           let mut first_line_top : Double? = None
-          for child_id in node.children {
+          for child_id in tree.children[node_id] {
             let child = match tree.nodes.get(child_id) {
               Some(c) => c
               None => raise InvalidNodeId(child_id)
@@ -43,7 +43,8 @@ fn[C] baseline_offset_y(
             match (child.style.display, child.style.position) {
               (DisplayNone, _) | (_, PosAbsolute) => ()
               _ => {
-                let rel_top = child.layout.location.y - node_layout.location.y
+                let rel_top = child.unrounded_layout.location.y -
+                  node_layout.location.y
                 first_line_top = match first_line_top {
                   Some(v) => Some(min_double(v, rel_top))
                   None => Some(rel_top)
@@ -55,7 +56,7 @@ fn[C] baseline_offset_y(
             Some(first_line_top) => {
               let mut first_candidate : NodeId? = None
               let mut baseline_candidate : NodeId? = None
-              for child_id in node.children {
+              for child_id in tree.children[node_id] {
                 let child = match tree.nodes.get(child_id) {
                   Some(c) => c
                   None => raise InvalidNodeId(child_id)
@@ -63,7 +64,7 @@ fn[C] baseline_offset_y(
                 match (child.style.display, child.style.position) {
                   (DisplayNone, _) | (_, PosAbsolute) => ()
                   _ => {
-                    let rel_top = child.layout.location.y -
+                    let rel_top = child.unrounded_layout.location.y -
                       node_layout.location.y
                     if abs_double(rel_top - first_line_top) < 0.0001 {
                       if first_candidate is None {
@@ -86,7 +87,7 @@ fn[C] baseline_offset_y(
               }
               match chosen {
                 Some(chosen_id) => {
-                  let chosen_layout = tree.nodes[chosen_id].layout
+                  let chosen_layout = tree.nodes[chosen_id].unrounded_layout
                   return chosen_layout.location.y -
                     node_layout.location.y +
                     baseline_offset_y(tree, chosen_id)
@@ -97,7 +98,7 @@ fn[C] baseline_offset_y(
             None => ()
           }
         }
-        for child_id in node.children {
+        for child_id in tree.children[node_id] {
           let child = match tree.nodes.get(child_id) {
             Some(c) => c
             None => raise InvalidNodeId(child_id)
@@ -108,7 +109,7 @@ fn[C] baseline_offset_y(
               match child.style.position {
                 PosAbsolute => ()
                 PosRelative => {
-                  let child_layout = child.layout
+                  let child_layout = child.unrounded_layout
                   let child_margin_top = if node.style.display is DisplayFlex &&
                     is_column(node.style.flex_direction) {
                     match child.style.margin.top {
@@ -144,11 +145,11 @@ fn[C] grid_item_baseline_offset_y(
     Some(n) => n
     None => raise InvalidNodeId(node_id)
   }
-  let node_layout = node.layout
-  if node.children.length() == 0 {
+  let node_layout = node.unrounded_layout
+  if tree.children[node_id].length() == 0 {
     node_layout.size.height
   } else {
-    for child_id in node.children {
+    for child_id in tree.children[node_id] {
       let child = match tree.nodes.get(child_id) {
         Some(c) => c
         None => raise InvalidNodeId(child_id)
@@ -159,7 +160,7 @@ fn[C] grid_item_baseline_offset_y(
           match child.style.position {
             PosAbsolute => ()
             PosRelative => {
-              let child_layout = child.layout
+              let child_layout = child.unrounded_layout
               return child_layout.location.y -
                 node_layout.location.y +
                 grid_item_baseline_offset_y(tree, child_id)

@@ -100,7 +100,7 @@ fn[C] compute_flex_layout_with_measure(
   let flow_children : Array[NodeId] = []
   let abs_children : Array[NodeId] = []
   let hidden_children : Array[NodeId] = []
-  for child_id in node.children {
+  for child_id in tree.children[node_id] {
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
       None => raise InvalidNodeId(child_id)
@@ -280,8 +280,9 @@ fn[C] compute_flex_layout_with_measure(
     } else {
       intrinsic_available_for_children
     }
-    let intrinsic_known_dimensions = if child.context is Some(_) &&
-      child.children.length() == 0 &&
+    let intrinsic_known_dimensions = if tree.node_context_data[child_id]
+      is Some(_) &&
+      tree.children[child_id].length() == 0 &&
       align is ItemsStretch {
       let intrinsic_cross_available = if is_col {
         child_intrinsic_available.width
@@ -314,7 +315,7 @@ fn[C] compute_flex_layout_with_measure(
       measure_function,
       false,
     )
-    let child_layout = tree.layout(child_id)
+    let child_layout = tree.unrounded_layout(child_id)
     content_main_sizes[i] = if is_col {
       child_layout.size.height
     } else {
@@ -357,8 +358,8 @@ fn[C] compute_flex_layout_with_measure(
     }
     if basis is None &&
       main_from_size is None &&
-      child.children.length() == 0 &&
-      child.context is None &&
+      tree.children[child_id].length() == 0 &&
+      tree.node_context_data[child_id] is None &&
       child.style.aspect_ratio is None {
       main = padding_border_main
     }
@@ -511,7 +512,7 @@ fn[C] compute_flex_layout_with_measure(
     node.style.max_size.height,
     available_space.height,
   )
-  tree.nodes[node_id].layout = {
+  tree.nodes[node_id].unrounded_layout = {
     ..Layout::zero(),
     location: absolute_origin,
     size: Size(width=border_box_width, height=border_box_height),
@@ -689,7 +690,7 @@ fn[C] compute_flex_layout_with_measure(
         )
         content_height = max_double(border_box_height - vert_inset, 0.0)
       }
-      tree.nodes[node_id].layout = {
+      tree.nodes[node_id].unrounded_layout = {
         ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
@@ -888,7 +889,7 @@ fn[C] compute_flex_layout_with_measure(
                 FlexNoWrap => false
                 _ => true
               }
-              if child.children.length() > 0 && child_wraps {
+              if tree.children[child_id].length() > 0 && child_wraps {
                 min_double(intrinsic_cross, stretch_cross_available)
               } else {
                 intrinsic_cross
@@ -1004,7 +1005,7 @@ fn[C] compute_flex_layout_with_measure(
             actual_gap_main
           pos
         }
-        let has_measure_context = tree.nodes[child_id].context is Some(_)
+        let has_measure_context = tree.node_context_data[child_id] is Some(_)
         let known_width = if has_measure_context {
           let main_changed = abs_double(main_size - base_main_sizes[idx]) >
             0.0001
@@ -1040,7 +1041,7 @@ fn[C] compute_flex_layout_with_measure(
             FlexNoWrap => false
             _ => true
           }
-          let allow_auto_main = child.children.length() > 0 &&
+          let allow_auto_main = tree.children[child_id].length() > 0 &&
             child_wraps &&
             !main_size_is_known_constraint[idx] &&
             !main_changed
@@ -1086,7 +1087,7 @@ fn[C] compute_flex_layout_with_measure(
             FlexNoWrap => false
             _ => true
           }
-          let allow_auto_main = child.children.length() > 0 &&
+          let allow_auto_main = tree.children[child_id].length() > 0 &&
             child_wraps &&
             !main_size_is_known_constraint[idx] &&
             !main_changed
@@ -1153,7 +1154,7 @@ fn[C] compute_flex_layout_with_measure(
           content_width = max_double(border_box_width - horiz_inset, 0.0)
           container_main = content_width
         }
-        tree.nodes[node_id].layout = {
+        tree.nodes[node_id].unrounded_layout = {
           ..Layout::zero(),
           location: absolute_origin,
           size: Size(width=border_box_width, height=border_box_height),
@@ -1253,7 +1254,7 @@ fn[C] compute_flex_layout_with_measure(
           has_definite_basis ||
           (
             double_approx_equal(free_space, 0.0) &&
-            child_for_min.context is Some(_) &&
+            tree.node_context_data[flow_children[i]] is Some(_) &&
             main_available_pre is AvailMaxContent &&
             cross_available_pre is AvailMaxContent
           )
@@ -1373,7 +1374,7 @@ fn[C] compute_flex_layout_with_measure(
       height=AvailDefinite(content_height),
     )
     let container_cross_for_placement = {
-      let s = tree.nodes[node_id].layout.size
+      let s = tree.nodes[node_id].unrounded_layout.size
       if is_col {
         max_double(s.width - horiz_inset, 0.0)
       } else {
@@ -1442,7 +1443,7 @@ fn[C] compute_flex_layout_with_measure(
               FlexNoWrap => false
               _ => true
             }
-            if child.children.length() > 0 && child_wraps {
+            if tree.children[child_id].length() > 0 && child_wraps {
               min_double(intrinsic_cross, stretch_cross_available)
             } else {
               intrinsic_cross
@@ -1553,7 +1554,7 @@ fn[C] compute_flex_layout_with_measure(
           actual_gap_main
         pos
       }
-      let has_measure_context = tree.nodes[child_id].context is Some(_)
+      let has_measure_context = tree.node_context_data[child_id] is Some(_)
       let known_width = if has_measure_context {
         let main_changed = abs_double(main_size - base_main_sizes[i]) > 0.0001
         let main_known = if main_size_is_known_constraint[i] || main_changed {
@@ -1585,12 +1586,12 @@ fn[C] compute_flex_layout_with_measure(
           FlexNoWrap => false
           _ => true
         }
-        let allow_auto_main = child.children.length() > 0 &&
+        let allow_auto_main = tree.children[child_id].length() > 0 &&
           child_wraps &&
           !main_size_is_known_constraint[i] &&
           !main_changed
         let main_known = if allow_auto_main { None } else { Some(main_size) }
-        let allow_auto_cross = child.children.length() > 0 &&
+        let allow_auto_cross = tree.children[child_id].length() > 0 &&
           child_wraps &&
           cross_is_auto[i]
         let cross_known = if !cross_is_auto[i] {
@@ -1643,12 +1644,12 @@ fn[C] compute_flex_layout_with_measure(
           FlexNoWrap => false
           _ => true
         }
-        let allow_auto_main = child.children.length() > 0 &&
+        let allow_auto_main = tree.children[child_id].length() > 0 &&
           child_wraps &&
           !main_size_is_known_constraint[i] &&
           !main_changed
         let main_known = if allow_auto_main { None } else { Some(main_size) }
-        let allow_auto_cross = child.children.length() > 0 &&
+        let allow_auto_cross = tree.children[child_id].length() > 0 &&
           child_wraps &&
           cross_is_auto[i]
         let cross_known = if !cross_is_auto[i] {
@@ -1690,7 +1691,7 @@ fn[C] compute_flex_layout_with_measure(
       !subtree_has_measure_context(tree, node_id) {
       let mut needed_cross = 0.0
       for i in 0..<flow_count {
-        let child_layout = tree.layout(flow_children[i])
+        let child_layout = tree.unrounded_layout(flow_children[i])
         let cross_start = if is_col {
           child_layout.location.x - base_x
         } else {
@@ -1724,7 +1725,7 @@ fn[C] compute_flex_layout_with_measure(
         )
         content_height = max_double(border_box_height - vert_inset, 0.0)
       }
-      tree.nodes[node_id].layout = {
+      tree.nodes[node_id].unrounded_layout = {
         ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
@@ -1751,7 +1752,7 @@ fn[C] compute_flex_layout_with_measure(
       Some(c) => c
       None => raise InvalidNodeId(only_child)
     }
-    let child_layout = tree.layout(only_child)
+    let child_layout = tree.unrounded_layout(only_child)
     let child_main_size = if is_col {
       child_layout.size.height
     } else {
@@ -1788,7 +1789,8 @@ fn[C] compute_flex_layout_with_measure(
       Some(v) => v > container_cross + 0.0001
       None => false
     }
-    let needs_main_resize_for_measured_margin_reflow = child.context is Some(_) &&
+    let needs_main_resize_for_measured_margin_reflow = tree.node_context_data[only_child]
+      is Some(_) &&
       (
         margin_main_start[0] > 0.0 ||
         margin_main_end[0] > 0.0 ||
@@ -1802,9 +1804,9 @@ fn[C] compute_flex_layout_with_measure(
       )
       is Some(_)
     let force_basisless_leaf_main = !is_col &&
-      child.children.length() == 0 &&
+      tree.children[only_child].length() == 0 &&
       child.style.size.width is DimAuto &&
-      child.context is None &&
+      tree.node_context_data[only_child] is None &&
       child_basis_is_definite &&
       main_available_pre is AvailMaxContent
     if force_basisless_leaf_main {
@@ -1861,7 +1863,7 @@ fn[C] compute_flex_layout_with_measure(
       resized = true
     }
     if resized {
-      tree.nodes[node_id].layout = {
+      tree.nodes[node_id].unrounded_layout = {
         ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),
@@ -1895,7 +1897,7 @@ fn[C] compute_flex_layout_with_measure(
     allow_auto_resize {
     let mut needed_main = 0.0
     for i in 0..<flow_count {
-      let child_layout = tree.layout(flow_children[i])
+      let child_layout = tree.unrounded_layout(flow_children[i])
       let main_start = if is_col {
         child_layout.location.y - base_y
       } else {
@@ -2001,7 +2003,7 @@ fn[C] compute_flex_layout_with_measure(
       content_width = max_double(border_box_width - horiz_inset, 0.0)
       container_main = content_width
     }
-    tree.nodes[node_id].layout = {
+    tree.nodes[node_id].unrounded_layout = {
       ..Layout::zero(),
       location: absolute_origin,
       size: Size(width=border_box_width, height=border_box_height),
@@ -2009,7 +2011,7 @@ fn[C] compute_flex_layout_with_measure(
     if cross_is_auto_container {
       let mut needed_cross = 0.0
       for i in 0..<flow_count {
-        let child_layout = tree.layout(flow_children[i])
+        let child_layout = tree.unrounded_layout(flow_children[i])
         let cross_start = if is_col {
           child_layout.location.x - base_x
         } else {
@@ -2044,7 +2046,7 @@ fn[C] compute_flex_layout_with_measure(
         content_height = max_double(border_box_height - vert_inset, 0.0)
         container_cross = content_height
       }
-      tree.nodes[node_id].layout = {
+      tree.nodes[node_id].unrounded_layout = {
         ..Layout::zero(),
         location: absolute_origin,
         size: Size(width=border_box_width, height=border_box_height),

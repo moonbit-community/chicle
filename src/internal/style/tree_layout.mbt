@@ -160,6 +160,16 @@ priv struct NodeLayoutCacheEntry {
 }
 
 ///|
+priv struct TaffyConfig {
+  mut use_rounding : Bool
+}
+
+///|
+fn TaffyConfig::TaffyConfig() -> TaffyConfig {
+  { use_rounding: true }
+}
+
+///|
 pub struct LayoutOutput {
   size : Size[Double]
   content_size : Size[Double]
@@ -214,12 +224,10 @@ fn Cache::Cache() -> Cache {
 }
 
 ///|
-struct Node[C] {
+struct NodeData {
   mut style : Style
-  children : Array[NodeId]
-  mut parent : NodeId?
-  mut layout : Layout
-  mut context : C?
+  mut unrounded_layout : Layout
+  mut final_layout : Layout
   cache : Cache
   mut effective_margin_top : Double
   mut effective_margin_bottom : Double
@@ -233,5 +241,14 @@ struct Node[C] {
 
 ///|
 pub struct TaffyTree[C] {
-  priv nodes : Array[Node[C]]
+  priv nodes : Array[NodeData]
+  priv children : Array[Array[NodeId]]
+  priv parents : Array[NodeId?]
+  priv node_context_data : Array[C?]
+  priv config : TaffyConfig
+}
+
+///|
+priv struct TaffyView[C] {
+  tree : TaffyTree[C]
 }

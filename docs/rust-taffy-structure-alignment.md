@@ -8,10 +8,12 @@ MoonBit directories are package boundaries. A direct copy of Rust's nested modul
 
 ## Architecture alignment status
 
-- Rust uses a trait-driven layout engine (`LayoutPartialTree`, `LayoutPartialTreeExt`, `TraverseTree`, `RoundTree`, `PrintTree`) that can run over custom tree implementations. MoonBit keeps a concrete `TaffyTree` arena, but mirrors the trait surface as tree methods (`child_ids`, `child_count`, `get_child_id`, `get_style`, unrounded/final layout accessors).
+- Rust uses a trait-driven layout engine (`LayoutPartialTree`, `LayoutPartialTreeExt`, `TraverseTree`, `RoundTree`, `PrintTree`) that can run over custom tree implementations. MoonBit keeps a concrete `TaffyTree` arena, but routes computation through an internal `TaffyView` and mirrors the trait surface as tree methods (`child_ids`, `child_count`, `get_child_id`, `get_style`, unrounded/final layout accessors).
 - Rust has a first-class `Cache` model with one final layout entry and nine measure cache slots integrated with dirty tracking. MoonBit mirrors that cache shape and clears caches through dirty propagation.
 - Cache lookup follows Rust taffy's looser match rules: known dimensions may match either the original known inputs or the cached output size, while unknown dimensions compare available space.
-- Rust layout execution is recursive through `perform_child_layout`. MoonBit mostly follows this model, but includes an iterative fast path for deep default single-child flex chains so the legacy `wasm` backend does not overflow the stack.
+- Rust layout execution is recursive through `perform_child_layout`. MoonBit routes normal layout through the same recursive dispatch path, with a narrow stack-safety trampoline for deep default single-child chains so the legacy `wasm` backend preserves Rust's observable measurement behavior without overflowing the JavaScript stack.
+- Rust `TaffyTree` separates node data, children, parents, node context, and config. MoonBit now mirrors this arena split with `nodes`, `children`, `parents`, `node_context_data`, and `config` arrays on `TaffyTree`.
+- Rust stores `unrounded_layout` separately from `final_layout` and gates rounding through `TaffyConfig`. MoonBit now keeps the same two layout buffers and uses `TaffyConfig.use_rounding` to decide whether to round or copy unrounded output into final output.
 - Rust `Layout` stores order, location, size, content size, scrollbar size, border, and padding. MoonBit exposes the same `Layout` field shape; fields not yet computed by an algorithm are zero-initialized.
 - Rust exposes `LayoutInput`, `LayoutOutput`, `RunMode`, `SizingMode`, and `RequestedAxis` as low-level compute contract types. MoonBit exposes the same shapes and routes compute-size probes through `LayoutInput`.
 - Internal compute dispatch now returns `LayoutOutput` through the cached/uncached path, matching Rust taffy's `compute_cached_layout` result flow; high-level APIs still write layouts into `TaffyTree`.

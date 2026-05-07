@@ -59,7 +59,7 @@ fn[C] reject_child_cycle(
         if id == child {
           raise CycleDetected(parent~, child~)
         } else {
-          cur = tree.nodes[id].parent
+          cur = tree.parents[id]
         }
     }
   }
@@ -71,10 +71,10 @@ fn[C] detach_from_parent(
   child : NodeId,
   new_parent : NodeId,
 ) -> Unit {
-  match tree.nodes[child].parent {
+  match tree.parents[child] {
     Some(old_parent) =>
       if old_parent != new_parent {
-        let old_children = tree.nodes[old_parent].children
+        let old_children = tree.children[old_parent]
         match old_children.search_by(fn(x) { x == child }) {
           Some(idx) => ignore(old_children.remove(idx))
           None => ()
@@ -91,10 +91,10 @@ fn[C] attach_children_unchecked(
   parent : NodeId,
   children : Array[NodeId],
 ) -> Unit {
-  let parent_children = tree.nodes[parent].children
+  let parent_children = tree.children[parent]
   for child in children {
     detach_from_parent(tree, child, parent)
-    tree.nodes[child].parent = Some(parent)
+    tree.parents[child] = Some(parent)
     parent_children.push(child)
   }
 }
@@ -108,12 +108,12 @@ pub fn[C] TaffyTree::add_child(
   validate_node_alive(tree, parent)
   validate_node_alive(tree, child)
   reject_child_cycle(tree, parent, child)
-  let parent_children = tree.nodes[parent].children
+  let parent_children = tree.children[parent]
   if array_contains_node(parent_children, child) {
     return
   }
   detach_from_parent(tree, child, parent)
-  tree.nodes[child].parent = Some(parent)
+  tree.parents[child] = Some(parent)
   parent_children.push(child)
   tree.mark_dirty(parent)
 }
@@ -132,9 +132,9 @@ pub fn[C] TaffyTree::set_children(
       raise DuplicateChild(parent~, child=child_id)
     }
   }
-  let old_children = tree.nodes[parent].children
+  let old_children = tree.children[parent]
   for child_id in old_children {
-    tree.nodes[child_id].parent = None
+    tree.parents[child_id] = None
   }
   old_children.clear()
   attach_children_unchecked(tree, parent, children)
@@ -161,11 +161,11 @@ pub fn[C] TaffyTree::remove_child(
   if !tree.nodes[child].alive {
     raise InvalidNodeId(child)
   }
-  let siblings = tree.nodes[parent].children
+  let siblings = tree.children[parent]
   match siblings.search_by(fn(x) { x == child }) {
     Some(idx) => {
       ignore(siblings.remove(idx))
-      tree.nodes[child].parent = None
+      tree.parents[child] = None
       tree.mark_dirty(parent)
       child
     }
@@ -192,7 +192,7 @@ pub fn[C] TaffyTree::mark_dirty(
       Some(id) => {
         tree.nodes[id].dirty = true
         tree.nodes[id].cache.clear()
-        cur = tree.nodes[id].parent
+        cur = tree.parents[id]
       }
     }
   }
@@ -227,22 +227,22 @@ pub fn[C] TaffyTree::remove(
     raise InvalidNodeId(node)
   }
   // Detach from parent.
-  let old_parent = tree.nodes[node].parent
+  let old_parent = tree.parents[node]
   match old_parent {
     Some(parent_id) => {
-      let siblings = tree.nodes[parent_id].children
+      let siblings = tree.children[parent_id]
       match siblings.search_by(fn(x) { x == node }) {
         Some(idx) => ignore(siblings.remove(idx))
         None => ()
       }
-      tree.nodes[node].parent = None
+      tree.parents[node] = None
     }
     None => ()
   }
   // Orphan children.
-  let kids = tree.nodes[node].children
+  let kids = tree.children[node]
   for child_id in kids {
-    tree.nodes[child_id].parent = None
+    tree.parents[child_id] = None
   }
   kids.clear()
   tree.nodes[node].alive = false
@@ -265,15 +265,15 @@ pub fn[C] TaffyTree::remove_subtree(
     raise InvalidNodeId(node)
   }
   // Detach root of subtree from its parent.
-  let old_parent = tree.nodes[node].parent
+  let old_parent = tree.parents[node]
   match old_parent {
     Some(parent_id) => {
-      let siblings = tree.nodes[parent_id].children
+      let siblings = tree.children[parent_id]
       match siblings.search_by(fn(x) { x == node }) {
         Some(idx) => ignore(siblings.remove(idx))
         None => ()
       }
-      tree.nodes[node].parent = None
+      tree.parents[node] = None
     }
     None => ()
   }
@@ -285,15 +285,15 @@ pub fn[C] TaffyTree::remove_subtree(
         if !tree.nodes[cur].alive {
           continue
         }
-        let kids = tree.nodes[cur].children
+        let kids = tree.children[cur]
         for child_id in kids {
           stack.push(child_id)
         }
         kids.clear()
-        tree.nodes[cur].parent = None
-        tree.nodes[cur].context = None
+        tree.parents[cur] = None
+        tree.node_context_data[cur] = None
         tree.nodes[cur].cache.clear()
-        tree.nodes[cur].layout = Layout::zero()
+        tree.nodes[cur].unrounded_layout = Layout::zero()
         tree.nodes[cur].alive = false
       }
     }
@@ -313,7 +313,7 @@ pub fn[C] TaffyTree::set_node_context(
   match tree.nodes.get(node) {
     Some(_) =>
       if tree.nodes[node].alive {
-        tree.nodes[node].context = Some(context)
+        tree.node_context_data[node] = Some(context)
         tree.nodes[node].cache.clear()
         tree.mark_dirty(node)
       } else {
@@ -331,7 +331,7 @@ pub fn[C] TaffyTree::clear_node_context(
   match tree.nodes.get(node) {
     Some(_) =>
       if tree.nodes[node].alive {
-        tree.nodes[node].context = None
+        tree.node_context_data[node] = None
         tree.nodes[node].cache.clear()
         tree.mark_dirty(node)
       } else {

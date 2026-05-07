@@ -134,7 +134,7 @@ fn[C] compute_leaf_layout_with_measure(
         measure_known_dimensions,
         measure_available_space,
         node_id,
-        node.context,
+        tree.node_context_data[node_id],
         node.style,
       )
       store_leaf_measure_cache(
@@ -268,7 +268,7 @@ fn[C] compute_leaf_layout_with_measure(
       }
     None => ()
   }
-  tree.nodes[node_id].layout = {
+  tree.nodes[node_id].unrounded_layout = {
     ..Layout::zero(),
     location: absolute_origin,
     size: border_box_size,

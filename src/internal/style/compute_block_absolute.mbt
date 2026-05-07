@@ -239,7 +239,7 @@ fn[C] compute_block_absolute_children(
           measure_function,
           false,
         )
-        tree.nodes[child_id].layout.size
+        tree.nodes[child_id].unrounded_layout.size
       }
     }
     let final_width = match used_width {
@@ -289,7 +289,7 @@ fn[C] compute_block_absolute_children(
       measure_function,
       false,
     )
-    let final_size = tree.nodes[child_id].layout.size
+    let final_size = tree.nodes[child_id].unrounded_layout.size
     let mut final_margin_left = if margin_left_auto {
       0.0
     } else {

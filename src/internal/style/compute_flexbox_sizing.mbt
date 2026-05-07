@@ -38,7 +38,7 @@ fn[C] resolve_flex_auto_min_main(
     resolve_optional_dimension(child.style.max_size.width, main_axis_available)
   }
   let original_style = child.style
-  let original_layout = child.layout
+  let original_layout = child.unrounded_layout
   let cleared_size = if is_col {
     Size(width=original_style.size.width, height=DimAuto)
   } else {
@@ -67,7 +67,7 @@ fn[C] resolve_flex_auto_min_main(
     measure_function,
   )
   tree.nodes[child_id].style = original_style
-  tree.nodes[child_id].layout = original_layout
+  tree.nodes[child_id].unrounded_layout = original_layout
   let mut clamped = min_content_main
   match main_from_size {
     Some(v) => clamped = min_double(clamped, v)
@@ -221,7 +221,7 @@ fn[C] resolve_wrap_line_main_sizes(
         has_definite_basis ||
         (
           double_approx_equal(free_space, 0.0) &&
-          child_for_min.context is Some(_) &&
+          tree.node_context_data[flow_children[idx]] is Some(_) &&
           main_available_pre is AvailMaxContent
         )
       if !line_frozen[idx] &&

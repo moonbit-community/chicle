@@ -14,7 +14,13 @@
 
 ///|
 pub fn[C] TaffyTree::TaffyTree() -> TaffyTree[C] {
-  { nodes: [] }
+  {
+    nodes: [],
+    children: [],
+    parents: [],
+    node_context_data: [],
+    config: TaffyConfig(),
+  }
 }
 
 ///|
@@ -23,17 +29,12 @@ pub fn[C] TaffyTree::with_capacity(_capacity : Int) -> TaffyTree[C] {
 }
 
 ///|
-fn[C] Node::new(
-  style : Style,
-  children : Array[NodeId],
-  context : C?,
-) -> Node[C] {
+fn[C] NodeData::new(style : Style, context : C?) -> NodeData {
+  ignore(context)
   {
     style,
-    children,
-    parent: None,
-    layout: Layout::zero(),
-    context,
+    unrounded_layout: Layout::zero(),
+    final_layout: Layout::zero(),
     cache: Cache(),
     effective_margin_top: 0.0,
     effective_margin_bottom: 0.0,
@@ -54,7 +55,10 @@ fn[C] TaffyTree::push_node(
   context : C?,
 ) -> NodeId {
   let id = self.nodes.length()
-  self.nodes.append([Node::new(style, children, context)])
+  self.nodes.append([NodeData::new(style, context)])
+  self.children.append([children])
+  self.parents.append([None])
+  self.node_context_data.append([context])
   id
 }
 

@@ -69,7 +69,9 @@ fn[C] compute_child_layout_with_measure(
   }
   ignore(inputs.parent_size)
   ignore(inputs.vertical_margins_are_collapsible)
-  let can_use_layout_cache = can_use_node_layout_cache(node, absolute_origin)
+  let can_use_layout_cache = can_use_node_layout_cache(
+    tree, node_id, absolute_origin,
+  )
   match
     restore_node_layout_from_cache(
       tree,
@@ -88,7 +90,7 @@ fn[C] compute_child_layout_with_measure(
     match node.style.display {
       DisplayNone => compute_hidden_layout(tree, node_id, absolute_origin)
       DisplayGrid =>
-        if node.children.length() == 0 {
+        if tree.children[node_id].length() == 0 {
           compute_leaf_layout_with_measure(
             tree,
             node_id,
@@ -109,7 +111,7 @@ fn[C] compute_child_layout_with_measure(
           )
         }
       DisplayBlock =>
-        if node.children.length() == 0 {
+        if tree.children[node_id].length() == 0 {
           compute_leaf_layout_with_measure(
             tree,
             node_id,
@@ -130,7 +132,7 @@ fn[C] compute_child_layout_with_measure(
           )
         }
       _ =>
-        if node.children.length() == 0 {
+        if tree.children[node_id].length() == 0 {
           compute_leaf_layout_with_measure(
             tree,
             node_id,
@@ -159,7 +161,7 @@ fn[C] compute_child_layout_with_measure(
     inputs.available_space,
   )
   finalize_layout_metadata(tree, node_id, node.style, inputs.available_space)
-  let output = LayoutOutput::from_layout(tree.nodes[node_id].layout)
+  let output = LayoutOutput::from_layout(tree.nodes[node_id].unrounded_layout)
   save_node_layout_cache(
     tree,
     node_id,
@@ -182,7 +184,7 @@ fn[C] finalize_layout_metadata(
   if style.display is DisplayNone {
     return
   }
-  let layout = tree.nodes[node_id].layout
+  let layout = tree.nodes[node_id].unrounded_layout
   let padding = resolve_rect_width_basis(style.padding, available_space)
   let border = resolve_rect_width_basis(style.border, available_space)
   let scrollbar_width = style.scrollbar_width
@@ -206,7 +208,7 @@ fn[C] finalize_layout_metadata(
     border.top +
     border.bottom +
     scrollbar_size.height
-  let content_size = if tree.nodes[node_id].children.length() == 0 {
+  let content_size = if tree.children[node_id].length() == 0 {
     layout.content_size
   } else {
     Size(
@@ -214,7 +216,7 @@ fn[C] finalize_layout_metadata(
       height=max_double(layout.size.height - vertical_inset, 0.0),
     )
   }
-  tree.nodes[node_id].layout = {
+  tree.nodes[node_id].unrounded_layout = {
     ..layout,
     content_size,
     scrollbar_size,
@@ -258,10 +260,11 @@ fn[C] measure_child_size_with_measure(
 
 ///|
 fn[C] can_use_node_layout_cache(
-  node : Node[C],
+  tree : TaffyTree[C],
+  node_id : NodeId,
   absolute_origin : Point[Double],
 ) -> Bool {
-  node.children.length() <= 1 &&
+  tree.children[node_id].length() <= 1 &&
   double_approx_equal(absolute_origin.x, 0.0) &&
   double_approx_equal(absolute_origin.y, 0.0)
 }
@@ -287,7 +290,7 @@ fn[C] restore_node_layout_from_cache(
       run_mode,
     ) {
     Some(entry) => {
-      tree.nodes[node_id].layout = entry.layout
+      tree.nodes[node_id].unrounded_layout = entry.layout
       tree.nodes[node_id].effective_margin_top = entry.effective_margin_top
       tree.nodes[node_id].effective_margin_bottom = entry.effective_margin_bottom
       tree.nodes[node_id].effective_margin_top_max_pos = entry.effective_margin_top_max_pos
@@ -353,7 +356,7 @@ fn[C] save_node_layout_cache(
   if !can_use_layout_cache {
     return
   }
-  let layout = tree.nodes[node_id].layout
+  let layout = tree.nodes[node_id].unrounded_layout
   store_node_layout_cache(tree.nodes[node_id].cache, run_mode, {
     known_dimensions,
     available_space,

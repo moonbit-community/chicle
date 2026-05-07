@@ -80,7 +80,8 @@ fn[C] has_in_flow_children(
 ///|
 fn[C] can_collapse_through_child(
   tree : TaffyTree[C],
-  child : Node[C],
+  child_id : NodeId,
+  child : NodeData,
   child_size : Size[Double],
 ) -> Bool raise TaffyError {
   match child.style.display {
@@ -92,7 +93,7 @@ fn[C] can_collapse_through_child(
   } else {
     ()
   }
-  match child.context {
+  match tree.node_context_data[child_id] {
     Some(_) => return false
     None => ()
   }
@@ -106,7 +107,7 @@ fn[C] can_collapse_through_child(
   } else {
     ()
   }
-  if has_in_flow_children(tree, child.children) {
+  if has_in_flow_children(tree, tree.children[child_id]) {
     return false
   } else {
     ()

@@ -24,7 +24,7 @@ pub fn[C] TaffyTree::node_context(
   if !node_ref.alive {
     raise InvalidNodeId(node)
   }
-  node_ref.context
+  self.node_context_data[node]
 }
 
 ///|
@@ -39,8 +39,8 @@ pub fn[C] TaffyTree::layout(
   if !node_ref.alive {
     raise InvalidNodeId(node)
   }
-  let layout = node_ref.layout
-  match node_ref.parent {
+  let layout = node_ref.final_layout
+  match self.parents[node] {
     None => layout
     Some(parent_id) => {
       let parent = match self.nodes.get(parent_id) {
@@ -50,7 +50,7 @@ pub fn[C] TaffyTree::layout(
       if !parent.alive {
         raise InvalidNodeId(parent_id)
       }
-      let parent_layout = parent.layout
+      let parent_layout = parent.final_layout
       {
         ..layout,
         location: Point(
@@ -82,6 +82,16 @@ pub fn[C] TaffyTree::compute_layout(
 }
 
 ///|
+pub fn[C] TaffyTree::enable_rounding(self : TaffyTree[C]) -> Unit {
+  self.config.use_rounding = true
+}
+
+///|
+pub fn[C] TaffyTree::disable_rounding(self : TaffyTree[C]) -> Unit {
+  self.config.use_rounding = false
+}
+
+///|
 pub fn[C] TaffyTree::compute_layout_with_measure(
   self : TaffyTree[C],
   root : NodeId,
@@ -99,11 +109,25 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
       }
     None => raise InvalidNodeId(root)
   }
-  if !compute_default_single_child_chain_layout(
-      self, root, available_space, measure_function,
+  let view : TaffyView[C] = { tree: self }
+  view.compute_root_layout_with_measure(root, available_space, measure_function)
+}
+
+///|
+fn[C] TaffyView::compute_root_layout_with_measure(
+  self : TaffyView[C],
+  root : NodeId,
+  available_space : Size[AvailableSpace],
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ],
+) -> Unit raise TaffyError {
+  let tree = self.tree
+  if !compute_default_single_child_chain_trampoline(
+      tree, root, available_space, measure_function,
     ) {
     compute_node_layout_with_measure(
-      self,
+      tree,
       root,
       Size(width=None, height=None),
       available_space,
@@ -112,11 +136,15 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
       true,
     )
   }
-  round_layout_tree_and_mark_clean(self, root)
+  if tree.config.use_rounding {
+    round_layout_tree_and_mark_clean(tree, root)
+  } else {
+    copy_unrounded_layout_tree_and_mark_clean(tree, root)
+  }
 }
 
 ///|
-fn[C] compute_default_single_child_chain_layout(
+fn[C] compute_default_single_child_chain_trampoline(
   tree : TaffyTree[C],
   root : NodeId,
   available_space : Size[AvailableSpace],
@@ -135,22 +163,22 @@ fn[C] compute_default_single_child_chain_layout(
     if !node.alive {
       return false
     }
-    if node.children.length() == 0 {
+    if tree.children[cur].length() == 0 {
       if chain.length() < 32 ||
-        node.context is None ||
+        tree.node_context_data[cur] is None ||
         !is_default_flex_chain_leaf(node.style) {
         return false
       }
       let size = measure_default_flex_chain_leaf(
         tree, cur, available_space, measure_function,
       )
-      tree.nodes[cur].layout = {
+      tree.nodes[cur].unrounded_layout = {
         ..Layout::zero(),
         location: Point::zero(),
         size,
       }
       for parent_id in chain {
-        tree.nodes[parent_id].layout = {
+        tree.nodes[parent_id].unrounded_layout = {
           ..Layout::zero(),
           location: Point::zero(),
           size,
@@ -158,12 +186,12 @@ fn[C] compute_default_single_child_chain_layout(
       }
       return true
     }
-    if node.children.length() != 1 ||
+    if tree.children[cur].length() != 1 ||
       !is_default_flex_chain_container(node.style) {
       return false
     }
     chain.push(cur)
-    cur = node.children[0]
+    cur = tree.children[cur][0]
   }
   false
 }
@@ -205,46 +233,29 @@ fn[C] measure_default_flex_chain_leaf(
   ],
 ) -> Size[Double] {
   let node = tree.nodes[leaf]
+  let context = tree.node_context_data[leaf]
   let unconstrained = Size(width=None, height=None)
   let measured = measure_function(
     unconstrained,
     available_space,
     leaf,
-    node.context,
+    context,
     node.style,
   )
   let width_known = Size(width=Some(measured.width), height=None)
   ignore(
-    measure_function(
-      width_known,
-      available_space,
-      leaf,
-      node.context,
-      node.style,
-    ),
+    measure_function(width_known, available_space, leaf, context, node.style),
   )
   let height_known = Size(width=None, height=Some(measured.height))
   ignore(
-    measure_function(
-      height_known,
-      available_space,
-      leaf,
-      node.context,
-      node.style,
-    ),
+    measure_function(height_known, available_space, leaf, context, node.style),
   )
   let fully_known = Size(
     width=Some(measured.width),
     height=Some(measured.height),
   )
   ignore(
-    measure_function(
-      fully_known,
-      available_space,
-      leaf,
-      node.context,
-      node.style,
-    ),
+    measure_function(fully_known, available_space, leaf, context, node.style),
   )
   measured
 }
@@ -330,21 +341,45 @@ fn[C] round_layout_tree_and_mark_clean(
         if !tree.nodes[cur].alive {
           continue
         }
-        let layout = tree.nodes[cur].layout
+        let layout = tree.nodes[cur].unrounded_layout
         let rounded_left = layout.location.x.round()
         let rounded_top = layout.location.y.round()
         let rounded_right = (layout.location.x + layout.size.width).round()
         let rounded_bottom = (layout.location.y + layout.size.height).round()
-        tree.nodes[cur].layout = {
-          ..Layout::zero(),
+        let rounded_layout = {
+          ..layout,
           location: Point(x=rounded_left, y=rounded_top),
           size: Size(
             width=max_double(rounded_right - rounded_left, 0.0),
             height=max_double(rounded_bottom - rounded_top, 0.0),
           ),
         }
+        tree.nodes[cur].final_layout = rounded_layout
         tree.nodes[cur].dirty = false
-        for child_id in tree.nodes[cur].children {
+        for child_id in tree.children[cur] {
+          stack.push(child_id)
+        }
+      }
+    }
+  }
+}
+
+///|
+fn[C] copy_unrounded_layout_tree_and_mark_clean(
+  tree : TaffyTree[C],
+  root : NodeId,
+) -> Unit {
+  let stack : Array[NodeId] = [root]
+  while true {
+    match stack.pop() {
+      None => break
+      Some(cur) => {
+        if !tree.nodes[cur].alive {
+          continue
+        }
+        tree.nodes[cur].final_layout = tree.nodes[cur].unrounded_layout
+        tree.nodes[cur].dirty = false
+        for child_id in tree.children[cur] {
           stack.push(child_id)
         }
       }

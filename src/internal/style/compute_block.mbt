@@ -111,7 +111,7 @@ fn[C] compute_block_layout_with_measure(
     ),
     vert_non_scroll_inset,
   )
-  tree.nodes[node_id].layout = {
+  tree.nodes[node_id].unrounded_layout = {
     ..Layout::zero(),
     location: absolute_origin,
     size: Size(width=border_box_width, height=border_box_height),
@@ -164,7 +164,7 @@ fn[C] compute_block_layout_with_measure(
   }
   let mut first_in_flow_child : NodeId? = None
   let mut last_in_flow_child : NodeId? = None
-  for child_id in node.children {
+  for child_id in tree.children[node_id] {
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
       None => raise InvalidNodeId(child_id)
@@ -229,7 +229,7 @@ fn[C] compute_block_layout_with_measure(
     _ => 0.0
   }
   let mut is_first_in_flow = true
-  for child_id in node.children {
+  for child_id in tree.children[node_id] {
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
       None => raise InvalidNodeId(child_id)
@@ -391,7 +391,7 @@ fn[C] compute_block_layout_with_measure(
               measure_function,
               false,
             )
-            let child_size = tree.nodes[child_id].layout.size
+            let child_size = tree.nodes[child_id].unrounded_layout.size
             let effective_top = tree.nodes[child_id].effective_margin_top
             let top_used_effective = if collapse_top_with_child &&
               is_first_in_flow {
@@ -450,7 +450,9 @@ fn[C] compute_block_layout_with_measure(
             } else {
               effective_bottom_raw
             }
-            let through = can_collapse_through_child(tree, child, child_size)
+            let through = can_collapse_through_child(
+              tree, child_id, child, child_size,
+            )
             if through {
               flow_margin_collapse = collapse_state_add(
                 collapse_state_add(flow_margin_collapse, top_used_effective),
@@ -535,7 +537,7 @@ fn[C] compute_block_layout_with_measure(
     max_flow_child_width = 0.0
     let content_width_for_flow2 = final_content_width_for_flow
     let mut is_first_in_flow2 = true
-    for child_id in node.children {
+    for child_id in tree.children[node_id] {
       let child = match tree.nodes.get(child_id) {
         Some(c) => c
         None => raise InvalidNodeId(child_id)
@@ -687,7 +689,7 @@ fn[C] compute_block_layout_with_measure(
                 measure_function,
                 false,
               )
-              let child_size = tree.nodes[child_id].layout.size
+              let child_size = tree.nodes[child_id].unrounded_layout.size
               let effective_top = tree.nodes[child_id].effective_margin_top
               let top_used_effective = if collapse_top_with_child &&
                 is_first_in_flow2 {
@@ -738,7 +740,9 @@ fn[C] compute_block_layout_with_measure(
               } else {
                 effective_bottom_raw
               }
-              let through = can_collapse_through_child(tree, child, child_size)
+              let through = can_collapse_through_child(
+                tree, child_id, child, child_size,
+              )
               if through {
                 flow_margin_collapse = collapse_state_add(
                   collapse_state_add(flow_margin_collapse, top_used_effective),
@@ -783,7 +787,7 @@ fn[C] compute_block_layout_with_measure(
         )
     }
   }
-  tree.nodes[node_id].layout = {
+  tree.nodes[node_id].unrounded_layout = {
     ..Layout::zero(),
     location: absolute_origin,
     size: Size(width=final_border_box_width, height=final_border_box_height),

@@ -509,121 +509,102 @@ fn compute_grid_track_sizes_with_contributions(
 }
 
 ///|
-fn grid_items_placed(items : Array[GridItem]) -> Array[Bool] {
-  let values : Array[Bool] = []
+priv struct GridTrackSizingItemSnapshot {
+  placed : Array[Bool]
+  start : Array[Int]
+  span : Array[Int]
+  minimum_contribution : Array[Double]
+  min_content_contribution : Array[Double]
+  max_content_contribution : Array[Double]
+  crosses_flexible_track : Array[Bool]
+  crosses_intrinsic_track : Array[Bool]
+}
+
+///|
+fn grid_column_track_sizing_item_snapshot(
+  items : Array[GridItem],
+) -> GridTrackSizingItemSnapshot {
+  let placed : Array[Bool] = []
+  let start : Array[Int] = []
+  let span : Array[Int] = []
+  let minimum_contribution : Array[Double] = []
+  let min_content_contribution : Array[Double] = []
+  let max_content_contribution : Array[Double] = []
+  let crosses_flexible_track : Array[Bool] = []
+  let crosses_intrinsic_track : Array[Bool] = []
   for item in items {
     ignore(item.source_order)
-    values.push(item.placed)
+    placed.push(item.placed)
+    start.push(item.column)
+    span.push(item.column_span)
+    minimum_contribution.push(item.column_minimum_contribution)
+    min_content_contribution.push(item.column_min_content_contribution)
+    max_content_contribution.push(item.column_max_content_contribution)
+    crosses_flexible_track.push(item.crosses_flexible_column)
+    crosses_intrinsic_track.push(item.crosses_intrinsic_column)
   }
-  values
+  {
+    placed,
+    start,
+    span,
+    minimum_contribution,
+    min_content_contribution,
+    max_content_contribution,
+    crosses_flexible_track,
+    crosses_intrinsic_track,
+  }
 }
 
 ///|
-fn grid_items_column(items : Array[GridItem]) -> Array[Int] {
-  let values : Array[Int] = []
-  for item in items {
-    values.push(item.column)
-  }
-  values
-}
-
-///|
-fn grid_items_column_span(items : Array[GridItem]) -> Array[Int] {
-  let values : Array[Int] = []
-  for item in items {
-    values.push(item.column_span)
-  }
-  values
-}
-
-///|
-fn grid_items_column_minimum_contribution(
+fn grid_row_track_sizing_item_snapshot(
   items : Array[GridItem],
-) -> Array[Double] {
-  let values : Array[Double] = []
+) -> GridTrackSizingItemSnapshot {
+  let placed : Array[Bool] = []
+  let start : Array[Int] = []
+  let span : Array[Int] = []
+  let minimum_contribution : Array[Double] = []
+  let min_content_contribution : Array[Double] = []
+  let max_content_contribution : Array[Double] = []
+  let crosses_flexible_track : Array[Bool] = []
+  let crosses_intrinsic_track : Array[Bool] = []
   for item in items {
-    values.push(item.column_minimum_contribution)
+    ignore(item.source_order)
+    placed.push(item.placed)
+    start.push(item.row)
+    span.push(item.row_span)
+    minimum_contribution.push(item.row_minimum_contribution)
+    min_content_contribution.push(item.row_minimum_contribution)
+    max_content_contribution.push(item.row_max_content_contribution)
+    crosses_flexible_track.push(item.crosses_flexible_row)
+    crosses_intrinsic_track.push(item.crosses_intrinsic_row)
   }
-  values
+  {
+    placed,
+    start,
+    span,
+    minimum_contribution,
+    min_content_contribution,
+    max_content_contribution,
+    crosses_flexible_track,
+    crosses_intrinsic_track,
+  }
 }
 
 ///|
-fn grid_items_column_min_content_contribution(
-  items : Array[GridItem],
-) -> Array[Double] {
-  let values : Array[Double] = []
-  for item in items {
-    values.push(item.column_min_content_contribution)
-  }
-  values
-}
-
-///|
-fn grid_items_column_max_content_contribution(
-  items : Array[GridItem],
-) -> Array[Double] {
-  let values : Array[Double] = []
-  for item in items {
-    values.push(item.column_max_content_contribution)
-  }
-  values
-}
-
-///|
-fn grid_items_row(items : Array[GridItem]) -> Array[Int] {
-  let values : Array[Int] = []
-  for item in items {
-    values.push(item.row)
-  }
-  values
-}
-
-///|
-fn grid_items_row_span(items : Array[GridItem]) -> Array[Int] {
-  let values : Array[Int] = []
-  for item in items {
-    values.push(item.row_span)
-  }
-  values
-}
-
-///|
-fn grid_items_row_minimum_contribution(
-  items : Array[GridItem],
-) -> Array[Double] {
-  let values : Array[Double] = []
-  for item in items {
-    values.push(item.row_minimum_contribution)
-  }
-  values
-}
-
-///|
-fn grid_items_row_max_content_contribution(
-  items : Array[GridItem],
-) -> Array[Double] {
-  let values : Array[Double] = []
-  for item in items {
-    values.push(item.row_max_content_contribution)
-  }
-  values
-}
-
-///|
-fn compute_max_content_spanning_track_sizes_for_grid_items(
+fn compute_max_content_spanning_track_sizes_for_snapshot(
   tracks : Array[Dimension],
-  items : Array[GridItem],
+  snapshot : GridTrackSizingItemSnapshot,
 ) -> (Array[Double], Double)? {
   let mut has_spanning_item = false
   let mut has_flexible_spanning_item = false
   let mut has_intrinsic_spanning_item = false
-  for item in items {
-    if item.placed && item.column_span > 1 {
+  for i in 0..<snapshot.placed.length() {
+    if snapshot.placed[i] && snapshot.span[i] > 1 {
       has_spanning_item = true
-      if item.crosses_flexible_column {
+      if snapshot.crosses_flexible_track[i] {
         has_flexible_spanning_item = true
       }
-      if item.crosses_intrinsic_column {
+      if snapshot.crosses_intrinsic_track[i] {
         has_intrinsic_spanning_item = true
       }
     }
@@ -634,12 +615,23 @@ fn compute_max_content_spanning_track_sizes_for_grid_items(
   }
   compute_max_content_spanning_track_sizes(
     tracks,
-    grid_items_column(items),
-    grid_items_column_span(items),
-    grid_items_column_minimum_contribution(items),
-    grid_items_column_min_content_contribution(items),
-    grid_items_column_max_content_contribution(items),
-    grid_items_placed(items),
+    snapshot.start,
+    snapshot.span,
+    snapshot.minimum_contribution,
+    snapshot.min_content_contribution,
+    snapshot.max_content_contribution,
+    snapshot.placed,
+  )
+}
+
+///|
+fn compute_max_content_spanning_track_sizes_for_grid_items(
+  tracks : Array[Dimension],
+  items : Array[GridItem],
+) -> (Array[Double], Double)? {
+  compute_max_content_spanning_track_sizes_for_snapshot(
+    tracks,
+    grid_column_track_sizing_item_snapshot(items),
   )
 }
 
@@ -648,31 +640,8 @@ fn compute_max_content_spanning_row_track_sizes_for_grid_items(
   tracks : Array[Dimension],
   items : Array[GridItem],
 ) -> (Array[Double], Double)? {
-  let mut has_spanning_item = false
-  let mut has_flexible_spanning_item = false
-  let mut has_intrinsic_spanning_item = false
-  for item in items {
-    if item.placed && item.row_span > 1 {
-      has_spanning_item = true
-      if item.crosses_flexible_row {
-        has_flexible_spanning_item = true
-      }
-      if item.crosses_intrinsic_row {
-        has_intrinsic_spanning_item = true
-      }
-    }
-  }
-  if !has_spanning_item ||
-    (!has_flexible_spanning_item && !has_intrinsic_spanning_item) {
-    return None
-  }
-  compute_max_content_spanning_track_sizes(
+  compute_max_content_spanning_track_sizes_for_snapshot(
     tracks,
-    grid_items_row(items),
-    grid_items_row_span(items),
-    grid_items_row_minimum_contribution(items),
-    grid_items_row_minimum_contribution(items),
-    grid_items_row_max_content_contribution(items),
-    grid_items_placed(items),
+    grid_row_track_sizing_item_snapshot(items),
   )
 }

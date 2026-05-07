@@ -48,27 +48,27 @@ pub fn Layout::zero() -> Layout {
 }
 
 ///|
-priv enum RunMode {
+pub enum RunMode {
   PerformLayout
   ComputeSize
   PerformHiddenLayout
 }
 
 ///|
-priv enum SizingMode {
+pub enum SizingMode {
   ContentSize
   InherentSize
 }
 
 ///|
-priv enum RequestedAxis {
+pub enum RequestedAxis {
   RequestedHorizontal
   RequestedVertical
   RequestedBoth
 }
 
 ///|
-priv struct LayoutInput {
+pub struct LayoutInput {
   run_mode : RunMode
   sizing_mode : SizingMode
   axis : RequestedAxis
@@ -79,7 +79,7 @@ priv struct LayoutInput {
 }
 
 ///|
-fn LayoutInput::hidden() -> LayoutInput {
+pub fn LayoutInput::hidden() -> LayoutInput {
   {
     run_mode: PerformHiddenLayout,
     sizing_mode: InherentSize,
@@ -92,7 +92,7 @@ fn LayoutInput::hidden() -> LayoutInput {
 }
 
 ///|
-fn layout_input_for_perform_layout(
+pub fn layout_input_for_perform_layout(
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
 ) -> LayoutInput {
@@ -108,7 +108,7 @@ fn layout_input_for_perform_layout(
 }
 
 ///|
-fn layout_input_for_compute_size(
+pub fn layout_input_for_compute_size(
   known_dimensions : Size[Double?],
   parent_size : Size[Double?],
   available_space : Size[AvailableSpace],
@@ -128,7 +128,7 @@ fn layout_input_for_compute_size(
 }
 
 ///|
-fn requested_axis_from_absolute(axis : AbsoluteAxis) -> RequestedAxis {
+pub fn requested_axis_from_absolute(axis : AbsoluteAxis) -> RequestedAxis {
   match axis {
     Horizontal => RequestedHorizontal
     Vertical => RequestedVertical
@@ -160,7 +160,7 @@ priv struct NodeLayoutCacheEntry {
 }
 
 ///|
-priv struct LayoutOutput {
+pub struct LayoutOutput {
   size : Size[Double]
   content_size : Size[Double]
   first_baselines : Point[Double?]
@@ -170,7 +170,7 @@ priv struct LayoutOutput {
 }
 
 ///|
-fn LayoutOutput::from_outer_size(size : Size[Double]) -> LayoutOutput {
+pub fn LayoutOutput::from_outer_size(size : Size[Double]) -> LayoutOutput {
   {
     size,
     content_size: Size::zero(),
@@ -182,7 +182,7 @@ fn LayoutOutput::from_outer_size(size : Size[Double]) -> LayoutOutput {
 }
 
 ///|
-fn LayoutOutput::from_layout(layout : Layout) -> LayoutOutput {
+pub fn LayoutOutput::from_layout(layout : Layout) -> LayoutOutput {
   {
     ..LayoutOutput::from_outer_size(layout.size),
     content_size: layout.content_size,
@@ -190,7 +190,7 @@ fn LayoutOutput::from_layout(layout : Layout) -> LayoutOutput {
 }
 
 ///|
-fn LayoutOutput::outer_size(self : LayoutOutput) -> Size[Double] {
+pub fn LayoutOutput::outer_size(self : LayoutOutput) -> Size[Double] {
   ignore(self.content_size)
   ignore(self.first_baselines)
   ignore(self.top_margin)

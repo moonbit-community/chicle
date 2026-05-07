@@ -159,11 +159,35 @@ pub fn Style::with_grid_template_rows(
 }
 
 ///|
+pub fn Style::with_grid_template_rows_taffy(
+  self : Style,
+  grid_template_rows : Array[TrackSizingFunction],
+) -> Style {
+  {
+    ..self,
+    grid_template_rows: track_sizing_functions_to_dimensions(grid_template_rows),
+  }
+}
+
+///|
 pub fn Style::with_grid_template_columns(
   self : Style,
   grid_template_columns : Array[Dimension],
 ) -> Style {
   { ..self, grid_template_columns, }
+}
+
+///|
+pub fn Style::with_grid_template_columns_taffy(
+  self : Style,
+  grid_template_columns : Array[TrackSizingFunction],
+) -> Style {
+  {
+    ..self,
+    grid_template_columns: track_sizing_functions_to_dimensions(
+      grid_template_columns,
+    ),
+  }
 }
 
 ///|
@@ -175,11 +199,30 @@ pub fn Style::with_grid_auto_rows(
 }
 
 ///|
+pub fn Style::with_grid_auto_rows_taffy(
+  self : Style,
+  grid_auto_rows : Array[NonRepeatedTrackSizingFunction],
+) -> Style {
+  { ..self, grid_auto_rows: non_repeated_tracks_to_dimensions(grid_auto_rows) }
+}
+
+///|
 pub fn Style::with_grid_auto_columns(
   self : Style,
   grid_auto_columns : Array[Dimension],
 ) -> Style {
   { ..self, grid_auto_columns, }
+}
+
+///|
+pub fn Style::with_grid_auto_columns_taffy(
+  self : Style,
+  grid_auto_columns : Array[NonRepeatedTrackSizingFunction],
+) -> Style {
+  {
+    ..self,
+    grid_auto_columns: non_repeated_tracks_to_dimensions(grid_auto_columns),
+  }
 }
 
 ///|
@@ -222,4 +265,28 @@ pub fn Style::with_grid_column_start(self : Style, start : Int) -> Style {
     grid_column_start: Some(start),
     grid_column: Line(start=PlaceLine(start), end=PlaceAuto),
   }
+}
+
+///|
+fn track_sizing_functions_to_dimensions(
+  tracks : Array[TrackSizingFunction],
+) -> Array[Dimension] {
+  let dimensions : Array[Dimension] = []
+  for track in tracks {
+    for dimension in track.to_dimensions() {
+      dimensions.push(dimension)
+    }
+  }
+  dimensions
+}
+
+///|
+fn non_repeated_tracks_to_dimensions(
+  tracks : Array[NonRepeatedTrackSizingFunction],
+) -> Array[Dimension] {
+  let dimensions : Array[Dimension] = []
+  for track in tracks {
+    dimensions.push(track.to_dimension())
+  }
+  dimensions
 }

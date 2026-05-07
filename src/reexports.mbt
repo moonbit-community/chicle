@@ -106,6 +106,21 @@ pub type NodeId = @style.NodeId
 pub type Layout = @style.Layout
 
 ///|
+pub type LayoutInput = @style.LayoutInput
+
+///|
+pub type LayoutOutput = @style.LayoutOutput
+
+///|
+pub type RunMode = @style.RunMode
+
+///|
+pub type SizingMode = @style.SizingMode
+
+///|
+pub type RequestedAxis = @style.RequestedAxis
+
+///|
 pub type TaffyError = @style.TaffyError
 
 ///|

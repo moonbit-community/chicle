@@ -234,6 +234,37 @@ pub fn MinTrackSizingFunction::uses_percentage(
 }
 
 ///|
+pub fn MaxTrackSizingFunction::to_dimension(
+  self : MaxTrackSizingFunction,
+) -> Dimension {
+  match self {
+    MaxTrackFixed(LengthPercentageLength(value)) => DimLength(value)
+    MaxTrackFixed(LengthPercentagePercent(value)) => DimPercent(value)
+    MaxTrackMinContent => DimMinContent
+    MaxTrackMaxContent => DimMaxContent
+    MaxTrackFitContent(LengthPercentageLength(value)) =>
+      DimFitContent(DimLength(value))
+    MaxTrackFitContent(LengthPercentagePercent(value)) =>
+      DimFitContent(DimPercent(value))
+    MaxTrackAuto => DimAuto
+    MaxTrackFraction(value) => DimFr(value)
+  }
+}
+
+///|
+pub fn MinTrackSizingFunction::to_dimension(
+  self : MinTrackSizingFunction,
+) -> Dimension {
+  match self {
+    MinTrackFixed(LengthPercentageLength(value)) => DimLength(value)
+    MinTrackFixed(LengthPercentagePercent(value)) => DimPercent(value)
+    MinTrackMinContent => DimMinContent
+    MinTrackMaxContent => DimMaxContent
+    MinTrackAuto => DimAuto
+  }
+}
+
+///|
 pub fn NonRepeatedTrackSizingFunction::min_sizing_function(
   self : NonRepeatedTrackSizingFunction,
 ) -> MinTrackSizingFunction {
@@ -252,4 +283,31 @@ pub fn NonRepeatedTrackSizingFunction::has_fixed_component(
   self : NonRepeatedTrackSizingFunction,
 ) -> Bool {
   self.min is MinTrackFixed(_) || self.max is MaxTrackFixed(_)
+}
+
+///|
+pub fn NonRepeatedTrackSizingFunction::to_dimension(
+  self : NonRepeatedTrackSizingFunction,
+) -> Dimension {
+  match (self.min, self.max) {
+    (MinTrackAuto, max) => max.to_dimension()
+    (min, MaxTrackAuto) => min.to_dimension()
+    (min, max) => DimMinMax(min.to_dimension(), max.to_dimension())
+  }
+}
+
+///|
+pub fn TrackSizingFunction::to_dimensions(
+  self : TrackSizingFunction,
+) -> Array[Dimension] {
+  match self {
+    Single(track) => [track.to_dimension()]
+    Repeat(repetition, tracks) => {
+      let dimensions : Array[Dimension] = []
+      for track in tracks {
+        dimensions.push(track.to_dimension())
+      }
+      [DimRepeat(repetition, dimensions)]
+    }
+  }
 }

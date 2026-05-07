@@ -215,6 +215,10 @@ pub using @style {type AlignItems as JustifySelf}
 
 pub using @style {type Layout}
 
+pub using @style {type LayoutInput}
+
+pub using @style {type LayoutOutput}
+
 pub using @style {type LengthPercentage}
 
 pub using @style {type LengthPercentageAuto}
@@ -237,7 +241,13 @@ pub using @style {type Position}
 
 pub using @style {type Rect}
 
+pub using @style {type RequestedAxis}
+
+pub using @style {type RunMode}
+
 pub using @style {type Size}
+
+pub using @style {type SizingMode}
 
 pub using @style {type Style}
 

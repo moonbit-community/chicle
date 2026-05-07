@@ -218,7 +218,6 @@ fn initialize_grid_item_track_crossings(
 }
 
 ///|
-#warnings("-unused_value")
 fn grid_items_first_row_baseline(items : Array[GridItem]) -> Double? {
   let mut first_row = -1
   for item in items {

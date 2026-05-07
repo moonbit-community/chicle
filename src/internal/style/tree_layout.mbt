@@ -200,6 +200,14 @@ pub fn LayoutOutput::from_layout(layout : Layout) -> LayoutOutput {
 }
 
 ///|
+fn LayoutOutput::from_layout_and_first_baselines(
+  layout : Layout,
+  first_baselines : Point[Double?],
+) -> LayoutOutput {
+  { ..LayoutOutput::from_layout(layout), first_baselines, }
+}
+
+///|
 pub fn LayoutOutput::outer_size(self : LayoutOutput) -> Size[Double] {
   ignore(self.content_size)
   ignore(self.first_baselines)
@@ -228,6 +236,7 @@ struct NodeData {
   mut style : Style
   mut unrounded_layout : Layout
   mut final_layout : Layout
+  mut first_baselines : Point[Double?]
   cache : Cache
   mut effective_margin_top : Double
   mut effective_margin_bottom : Double

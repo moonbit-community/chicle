@@ -389,6 +389,7 @@ fn[C] TaffyView::compute_child_layout(
     Some(output) => return output
     None => ()
   }
+  tree.set_first_baselines(node_id, Point(x=None, y=None))
   if run_mode is PerformHiddenLayout {
     compute_hidden_layout(tree, node_id, absolute_origin)
   } else {
@@ -460,7 +461,10 @@ fn[C] TaffyView::compute_child_layout(
     inputs.available_space,
   )
   finalize_layout_metadata(tree, node_id, node.style, inputs.available_space)
-  let output = LayoutOutput::from_layout(tree.nodes[node_id].unrounded_layout)
+  let output = LayoutOutput::from_layout_and_first_baselines(
+    tree.nodes[node_id].unrounded_layout,
+    tree.nodes[node_id].first_baselines,
+  )
   save_node_layout_cache(
     tree,
     node_id,

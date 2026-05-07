@@ -35,6 +35,7 @@ fn[C] NodeData::new(style : Style, context : C?) -> NodeData {
     style,
     unrounded_layout: Layout::zero(),
     final_layout: Layout::zero(),
+    first_baselines: Point(x=None, y=None),
     cache: Cache(),
     effective_margin_top: 0.0,
     effective_margin_bottom: 0.0,

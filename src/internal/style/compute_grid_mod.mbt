@@ -1585,6 +1585,10 @@ fn[C] compute_grid_layout(
       }
     }
   }
+  tree.set_first_baselines(
+    node_id,
+    Point(x=None, y=grid_items_first_row_baseline(grid_items)),
+  )
   let padding_origin = Point(
     x=absolute_origin.x + border.left,
     y=absolute_origin.y + border.top,

@@ -29,3 +29,12 @@ fn[C] TaffyTree::set_final_layout(
 ) -> Unit {
   self.nodes[node_id].final_layout = layout
 }
+
+///|
+fn[C] TaffyTree::set_first_baselines(
+  self : TaffyTree[C],
+  node_id : NodeId,
+  first_baselines : Point[Double?],
+) -> Unit {
+  self.nodes[node_id].first_baselines = first_baselines
+}

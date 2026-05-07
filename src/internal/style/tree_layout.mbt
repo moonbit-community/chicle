@@ -251,4 +251,7 @@ pub struct TaffyTree[C] {
 ///|
 priv struct TaffyView[C] {
   tree : TaffyTree[C]
+  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
+    Double,
+  ]
 }

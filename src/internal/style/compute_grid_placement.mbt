@@ -13,19 +13,6 @@
 // limitations under the License.
 
 ///|
-fn origin_zero_line(value : Int, explicit_track_count : Int) -> Int? {
-  if value == 0 {
-    None
-  } else if value > 0 {
-    Some(value - 1)
-  } else {
-    // Negative indices count back from the end of the explicit grid.
-    let explicit_line_count = explicit_track_count + 1
-    Some(value + explicit_line_count)
-  }
-}
-
-///|
 fn merged_placement_line(
   placement : Line[GridPlacement],
   legacy_start : Int?,
@@ -109,107 +96,6 @@ fn negative_auto_track_at(
     let idx = (len - m) % len
     auto_tracks[idx]
   }
-}
-
-///|
-fn matrix_make(rows : Int, cols : Int) -> Array[Array[Bool]] {
-  let m : Array[Array[Bool]] = []
-  for _r in 0..<rows {
-    m.push(Array::make(cols, false))
-  }
-  m
-}
-
-///|
-fn ensure_cols(
-  occ : Array[Array[Bool]],
-  col_tracks : Array[Dimension],
-  auto_cols : Array[Dimension],
-  negative_cols : Int,
-  explicit_cols : Int,
-  target_col : Int,
-) -> Unit {
-  while col_tracks.length() <= target_col {
-    let pos_existing = col_tracks.length() - negative_cols - explicit_cols
-    let dim = auto_cols[pos_existing % auto_cols.length()]
-    col_tracks.push(dim)
-    for r in 0..<occ.length() {
-      occ[r].push(false)
-    }
-  }
-}
-
-///|
-fn ensure_rows(
-  occ : Array[Array[Bool]],
-  row_tracks : Array[Dimension],
-  auto_rows : Array[Dimension],
-  negative_rows : Int,
-  explicit_rows : Int,
-  target_row : Int,
-) -> Unit {
-  while row_tracks.length() <= target_row {
-    let pos_existing = row_tracks.length() - negative_rows - explicit_rows
-    let dim = auto_rows[pos_existing % auto_rows.length()]
-    row_tracks.push(dim)
-    occ.push(Array::make(occ[0].length(), false))
-  }
-}
-
-///|
-fn region_is_free(
-  occ : Array[Array[Bool]],
-  row : Int,
-  col : Int,
-  row_span : Int,
-  col_span : Int,
-) -> Bool {
-  for r in row..<(row + row_span) {
-    for c in col..<(col + col_span) {
-      if occ[r][c] {
-        return false
-      }
-    }
-  }
-  true
-}
-
-///|
-fn mark_placed(
-  placed : Array[Bool],
-  placed_row : Array[Int],
-  placed_col : Array[Int],
-  placed_row_span : Array[Int],
-  placed_col_span : Array[Int],
-  occ : Array[Array[Bool]],
-  row_tracks : Array[Dimension],
-  col_tracks : Array[Dimension],
-  auto_rows : Array[Dimension],
-  auto_cols : Array[Dimension],
-  negative_rows : Int,
-  negative_cols : Int,
-  explicit_rows : Int,
-  explicit_cols : Int,
-  idx : Int,
-  row : Int,
-  col : Int,
-  row_span : Int,
-  col_span : Int,
-) -> Unit {
-  let row_end = row + row_span - 1
-  let col_end = col + col_span - 1
-  ensure_rows(occ, row_tracks, auto_rows, negative_rows, explicit_rows, row_end)
-  ensure_cols(occ, col_tracks, auto_cols, negative_cols, explicit_cols, col_end)
-  for r in row..<(row + row_span) {
-    for c in col..<(col + col_span) {
-      occ[r][c] = true
-    }
-  }
-  placed[idx] = true
-  placed_row[idx] = row
-  placed_col[idx] = col
-  placed_row_span[idx] = row_span
-  placed_col_span[idx] = col_span
 }
 
 ///|
@@ -390,24 +276,10 @@ fn track_min_sizing_kind(track : Dimension) -> Int {
 }
 
 ///|
-priv struct GridTrackState {
-  dimension : Dimension
-  mut base_size : Double
-  mut base_size_planned_increase : Double
-  mut item_incurred_increase : Double
-}
-
-///|
-priv enum IntrinsicContributionType {
-  TrackMinimumContribution
-  TrackMaximumContribution
-}
-
-///|
 fn grid_track_base_state(
   dimension : Dimension,
   percent_basis : Double?,
-) -> GridTrackState {
+) -> GridTrack {
   let mut base_size = 0.0
   match dimension {
     DimLength(v) => base_size = v
@@ -572,12 +444,12 @@ fn compute_spanned_max_track_size(
 
 ///|
 fn distribute_track_space_up_to_limits(
-  states : Array[GridTrackState],
+  states : Array[GridTrack],
   start : Int,
   span : Int,
   space : Double,
-  should_affect : (GridTrackState) -> Bool,
-  limit_of : (GridTrackState) -> Double,
+  should_affect : (GridTrack) -> Bool,
+  limit_of : (GridTrack) -> Double,
   eps : Double,
   inf : Double,
 ) -> Double {
@@ -626,12 +498,12 @@ fn distribute_track_space_up_to_limits(
 
 ///|
 fn distribute_item_space_to_base_size(
-  states : Array[GridTrackState],
+  states : Array[GridTrack],
   start : Int,
   span : Int,
   space : Double,
-  should_affect : (GridTrackState) -> Bool,
-  limit_of : (GridTrackState) -> Double,
+  should_affect : (GridTrack) -> Bool,
+  limit_of : (GridTrack) -> Double,
   contribution_type : IntrinsicContributionType,
   percent_basis : Double?,
   eps : Double,
@@ -680,7 +552,7 @@ fn distribute_item_space_to_base_size(
         break
       }
     }
-    let beyond_filter = fn(state : GridTrackState) -> Bool {
+    let beyond_filter = fn(state : GridTrack) -> Bool {
       if matching_affected {
         match contribution_type {
           TrackMaximumContribution =>
@@ -708,7 +580,7 @@ fn distribute_item_space_to_base_size(
 }
 
 ///|
-fn flush_track_base_size_increases(states : Array[GridTrackState]) -> Unit {
+fn flush_track_base_size_increases(states : Array[GridTrack]) -> Unit {
   for state in states {
     state.base_size = state.base_size + state.base_size_planned_increase
     state.base_size_planned_increase = 0.0
@@ -717,7 +589,7 @@ fn flush_track_base_size_increases(states : Array[GridTrackState]) -> Unit {
 
 ///|
 fn apply_definite_max_floor(
-  states : Array[GridTrackState],
+  states : Array[GridTrack],
   percent_basis : Double?,
 ) -> Unit {
   for state in states {
@@ -743,7 +615,7 @@ fn apply_definite_max_floor(
 }
 
 ///|
-fn grid_track_base_sizes(states : Array[GridTrackState]) -> Array[Double] {
+fn grid_track_base_sizes(states : Array[GridTrack]) -> Array[Double] {
   let sizes : Array[Double] = []
   for state in states {
     sizes.push(state.base_size)
@@ -765,7 +637,7 @@ fn compute_intrinsic_base_sizes_max_content(
   let count = tracks.length()
   let inf = 1.0e30
   let eps = 0.000001
-  let states : Array[GridTrackState] = []
+  let states : Array[GridTrack] = []
   for i in 0..<count {
     states.push(grid_track_base_state(tracks[i], percent_basis))
   }
@@ -791,18 +663,18 @@ fn compute_intrinsic_base_sizes_max_content(
         max_double(minimum_needed[i], min_content_needed[i])
       }
       let limit_of = if scroll_container {
-        fn(state : GridTrackState) -> Double {
+        fn(state : GridTrack) -> Double {
           track_fit_content_limit(state.dimension, percent_basis, inf)
         }
       } else {
-        fn(_state : GridTrackState) -> Double { inf }
+        fn(_state : GridTrack) -> Double { inf }
       }
       distribute_item_space_to_base_size(
         states,
         s,
         sp,
         min_space,
-        fn(state : GridTrackState) -> Bool {
+        fn(state : GridTrack) -> Bool {
           track_has_intrinsic_min(state.dimension, percent_basis)
         },
         limit_of,
@@ -824,18 +696,18 @@ fn compute_intrinsic_base_sizes_max_content(
       let sp = col_span[i]
       let scroll_container = minimum_needed[i] + eps < min_content_needed[i]
       let limit_of = if scroll_container {
-        fn(state : GridTrackState) -> Double {
+        fn(state : GridTrack) -> Double {
           track_fit_content_limit(state.dimension, percent_basis, inf)
         }
       } else {
-        fn(_state : GridTrackState) -> Double { inf }
+        fn(_state : GridTrack) -> Double { inf }
       }
       distribute_item_space_to_base_size(
         states,
         s,
         sp,
         min_content_needed[i],
-        fn(state : GridTrackState) -> Bool {
+        fn(state : GridTrack) -> Bool {
           let k = track_min_sizing_kind(state.dimension)
           k == 1 || k == 2
         },
@@ -866,9 +738,9 @@ fn compute_intrinsic_base_sizes_max_content(
       }
       let affect_kind = if has_max_content { 2 } else { 3 }
       let limit_of = if has_max_content {
-        fn(_state : GridTrackState) -> Double { inf }
+        fn(_state : GridTrack) -> Double { inf }
       } else {
-        fn(state : GridTrackState) -> Double {
+        fn(state : GridTrack) -> Double {
           track_fit_content_limit(state.dimension, percent_basis, inf)
         }
       }
@@ -877,7 +749,7 @@ fn compute_intrinsic_base_sizes_max_content(
         s,
         sp,
         max_space,
-        fn(state : GridTrackState) -> Bool {
+        fn(state : GridTrack) -> Bool {
           track_min_sizing_kind(state.dimension) == affect_kind &&
           !track_max_is_min_content(state.dimension)
         },
@@ -903,10 +775,10 @@ fn compute_intrinsic_base_sizes_max_content(
         s,
         sp,
         max_needed[i],
-        fn(state : GridTrackState) -> Bool {
+        fn(state : GridTrack) -> Bool {
           track_min_sizing_kind(state.dimension) == 2
         },
-        fn(_state : GridTrackState) -> Double { inf },
+        fn(_state : GridTrack) -> Double { inf },
         TrackMaximumContribution,
         percent_basis,
         eps,
@@ -934,7 +806,7 @@ fn compute_flexible_percent_max_content_track_sizes(
   if flex_space <= 0.0 {
     return None
   }
-  let states : Array[GridTrackState] = []
+  let states : Array[GridTrack] = []
   let mut fixed_used = 0.0
   let mut flex_sum = 0.0
   for track in tracks {

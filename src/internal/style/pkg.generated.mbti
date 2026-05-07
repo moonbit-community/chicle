@@ -522,18 +522,12 @@ pub struct TaffyTree[C] {
 }
 pub fn[C] TaffyTree::TaffyTree() -> Self[C]
 pub fn[C] TaffyTree::add_child(Self[C], Int, Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::child_count(Self[C], Int) -> Int raise TaffyError
-pub fn[C] TaffyTree::child_ids(Self[C], Int) -> Array[Int] raise TaffyError
 pub fn[C] TaffyTree::clear_node_context(Self[C], Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::compute_layout(Self[C], Int, Size[AvailableSpace]) -> Unit raise TaffyError
 pub fn[C] TaffyTree::compute_layout_with_measure(Self[C], Int, Size[AvailableSpace], (Size[Double?], Size[AvailableSpace], Int, C?, Style) -> Size[Double]) -> Unit raise TaffyError
 pub fn[C] TaffyTree::dirty(Self[C], Int) -> Bool raise TaffyError
 pub fn[C] TaffyTree::disable_rounding(Self[C]) -> Unit
 pub fn[C] TaffyTree::enable_rounding(Self[C]) -> Unit
-pub fn[C] TaffyTree::get_child_id(Self[C], Int, Int) -> Int raise TaffyError
-pub fn[C] TaffyTree::get_final_layout(Self[C], Int) -> Layout raise TaffyError
-pub fn[C] TaffyTree::get_style(Self[C], Int) -> Style raise TaffyError
-pub fn[C] TaffyTree::get_unrounded_layout(Self[C], Int) -> Layout raise TaffyError
 pub fn[C] TaffyTree::layout(Self[C], Int) -> Layout raise TaffyError
 pub fn[C] TaffyTree::mark_dirty(Self[C], Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::new_leaf(Self[C], Style) -> Int
@@ -544,10 +538,8 @@ pub fn[C] TaffyTree::remove(Self[C], Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::remove_child(Self[C], Int, Int) -> Int raise TaffyError
 pub fn[C] TaffyTree::remove_subtree(Self[C], Int) -> Unit raise TaffyError
 pub fn[C] TaffyTree::set_children(Self[C], Int, Array[Int]) -> Unit raise TaffyError
-pub fn[C] TaffyTree::set_final_layout(Self[C], Int, Layout) -> Unit raise TaffyError
 pub fn[C] TaffyTree::set_node_context(Self[C], Int, C) -> Unit raise TaffyError
 pub fn[C] TaffyTree::set_style(Self[C], Int, Style) -> Unit raise TaffyError
-pub fn[C] TaffyTree::set_unrounded_layout(Self[C], Int, Layout) -> Unit raise TaffyError
 pub fn[C] TaffyTree::with_capacity(Int) -> Self[C]
 
 pub enum TrackSizingFunction {

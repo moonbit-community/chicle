@@ -109,22 +109,22 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
       }
     None => raise InvalidNodeId(root)
   }
-  let view : TaffyView[C] = { tree: self }
-  view.compute_root_layout_with_measure(root, available_space, measure_function)
+  let view : TaffyView[C] = { tree: self, measure_function }
+  view.compute_root_layout(root, available_space)
 }
 
 ///|
-fn[C] TaffyView::compute_root_layout_with_measure(
+fn[C] TaffyView::compute_root_layout(
   self : TaffyView[C],
   root : NodeId,
   available_space : Size[AvailableSpace],
-  measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
-    Double,
-  ],
 ) -> Unit raise TaffyError {
   let tree = self.tree
   if !compute_default_single_child_chain_trampoline(
-      tree, root, available_space, measure_function,
+      tree,
+      root,
+      available_space,
+      self.measure_function,
     ) {
     compute_node_layout_with_measure(
       tree,
@@ -132,7 +132,7 @@ fn[C] TaffyView::compute_root_layout_with_measure(
       Size(width=None, height=None),
       available_space,
       Point::zero(),
-      measure_function,
+      self.measure_function,
       true,
     )
   }

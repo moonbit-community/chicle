@@ -219,8 +219,7 @@ fn[C] compute_flex_absolute_and_hidden_children(
     let intrinsic = match (used_width, used_height) {
       (Some(w), Some(h)) => Size(width=w, height=h)
       _ => {
-        compute_node_layout(
-          view,
+        view.perform_child_layout(
           child_id,
           Size(width=None, height=None),
           abs_available,
@@ -268,8 +267,7 @@ fn[C] compute_flex_absolute_and_hidden_children(
     }
 
     // Second pass: compute final size (may be clamped by min/max).
-    compute_node_layout(
-      view,
+    view.perform_child_layout(
       child_id,
       Size(width=Some(clamped_final_width), height=Some(clamped_final_height)),
       abs_available,
@@ -427,8 +425,7 @@ fn[C] compute_flex_absolute_and_hidden_children(
             padding.top + (if is_col { static_main } else { static_cross })
         }
     }
-    compute_node_layout(
-      view,
+    view.perform_child_layout(
       child_id,
       Size(width=Some(final_size.width), height=Some(final_size.height)),
       abs_available,
@@ -442,8 +439,7 @@ fn[C] compute_flex_absolute_and_hidden_children(
 
   // Ensure `display: none` children get laid out (to zero) as well.
   for child_id in hidden_children {
-    compute_node_layout(
-      view,
+    view.perform_child_layout(
       child_id,
       Size(width=None, height=None),
       abs_available,

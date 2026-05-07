@@ -13,15 +13,15 @@
 // limitations under the License.
 
 ///|
-fn[C] compute_node_layout(
-  view : TaffyView[C],
+fn[C] TaffyView::perform_child_layout(
+  self : TaffyView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
   is_layout_root : Bool,
 ) -> Unit raise TaffyError {
-  let tree = view.tree
+  let tree = self.tree
   let inputs = match tree.nodes.get(node_id) {
     Some(node) =>
       if node.style.display is DisplayNone {
@@ -32,19 +32,19 @@ fn[C] compute_node_layout(
     None => layout_input_for_perform_layout(known_dimensions, available_space)
   }
   ignore(
-    compute_child_layout(view, node_id, inputs, absolute_origin, is_layout_root),
+    self.compute_child_layout(node_id, inputs, absolute_origin, is_layout_root),
   )
 }
 
 ///|
-fn[C] compute_child_layout(
-  view : TaffyView[C],
+fn[C] TaffyView::compute_child_layout(
+  self : TaffyView[C],
   node_id : NodeId,
   inputs : LayoutInput,
   absolute_origin : Point[Double],
   is_layout_root : Bool,
 ) -> LayoutOutput raise TaffyError {
-  let tree = view.tree
+  let tree = self.tree
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
     None => raise InvalidNodeId(node_id)
@@ -86,7 +86,7 @@ fn[C] compute_child_layout(
       DisplayGrid =>
         if tree.children[node_id].length() == 0 {
           compute_leaf_layout(
-            view,
+            self,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
@@ -94,7 +94,7 @@ fn[C] compute_child_layout(
           )
         } else {
           compute_grid_layout(
-            view,
+            self,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
@@ -105,7 +105,7 @@ fn[C] compute_child_layout(
       DisplayBlock =>
         if tree.children[node_id].length() == 0 {
           compute_leaf_layout(
-            view,
+            self,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
@@ -113,7 +113,7 @@ fn[C] compute_child_layout(
           )
         } else {
           compute_block_layout(
-            view,
+            self,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
@@ -124,7 +124,7 @@ fn[C] compute_child_layout(
       _ =>
         if tree.children[node_id].length() == 0 {
           compute_leaf_layout(
-            view,
+            self,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
@@ -132,7 +132,7 @@ fn[C] compute_child_layout(
           )
         } else {
           compute_flexbox_layout(
-            view,
+            self,
             node_id,
             inputs.known_dimensions,
             inputs.available_space,
@@ -214,8 +214,8 @@ fn[C] finalize_layout_metadata(
 }
 
 ///|
-fn[C] measure_child_size(
-  view : TaffyView[C],
+fn[C] TaffyView::measure_child_size(
+  self : TaffyView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   parent_size : Size[Double?],
@@ -233,8 +233,8 @@ fn[C] measure_child_size(
     requested_axis_from_absolute(axis),
     vertical_margins_are_collapsible,
   )
-  let output = compute_child_layout(
-    view, node_id, inputs, absolute_origin, false,
+  let output = self.compute_child_layout(
+    node_id, inputs, absolute_origin, false,
   )
   let size = output.outer_size()
   match axis {

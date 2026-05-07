@@ -377,8 +377,7 @@ fn[C] compute_block_layout(
             )
             let mut child_y_rel_static = flow_anchor_border_bottom +
               used_before_base
-            compute_node_layout(
-              view,
+            view.perform_child_layout(
               child_id,
               Size(width=target_width, height=None),
               margin_basis_available,
@@ -674,8 +673,7 @@ fn[C] compute_block_layout(
               )
               let mut child_y_rel_static = flow_anchor_border_bottom +
                 used_before_base
-              compute_node_layout(
-                view,
+              view.perform_child_layout(
                 child_id,
                 Size(width=target_width, height=None),
                 flow_available2,

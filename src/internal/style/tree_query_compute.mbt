@@ -131,8 +131,7 @@ fn[C] TaffyView::compute_root_layout(
   // recursive path, the trampoline returns false and the normal recursive
   // compute path runs.
   if !compute_default_single_child_chain_trampoline(self, root, available_space) {
-    compute_node_layout(
-      self,
+    self.perform_child_layout(
       root,
       Size(width=None, height=None),
       available_space,

@@ -638,8 +638,7 @@ fn[C] compute_grid_layout(
     }
 
     // Max-content contribution in the column axis
-    compute_node_layout(
-      view,
+    view.perform_child_layout(
       child_id,
       Size(width=None, height=None),
       Size(width=AvailMaxContent, height=contrib_available_height),
@@ -659,8 +658,7 @@ fn[C] compute_grid_layout(
     apply_col_contribution(col_tracks, c, col_span, max_needed, col_max_contrib)
 
     // Min-content contribution in the column axis
-    compute_node_layout(
-      view,
+    view.perform_child_layout(
       child_id,
       Size(width=None, height=None),
       Size(width=AvailMinContent, height=contrib_available_height),
@@ -780,8 +778,7 @@ fn[C] compute_grid_layout(
     }
 
     // Max-content contribution in the row axis under the column width constraint.
-    compute_node_layout(
-      view,
+    view.perform_child_layout(
       child_id,
       Size(width=known_w_for_contrib, height=None),
       Size(width=AvailDefinite(col_w), height=AvailMaxContent),
@@ -801,8 +798,7 @@ fn[C] compute_grid_layout(
     }
 
     // Min-content contribution in the row axis under the column width constraint.
-    compute_node_layout(
-      view,
+    view.perform_child_layout(
       child_id,
       Size(width=known_w_for_contrib, height=None),
       Size(width=AvailDefinite(col_w), height=AvailMinContent),
@@ -948,8 +944,7 @@ fn[C] compute_grid_layout(
       let c = placed_col[i]
       let col_span = placed_col_span[i]
       let gap_total = col_gap * (col_span - 1).to_double()
-      compute_node_layout(
-        view,
+      view.perform_child_layout(
         child_id,
         Size(width=None, height=None),
         Size(width=AvailMaxContent, height=rerun_col_contrib_available_height),
@@ -968,8 +963,7 @@ fn[C] compute_grid_layout(
       apply_col_contribution(
         col_tracks, c, col_span, max_needed, col_max_contrib,
       )
-      compute_node_layout(
-        view,
+      view.perform_child_layout(
         child_id,
         Size(width=None, height=None),
         Size(width=AvailMinContent, height=rerun_col_contrib_available_height),
@@ -1043,8 +1037,7 @@ fn[C] compute_grid_layout(
         !has_auto_margin_x {
         known_w_for_contrib = Some(available_w_for_item)
       }
-      compute_node_layout(
-        view,
+      view.perform_child_layout(
         child_id,
         Size(width=known_w_for_contrib, height=None),
         Size(width=AvailDefinite(col_w), height=AvailMaxContent),
@@ -1062,8 +1055,7 @@ fn[C] compute_grid_layout(
           row_max_contrib[j] = max_share
         }
       }
-      compute_node_layout(
-        view,
+      view.perform_child_layout(
         child_id,
         Size(width=known_w_for_contrib, height=None),
         Size(width=AvailDefinite(col_w), height=AvailMinContent),
@@ -1454,8 +1446,7 @@ fn[C] compute_grid_layout(
       (None, DimPercent(p)) => Some(cell_w * p)
       _ => known_w
     }
-    compute_node_layout(
-      view,
+    view.perform_child_layout(
       child_id,
       Size(width=known_w, height=None),
       item_available,
@@ -1627,8 +1618,7 @@ fn[C] compute_grid_layout(
         }
 
         // First pass: compute the item's intrinsic size within the cell constraints.
-        compute_node_layout(
-          view,
+        view.perform_child_layout(
           child_id,
           Size(width=known_w, height=known_h),
           child_available,
@@ -1664,8 +1654,7 @@ fn[C] compute_grid_layout(
                   }
                 }
               }
-              compute_node_layout(
-                view,
+              view.perform_child_layout(
                 child_id,
                 Size(width=known_w, height=known_h),
                 child_available,
@@ -1726,8 +1715,7 @@ fn[C] compute_grid_layout(
         }
 
         // Second pass: position the item within the cell.
-        compute_node_layout(
-          view,
+        view.perform_child_layout(
           child_id,
           Size(width=known_w, height=known_h),
           child_available,

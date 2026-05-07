@@ -304,8 +304,7 @@ fn[C] compute_flexbox_layout(
     } else {
       Size(width=None, height=None)
     }
-    compute_node_layout(
-      view,
+    view.perform_child_layout(
       child_id,
       intrinsic_known_dimensions,
       child_intrinsic_available,
@@ -1100,8 +1099,7 @@ fn[C] compute_flexbox_layout(
         } else {
           Point(x=base_x + main_pos, y=base_y + cross_offset)
         }
-        compute_node_layout(
-          view,
+        view.perform_child_layout(
           child_id,
           Size(width=known_width, height=known_height),
           child_available_for_final,
@@ -1671,8 +1669,7 @@ fn[C] compute_flexbox_layout(
       } else {
         Point(x=base_x + main_pos, y=base_y + cross_offset)
       }
-      compute_node_layout(
-        view,
+      view.perform_child_layout(
         child_id,
         Size(width=known_width, height=known_height),
         child_available_for_final,
@@ -1871,8 +1868,7 @@ fn[C] compute_flexbox_layout(
           x=base_x + margin_main_start[0],
           y=base_y + margin_cross_start[0],
         )
-        compute_node_layout(
-          view,
+        view.perform_child_layout(
           only_child,
           Size(width=Some(content_main_sizes[0]), height=Some(child_cross_size)),
           child_available_for_final,

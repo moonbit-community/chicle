@@ -48,8 +48,7 @@ fn[C] resolve_flex_auto_min_main(
   } else {
     Size(width=AvailMinContent, height=parent_available_for_children.height)
   }
-  let min_content_main = measure_child_size(
-    view,
+  let min_content_main = view.measure_child_size(
     child_id,
     Size(width=None, height=None),
     Size(width=None, height=None),

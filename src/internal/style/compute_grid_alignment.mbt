@@ -225,8 +225,7 @@ fn[C] compute_grid_absolute_children(
             let intrinsic = match (used_width, used_height) {
               (Some(w), Some(h)) => Size(width=w, height=h)
               _ => {
-                compute_node_layout(
-                  view,
+                view.perform_child_layout(
                   child_id,
                   Size(width=None, height=None),
                   abs_available,
@@ -274,8 +273,7 @@ fn[C] compute_grid_absolute_children(
                 }
               None => ()
             }
-            compute_node_layout(
-              view,
+            view.perform_child_layout(
               child_id,
               Size(
                 width=Some(clamped_final_width),
@@ -434,8 +432,7 @@ fn[C] compute_grid_absolute_children(
                   None => containing_y + static_y
                 }
             }
-            compute_node_layout(
-              view,
+            view.perform_child_layout(
               child_id,
               Size(width=Some(final_size.width), height=Some(final_size.height)),
               abs_available,

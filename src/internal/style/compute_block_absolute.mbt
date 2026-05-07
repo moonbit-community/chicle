@@ -228,8 +228,7 @@ fn[C] compute_block_absolute_children(
     let intrinsic = match (used_width, used_height) {
       (Some(w), Some(h)) => Size(width=w, height=h)
       _ => {
-        compute_node_layout(
-          view,
+        view.perform_child_layout(
           child_id,
           Size(width=None, height=None),
           abs_available,
@@ -277,8 +276,7 @@ fn[C] compute_block_absolute_children(
     }
 
     // Second pass: compute final size (may be clamped by min/max).
-    compute_node_layout(
-      view,
+    view.perform_child_layout(
       child_id,
       Size(width=Some(clamped_final_width), height=Some(clamped_final_height)),
       abs_available,
@@ -391,8 +389,7 @@ fn[C] compute_block_absolute_children(
           None => padding.top + static_y + final_margin_top
         }
     }
-    compute_node_layout(
-      view,
+    view.perform_child_layout(
       child_id,
       Size(width=Some(final_size.width), height=Some(final_size.height)),
       abs_available,

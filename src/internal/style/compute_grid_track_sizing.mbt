@@ -467,6 +467,15 @@ fn distribute_grid_track_free_space(
 }
 
 ///|
+fn clamp_grid_tracks_to_minimum(state : GridTrackSizingState) -> Unit {
+  let sizes = state.sizes
+  let min_sizes = state.min_sizes
+  for i in 0..<sizes.length() {
+    sizes[i] = clamp_track_size(sizes[i], min_sizes[i], state.inf)
+  }
+}
+
+///|
 fn compute_grid_track_sizes_with_contributions(
   tracks : Array[Dimension],
   available : Double,
@@ -475,12 +484,10 @@ fn compute_grid_track_sizes_with_contributions(
   max_contrib : Array[Double],
   expand_to_fill : Bool,
 ) -> Array[Double] {
-  let count = tracks.length()
   let state = initialize_grid_track_sizing_state(
     tracks, available, min_contrib, max_contrib,
   )
   let sizes = state.sizes
-  let min_sizes = state.min_sizes
 
   // Intrinsic sizing for flexible tracks: derive a flex fraction from content contributions.
   // This matches taffy 0.5 behavior for `fr` tracks under indefinite available space.
@@ -497,9 +504,7 @@ fn compute_grid_track_sizes_with_contributions(
   }
 
   // Ensure no track is below its min size.
-  for i in 0..<count {
-    sizes[i] = clamp_track_size(sizes[i], min_sizes[i], state.inf)
-  }
+  clamp_grid_tracks_to_minimum(state)
   sizes
 }
 

@@ -373,13 +373,13 @@ fn[C] compute_initial_grid_track_sizing(
     view, grid_items, placement_count, col_sizes, row_min_contrib, row_max_contrib,
     col_gap, row_gap, default_justify_items_for_contrib,
   )
-  let row_min_basis = axis_min_content_basis(
+  let mut row_min_basis = axis_min_content_basis(
     row_tracks, row_min_contrib, row_max_contrib, row_gap,
   )
-  let row_max_basis = axis_max_content_basis(
+  let mut row_max_basis = axis_max_content_basis(
     row_tracks, row_min_contrib, row_max_contrib, row_gap,
   )
-  let row_available_base = match specified_height {
+  let mut row_available_base = match specified_height {
     Some(_) => content_height
     None =>
       available_inset_or_basis(
@@ -389,7 +389,7 @@ fn[C] compute_initial_grid_track_sizing(
         row_max_basis,
       )
   }
-  let row_sizes = compute_grid_track_sizes_with_contributions(
+  let mut row_sizes = compute_grid_track_sizes_with_contributions(
     row_tracks,
     row_available_base,
     row_gap,
@@ -397,6 +397,22 @@ fn[C] compute_initial_grid_track_sizing(
     row_max_contrib,
     specified_height is Some(_),
   )
+  if specified_height is None && available_space.height is AvailMaxContent {
+    match
+      compute_max_content_spanning_row_track_sizes_for_grid_items(
+        row_tracks, grid_items,
+      ) {
+      Some(result) => {
+        row_sizes = result.0
+        row_available_base = result.1
+        let basis_with_gaps = result.1 +
+          row_gap * (row_tracks.length() - 1).to_double()
+        row_min_basis = basis_with_gaps
+        row_max_basis = basis_with_gaps
+      }
+      None => ()
+    }
+  }
   (
     col_sizes, row_sizes, col_min_basis, col_max_basis, col_available_base, row_min_basis,
     row_max_basis, row_available_base,

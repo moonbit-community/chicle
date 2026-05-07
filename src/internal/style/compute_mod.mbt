@@ -33,8 +33,10 @@ fn[C] compute_node_layout_with_measure(
       }
     None => layout_input_for_perform_layout(known_dimensions, available_space)
   }
-  compute_child_layout_with_measure(
-    tree, node_id, inputs, absolute_origin, measure_function, is_layout_root,
+  ignore(
+    compute_child_layout_with_measure(
+      tree, node_id, inputs, absolute_origin, measure_function, is_layout_root,
+    ),
   )
 }
 
@@ -48,7 +50,7 @@ fn[C] compute_child_layout_with_measure(
     Double,
   ],
   is_layout_root : Bool,
-) -> Unit raise TaffyError {
+) -> LayoutOutput raise TaffyError {
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
     None => raise InvalidNodeId(node_id)
@@ -68,7 +70,8 @@ fn[C] compute_child_layout_with_measure(
   ignore(inputs.parent_size)
   ignore(inputs.vertical_margins_are_collapsible)
   let can_use_layout_cache = can_use_node_layout_cache(node, absolute_origin)
-  if restore_node_layout_from_cache(
+  match
+    restore_node_layout_from_cache(
       tree,
       node_id,
       inputs.known_dimensions,
@@ -76,7 +79,8 @@ fn[C] compute_child_layout_with_measure(
       run_mode,
       can_use_layout_cache,
     ) {
-    return
+    Some(output) => return output
+    None => ()
   }
   if run_mode is PerformHiddenLayout {
     compute_hidden_layout(tree, node_id, absolute_origin)
@@ -155,14 +159,17 @@ fn[C] compute_child_layout_with_measure(
     inputs.available_space,
   )
   finalize_layout_metadata(tree, node_id, node.style, inputs.available_space)
+  let output = LayoutOutput::from_layout(tree.nodes[node_id].layout)
   save_node_layout_cache(
     tree,
     node_id,
     inputs.known_dimensions,
     inputs.available_space,
+    output,
     run_mode,
     can_use_layout_cache,
   )
+  output
 }
 
 ///|
@@ -239,10 +246,10 @@ fn[C] measure_child_size_with_measure(
     requested_axis_from_absolute(axis),
     vertical_margins_are_collapsible,
   )
-  compute_child_layout_with_measure(
+  let output = compute_child_layout_with_measure(
     tree, node_id, inputs, absolute_origin, measure_function, false,
   )
-  let size = tree.nodes[node_id].layout.size
+  let size = output.outer_size()
   match axis {
     Horizontal => size.width
     Vertical => size.height
@@ -267,9 +274,9 @@ fn[C] restore_node_layout_from_cache(
   available_space : Size[AvailableSpace],
   run_mode : RunMode,
   can_use_layout_cache : Bool,
-) -> Bool {
+) -> LayoutOutput? {
   if !can_use_layout_cache {
-    return false
+    return None
   }
   let node = tree.nodes[node_id]
   match
@@ -287,9 +294,9 @@ fn[C] restore_node_layout_from_cache(
       tree.nodes[node_id].effective_margin_top_min_neg = entry.effective_margin_top_min_neg
       tree.nodes[node_id].effective_margin_bottom_max_pos = entry.effective_margin_bottom_max_pos
       tree.nodes[node_id].effective_margin_bottom_min_neg = entry.effective_margin_bottom_min_neg
-      true
+      Some(entry.content)
     }
-    None => false
+    None => None
   }
 }
 
@@ -339,6 +346,7 @@ fn[C] save_node_layout_cache(
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
+  output : LayoutOutput,
   run_mode : RunMode,
   can_use_layout_cache : Bool,
 ) -> Unit {
@@ -349,7 +357,7 @@ fn[C] save_node_layout_cache(
   store_node_layout_cache(tree.nodes[node_id].cache, run_mode, {
     known_dimensions,
     available_space,
-    content: LayoutOutput::from_layout(layout),
+    content: output,
     layout,
     effective_margin_top: tree.nodes[node_id].effective_margin_top,
     effective_margin_bottom: tree.nodes[node_id].effective_margin_bottom,

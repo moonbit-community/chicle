@@ -122,6 +122,7 @@ fn[C] compute_initial_grid_track_sizing(
   vert_inset : Double,
   specified_width : Double?,
   specified_height : Double?,
+  justify_content_for_contrib : AlignContent,
   default_justify_items_for_contrib : AlignItems,
 ) -> (
   Array[Double],
@@ -160,6 +161,14 @@ fn[C] compute_initial_grid_track_sizing(
       )
   }
   let mut col_available_base = col_available
+  let col_alignment_inner_size = match specified_width {
+    Some(_) => Some(content_width)
+    None =>
+      match available_space.width {
+        AvailDefinite(_) => Some(col_available)
+        _ => None
+      }
+  }
   let mut col_sizes = track_sizing_algorithm(
       GridTrackSizingAlgorithmInput(
         tracks=col_tracks,
@@ -187,9 +196,12 @@ fn[C] compute_initial_grid_track_sizing(
       None => ()
     }
   }
+  let col_gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
+    justify_content_for_contrib, col_alignment_inner_size, col_sizes, col_gap,
+  )
   compute_grid_row_track_contributions(
-    view, grid_items, placement_count, col_sizes, contributions, col_gap, row_gap,
-    default_justify_items_for_contrib,
+    view, grid_items, placement_count, col_sizes, contributions, col_gap, col_gutter_alignment_adjustment,
+    row_gap, default_justify_items_for_contrib,
   )
   let mut row_min_basis = axis_min_content_basis(
     row_tracks,
@@ -260,6 +272,7 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
   content_height : Double,
   specified_width : Double?,
   specified_height : Double?,
+  justify_content_for_contrib : AlignContent,
   default_justify_items_for_contrib : AlignItems,
 ) -> (Array[Double], Array[Double], Double, Double) raise TaffyError {
   contributions.reset()
@@ -277,9 +290,18 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
         expand_to_fill=specified_width is Some(_),
       ),
     ).sizes
+  let col_gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
+    justify_content_for_contrib,
+    match specified_width {
+      Some(_) => Some(col_available_base)
+      None => None
+    },
+    col_sizes,
+    col_gap,
+  )
   compute_grid_row_track_contributions(
-    view, grid_items, placement_count, col_sizes, contributions, col_gap, row_gap,
-    default_justify_items_for_contrib,
+    view, grid_items, placement_count, col_sizes, contributions, col_gap, col_gutter_alignment_adjustment,
+    row_gap, default_justify_items_for_contrib,
   )
   let row_sizes = track_sizing_algorithm(
       GridTrackSizingAlgorithmInput(

@@ -540,6 +540,10 @@ fn[C] compute_grid_layout(
     row_count~,
   )
 
+  let justify_content = match node.style.justify_content {
+    Some(v) => v
+    None => AlignStart
+  }
   let default_justify_items_for_contrib = match node.style.justify_items {
     Some(v) => v
     None => ItemsStretch
@@ -547,7 +551,7 @@ fn[C] compute_grid_layout(
   let initial_sizing = compute_initial_grid_track_sizing(
     view, grid_items, placement_count, col_tracks, row_tracks, track_contributions,
     col_gap, row_gap, content_width, content_height, available_space, horiz_inset,
-    vert_inset, specified_width, specified_height, default_justify_items_for_contrib,
+    vert_inset, specified_width, specified_height, justify_content, default_justify_items_for_contrib,
   )
   let mut col_sizes = initial_sizing.0
   let mut row_sizes = initial_sizing.1
@@ -602,7 +606,7 @@ fn[C] compute_grid_layout(
     let rerun_result = rerun_grid_track_sizing_after_percent_gap_resolution(
       view, grid_items, placement_count, col_tracks, row_tracks, track_contributions,
       col_available_base, row_available_base, col_gap, row_gap, content_height, specified_width,
-      specified_height, default_justify_items_for_contrib,
+      specified_height, justify_content, default_justify_items_for_contrib,
     )
     col_sizes = rerun_result.0
     row_sizes = rerun_result.1
@@ -617,10 +621,6 @@ fn[C] compute_grid_layout(
 
   // Track alignment within the container's content box.
   let align_content = match node.style.align_content {
-    Some(v) => v
-    None => AlignStart
-  }
-  let justify_content = match node.style.justify_content {
     Some(v) => v
     None => AlignStart
   }

@@ -85,6 +85,54 @@ fn GridTrackContributions::apply_row_item(
 }
 
 ///|
+fn compute_alignment_gutter_adjustment(
+  alignment : AlignContent,
+  axis_inner_node_size : Double?,
+  track_sizes : Array[Double],
+  gap : Double,
+) -> Double {
+  if track_sizes.length() <= 1 {
+    return 0.0
+  }
+  let inner_gutter_weight = match alignment {
+    AlignSpaceBetween => 1
+    AlignSpaceAround => 2
+    AlignSpaceEvenly => 1
+    _ => 0
+  }
+  if inner_gutter_weight == 0 {
+    return 0.0
+  }
+  let outer_gutter_weight = match alignment {
+    AlignFlexStart | AlignStart | AlignFlexEnd | AlignEnd | AlignCenter => 1
+    AlignSpaceAround | AlignSpaceEvenly => 1
+    _ => 0
+  }
+  match axis_inner_node_size {
+    Some(inner_size) => {
+      let mut track_size_sum = 0.0
+      for size in track_sizes {
+        track_size_sum = track_size_sum + size
+      }
+      track_size_sum = track_size_sum +
+        gap * (track_sizes.length() - 1).to_double()
+      let free_space = max_double(inner_size - track_size_sum, 0.0)
+      let weighted_gutter_count = (track_sizes.length() - 1) *
+        inner_gutter_weight +
+        2 * outer_gutter_weight
+      if weighted_gutter_count == 0 {
+        0.0
+      } else {
+        free_space /
+        weighted_gutter_count.to_double() *
+        inner_gutter_weight.to_double()
+      }
+    }
+    None => 0.0
+  }
+}
+
+///|
 fn[C] compute_grid_column_track_contributions(
   view : TaffyView[C],
   grid_items : Array[GridItem],
@@ -173,6 +221,7 @@ fn[C] compute_grid_row_track_contributions(
   col_sizes : Array[Double],
   contributions : GridTrackContributions,
   col_gap : Double,
+  col_gutter_alignment_adjustment : Double,
   row_gap : Double,
   default_justify_items_for_contrib : AlignItems,
 ) -> Unit raise TaffyError {
@@ -189,7 +238,9 @@ fn[C] compute_grid_row_track_contributions(
       col_w = col_w + col_sizes[j]
     }
     if item.column_span > 1 {
-      col_w = col_w + col_gap * (item.column_span - 1).to_double()
+      col_w = col_w +
+        (col_gap + col_gutter_alignment_adjustment) *
+        (item.column_span - 1).to_double()
     }
     let row_gap_total = row_gap * (item.row_span - 1).to_double()
     let resolved_margin = resolve_rect_width_basis(

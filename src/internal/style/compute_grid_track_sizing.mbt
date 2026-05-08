@@ -37,7 +37,7 @@ priv struct GridTrackSizingState {
   sizes : Array[Double]
   min_sizes : Array[Double]
   fr_weights : Array[Double]
-  is_auto : Array[Bool]
+  stretch_auto : Array[Bool]
   max_limits : Array[Double]
   inf : Double
 }
@@ -159,7 +159,7 @@ fn initialize_track_sizes(
   let sizes : Array[Double] = Array::make(count, 0.0)
   let min_sizes : Array[Double] = Array::make(count, 0.0)
   let fr_weights : Array[Double] = Array::make(count, 0.0)
-  let is_auto : Array[Bool] = Array::make(count, false)
+  let stretch_auto : Array[Bool] = Array::make(count, false)
   let max_limits : Array[Double] = Array::make(count, 0.0)
   let inf = 1.0e30
   for i in 0..<count {
@@ -170,19 +170,17 @@ fn initialize_track_sizes(
         min_sizes[i] = min_c
         sizes[i] = max_c
         max_limits[i] = inf
-        is_auto[i] = true
+        stretch_auto[i] = true
       }
       DimMinContent => {
         min_sizes[i] = min_c
         sizes[i] = min_c
         max_limits[i] = inf
-        is_auto[i] = true
       }
       DimMaxContent => {
         min_sizes[i] = max_c
         sizes[i] = max_c
         max_limits[i] = inf
-        is_auto[i] = true
       }
       DimFitContent(limit) => {
         let lim = resolve_track_dimension(limit, available)
@@ -191,7 +189,6 @@ fn initialize_track_sizes(
         min_sizes[i] = min_c
         sizes[i] = preferred
         max_limits[i] = preferred
-        is_auto[i] = true
       }
       DimLength(v) => {
         sizes[i] = v
@@ -230,8 +227,8 @@ fn initialize_track_sizes(
           let preferred = if max_v < min_v { min_v } else { max_v }
           sizes[i] = preferred
           max_limits[i] = if max_lim < min_v { min_v } else { max_lim }
-          is_auto[i] = match max_d {
-            DimAuto | DimMinContent | DimMaxContent | DimFitContent(_) => true
+          stretch_auto[i] = match max_d {
+            DimAuto => true
             _ => false
           }
         }
@@ -241,11 +238,11 @@ fn initialize_track_sizes(
         min_sizes[i] = min_c
         sizes[i] = max_c
         max_limits[i] = inf
-        is_auto[i] = true
+        stretch_auto[i] = true
       }
     }
   }
-  { sizes, min_sizes, fr_weights, is_auto, max_limits, inf }
+  { sizes, min_sizes, fr_weights, stretch_auto, max_limits, inf }
 }
 
 ///|
@@ -258,7 +255,6 @@ fn resolve_intrinsic_track_sizes(
   let sizes = state.sizes
   let min_sizes = state.min_sizes
   let fr_weights = state.fr_weights
-  let is_auto = state.is_auto
   let max_limits = state.max_limits
   let inf = state.inf
   let count = sizes.length()
@@ -289,7 +285,6 @@ fn resolve_intrinsic_track_sizes(
           0.0
         }
         max_limits[i] = inf
-        is_auto[i] = true
       }
     }
   }
@@ -449,14 +444,16 @@ fn expand_flexible_tracks(
 }
 
 ///|
-fn stretch_auto_tracks(state : GridTrackSizingState, free : Double) -> Unit {
+fn distribute_space_up_to_growth_limits(
+  state : GridTrackSizingState,
+  free : Double,
+) -> Unit {
   let sizes = state.sizes
-  let is_auto = state.is_auto
   let max_limits = state.max_limits
   let mut remaining = free
   let mut growable : Array[Int] = []
   for i in 0..<sizes.length() {
-    if is_auto[i] && sizes[i] + 0.000001 < max_limits[i] {
+    if max_limits[i] < state.inf && sizes[i] + 0.000001 < max_limits[i] {
       growable.push(i)
     }
   }
@@ -494,8 +491,34 @@ fn maximize_tracks(
   if free <= 0.0 {
     return
   }
-  if !expand_flexible_tracks(state, available) {
-    stretch_auto_tracks(state, free)
+  distribute_space_up_to_growth_limits(state, free)
+}
+
+///|
+fn stretch_auto_tracks(
+  state : GridTrackSizingState,
+  available : Double,
+  gap : Double,
+) -> Unit {
+  let used = grid_track_used_size(state, gap)
+  let free = available - used
+  if free <= 0.0 {
+    return
+  }
+  let sizes = state.sizes
+  let stretch_auto = state.stretch_auto
+  let stretchable : Array[Int] = []
+  for i in 0..<sizes.length() {
+    if stretch_auto[i] {
+      stretchable.push(i)
+    }
+  }
+  if stretchable.length() == 0 {
+    return
+  }
+  let extra = free / stretchable.length().to_double()
+  for idx in stretchable {
+    sizes[idx] = sizes[idx] + extra
   }
 }
 
@@ -527,6 +550,12 @@ fn track_sizing_algorithm(
   // Distribute any remaining free space (only when the grid container has a definite size).
   if input.expand_to_fill {
     maximize_tracks(state, input.available, input.gap)
+    if expand_flexible_tracks(state, input.available) {
+      ()
+    } else {
+      ()
+    }
+    stretch_auto_tracks(state, input.available, input.gap)
   }
 
   // Ensure no track is below its min size.

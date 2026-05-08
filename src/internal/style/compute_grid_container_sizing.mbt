@@ -160,14 +160,16 @@ fn[C] compute_initial_grid_track_sizing(
       )
   }
   let mut col_available_base = col_available
-  let mut col_sizes = compute_grid_track_sizes_with_contributions(
-    col_tracks,
-    col_available,
-    col_gap,
-    contributions.column_minimum,
-    contributions.column_max_content,
-    specified_width is Some(_),
-  )
+  let mut col_sizes = track_sizing_algorithm(
+      GridTrackSizingAlgorithmInput(
+        tracks=col_tracks,
+        available=col_available,
+        gap=col_gap,
+        min_contribution=contributions.column_minimum,
+        max_content_contribution=contributions.column_max_content,
+        expand_to_fill=specified_width is Some(_),
+      ),
+    ).sizes
   if specified_width is None && available_space.width is AvailMaxContent {
     match
       compute_max_content_spanning_track_sizes_for_grid_items(
@@ -211,14 +213,16 @@ fn[C] compute_initial_grid_track_sizing(
         row_max_basis,
       )
   }
-  let mut row_sizes = compute_grid_track_sizes_with_contributions(
-    row_tracks,
-    row_available_base,
-    row_gap,
-    contributions.row_minimum,
-    contributions.row_max_content,
-    specified_height is Some(_),
-  )
+  let mut row_sizes = track_sizing_algorithm(
+      GridTrackSizingAlgorithmInput(
+        tracks=row_tracks,
+        available=row_available_base,
+        gap=row_gap,
+        min_contribution=contributions.row_minimum,
+        max_content_contribution=contributions.row_max_content,
+        expand_to_fill=specified_height is Some(_),
+      ),
+    ).sizes
   if specified_height is None && available_space.height is AvailMaxContent {
     match
       compute_max_content_spanning_row_track_sizes_for_grid_items(
@@ -263,26 +267,30 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
     view, grid_items, placement_count, col_tracks, row_tracks, contributions, col_gap,
     row_gap, content_height, specified_height, false,
   )
-  let col_sizes = compute_grid_track_sizes_with_contributions(
-    col_tracks,
-    col_available_base,
-    col_gap,
-    contributions.column_minimum,
-    contributions.column_max_content,
-    specified_width is Some(_),
-  )
+  let col_sizes = track_sizing_algorithm(
+      GridTrackSizingAlgorithmInput(
+        tracks=col_tracks,
+        available=col_available_base,
+        gap=col_gap,
+        min_contribution=contributions.column_minimum,
+        max_content_contribution=contributions.column_max_content,
+        expand_to_fill=specified_width is Some(_),
+      ),
+    ).sizes
   compute_grid_row_track_contributions(
     view, grid_items, placement_count, col_sizes, contributions, col_gap, row_gap,
     default_justify_items_for_contrib,
   )
-  let row_sizes = compute_grid_track_sizes_with_contributions(
-    row_tracks,
-    row_available_base,
-    row_gap,
-    contributions.row_minimum,
-    contributions.row_max_content,
-    specified_height is Some(_),
-  )
+  let row_sizes = track_sizing_algorithm(
+      GridTrackSizingAlgorithmInput(
+        tracks=row_tracks,
+        available=row_available_base,
+        gap=row_gap,
+        min_contribution=contributions.row_minimum,
+        max_content_contribution=contributions.row_max_content,
+        expand_to_fill=specified_height is Some(_),
+      ),
+    ).sizes
   (
     col_sizes,
     row_sizes,

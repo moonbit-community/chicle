@@ -43,6 +43,40 @@ priv struct GridTrackSizingState {
 }
 
 ///|
+priv struct GridTrackSizingAlgorithmInput {
+  tracks : Array[Dimension]
+  available : Double
+  gap : Double
+  min_contribution : Array[Double]
+  max_content_contribution : Array[Double]
+  expand_to_fill : Bool
+}
+
+///|
+priv struct GridTrackSizingAlgorithmOutput {
+  sizes : Array[Double]
+}
+
+///|
+fn GridTrackSizingAlgorithmInput::GridTrackSizingAlgorithmInput(
+  tracks~ : Array[Dimension],
+  available~ : Double,
+  gap~ : Double,
+  min_contribution~ : Array[Double],
+  max_content_contribution~ : Array[Double],
+  expand_to_fill~ : Bool,
+) -> GridTrackSizingAlgorithmInput {
+  {
+    tracks,
+    available,
+    gap,
+    min_contribution,
+    max_content_contribution,
+    expand_to_fill,
+  }
+}
+
+///|
 fn clamp_track_size(v : Double, lo : Double, hi : Double) -> Double {
   let clamped_lo = if v < lo { lo } else { v }
   if clamped_lo > hi {
@@ -114,12 +148,13 @@ fn grid_track_max_function_value_and_limit(
 }
 
 ///|
-fn initialize_grid_track_sizing_state(
-  tracks : Array[Dimension],
-  available : Double,
-  min_contrib : Array[Double],
-  max_contrib : Array[Double],
+fn initialize_track_sizes(
+  input : GridTrackSizingAlgorithmInput,
 ) -> GridTrackSizingState {
+  let tracks = input.tracks
+  let available = input.available
+  let min_contrib = input.min_contribution
+  let max_contrib = input.max_content_contribution
   let count = tracks.length()
   let sizes : Array[Double] = Array::make(count, 0.0)
   let min_sizes : Array[Double] = Array::make(count, 0.0)
@@ -214,11 +249,12 @@ fn initialize_grid_track_sizing_state(
 }
 
 ///|
-fn apply_intrinsic_flexible_track_sizing(
+fn resolve_intrinsic_track_sizes(
   state : GridTrackSizingState,
-  min_contrib : Array[Double],
-  max_contrib : Array[Double],
+  input : GridTrackSizingAlgorithmInput,
 ) -> Unit {
+  let min_contrib = input.min_contribution
+  let max_contrib = input.max_content_contribution
   let sizes = state.sizes
   let min_sizes = state.min_sizes
   let fr_weights = state.fr_weights
@@ -275,7 +311,7 @@ fn grid_track_used_size(state : GridTrackSizingState, gap : Double) -> Double {
 }
 
 ///|
-fn shrink_grid_tracks_to_minimum(
+fn shrink_tracks_to_minimum(
   state : GridTrackSizingState,
   available : Double,
   gap : Double,
@@ -318,7 +354,7 @@ fn shrink_grid_tracks_to_minimum(
 }
 
 ///|
-fn expand_flexible_grid_tracks(
+fn expand_flexible_tracks(
   state : GridTrackSizingState,
   available : Double,
 ) -> Bool {
@@ -413,10 +449,7 @@ fn expand_flexible_grid_tracks(
 }
 
 ///|
-fn grow_auto_like_grid_tracks(
-  state : GridTrackSizingState,
-  free : Double,
-) -> Unit {
+fn stretch_auto_tracks(state : GridTrackSizingState, free : Double) -> Unit {
   let sizes = state.sizes
   let is_auto = state.is_auto
   let max_limits = state.max_limits
@@ -451,7 +484,7 @@ fn grow_auto_like_grid_tracks(
 }
 
 ///|
-fn distribute_grid_track_free_space(
+fn maximize_tracks(
   state : GridTrackSizingState,
   available : Double,
   gap : Double,
@@ -461,8 +494,8 @@ fn distribute_grid_track_free_space(
   if free <= 0.0 {
     return
   }
-  if !expand_flexible_grid_tracks(state, available) {
-    grow_auto_like_grid_tracks(state, free)
+  if !expand_flexible_tracks(state, available) {
+    stretch_auto_tracks(state, free)
   }
 }
 
@@ -476,34 +509,27 @@ fn clamp_grid_tracks_to_minimum(state : GridTrackSizingState) -> Unit {
 }
 
 ///|
-fn compute_grid_track_sizes_with_contributions(
-  tracks : Array[Dimension],
-  available : Double,
-  gap : Double,
-  min_contrib : Array[Double],
-  max_contrib : Array[Double],
-  expand_to_fill : Bool,
-) -> Array[Double] {
-  let state = initialize_grid_track_sizing_state(
-    tracks, available, min_contrib, max_contrib,
-  )
+fn track_sizing_algorithm(
+  input : GridTrackSizingAlgorithmInput,
+) -> GridTrackSizingAlgorithmOutput {
+  let state = initialize_track_sizes(input)
   let sizes = state.sizes
 
   // Intrinsic sizing for flexible tracks: derive a flex fraction from content contributions.
   // This matches taffy 0.5 behavior for `fr` tracks under indefinite available space.
-  if !expand_to_fill {
-    apply_intrinsic_flexible_track_sizing(state, min_contrib, max_contrib)
+  if !input.expand_to_fill {
+    resolve_intrinsic_track_sizes(state, input)
   }
 
   // Shrink tracks down to their min-content contributions if the sum of preferred sizes overflows.
-  shrink_grid_tracks_to_minimum(state, available, gap)
+  shrink_tracks_to_minimum(state, input.available, input.gap)
 
   // Distribute any remaining free space (only when the grid container has a definite size).
-  if expand_to_fill {
-    distribute_grid_track_free_space(state, available, gap)
+  if input.expand_to_fill {
+    maximize_tracks(state, input.available, input.gap)
   }
 
   // Ensure no track is below its min size.
   clamp_grid_tracks_to_minimum(state)
-  sizes
+  { sizes, }
 }

@@ -11,7 +11,7 @@ MoonBit directories are package boundaries. The public root package owns all use
 - `src/*.mbt` contains the root `Milky2018/moon_taffy` package. Public types, public methods, and implementation code stay together here because moving public implementation types behind another package boundary breaks downstream method lookup.
 - `src/tests/regression` contains focused issue and behavior regression tests that exercise the public root package as a downstream user would.
 - `src/tests/upstream` contains generated and upstream-derived compatibility tests, plus shared measurement fixtures used by those tests.
-- `src/*_wbtest.mbt` files stay beside the implementation when they need white-box access to root-package internals.
+- Root-package tests should stay out of `src/*.mbt` unless they truly need white-box access to implementation internals.
 
 ## Architecture alignment status
 

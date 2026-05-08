@@ -17,8 +17,8 @@ The upstream source is checked out locally in `taffy-reference/` and is gitignor
 
 ## Architecture guardrails
 
-- The supported package boundary is `Milky2018/moon_taffy`; implementation details are kept under `src/internal/style`.
-- Rust module parity is tracked in `docs/rust-taffy-structure-alignment.md`; MoonBit keeps one internal package and mirrors Rust modules through file names.
+- The supported package boundary is `Milky2018/moon_taffy`; all user-facing implementation types and methods live in the root package so downstream users never need to import an `internal` package.
+- Rust module parity is tracked in `docs/rust-taffy-structure-alignment.md`; MoonBit mirrors Rust modules through root-package file names because MoonBit directories are package boundaries.
 - Tree mutation code keeps parent/child ownership in one attach/detach path, so constructors and mutation APIs preserve the same node invariants.
 - Layout caches mirror Rust taffy's one final-layout slot plus nine measure slots and are invalidated through dirty propagation.
 - Deep default single-child flex chains use an iterative fast path so all supported backends, including the legacy `wasm` target, avoid recursive stack overflow.

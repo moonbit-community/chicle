@@ -1,0 +1,280 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_taffy/style"
+
+import {
+  "Milky2018/moon_taffy/geometry",
+  "moonbitlang/core/json",
+}
+
+// Values
+pub fn length_percentage_auto_auto() -> LengthPercentageAuto
+
+pub fn length_percentage_auto_length(Double) -> LengthPercentageAuto
+
+pub fn length_percentage_auto_percent(Double) -> LengthPercentageAuto
+
+pub fn length_percentage_length(Double) -> LengthPercentage
+
+pub fn length_percentage_percent(Double) -> LengthPercentage
+
+// Errors
+
+// Types and methods
+#alias(JustifyContent)
+pub(all) enum AlignContent {
+  AlignStart
+  AlignEnd
+  AlignFlexStart
+  AlignFlexEnd
+  AlignCenter
+  AlignStretch
+  AlignSpaceBetween
+  AlignSpaceEvenly
+  AlignSpaceAround
+}
+
+#alias(AlignSelf)
+#alias(JustifyItems)
+#alias(JustifySelf)
+pub(all) enum AlignItems {
+  ItemsStart
+  ItemsEnd
+  ItemsFlexStart
+  ItemsFlexEnd
+  ItemsCenter
+  ItemsBaseline
+  ItemsStretch
+}
+
+pub(all) enum BoxSizing {
+  BorderBox
+  ContentBox
+}
+pub impl ToJson for BoxSizing
+pub impl @json.FromJson for BoxSizing
+
+pub(all) enum Dimension {
+  DimAuto
+  DimLength(Double)
+  DimPercent(Double)
+  DimFr(Double)
+  DimMinMax(Dimension, Dimension)
+  DimMinContent
+  DimMaxContent
+  DimFitContent(Dimension)
+  DimRepeat(GridTrackRepetition, Array[Dimension])
+}
+pub fn Dimension::into_option(Self) -> Double?
+pub impl ToJson for Dimension
+pub impl @json.FromJson for Dimension
+
+pub(all) enum Display {
+  DisplayBlock
+  DisplayFlex
+  DisplayGrid
+  DisplayNone
+}
+
+pub(all) enum FlexDirection {
+  FlexRow
+  FlexRowReverse
+  FlexColumn
+  FlexColumnReverse
+}
+
+pub(all) enum FlexWrap {
+  FlexNoWrap
+  FlexWrap
+  FlexWrapReverse
+}
+
+pub(all) enum GridAutoFlow {
+  Row
+  Column
+  RowDense
+  ColumnDense
+}
+pub fn GridAutoFlow::is_dense(Self) -> Bool
+pub fn GridAutoFlow::primary_axis(Self) -> @geometry.AbsoluteAxis
+
+pub(all) enum GridPlacement {
+  PlaceAuto
+  PlaceLine(Int)
+  PlaceSpan(Int)
+}
+pub fn GridPlacement::indefinite_span(@geometry.Line[Self]) -> Int
+pub fn GridPlacement::is_definite(@geometry.Line[Self]) -> Bool
+pub impl ToJson for GridPlacement
+pub impl @json.FromJson for GridPlacement
+
+pub(all) enum GridTrackRepetition {
+  RepeatCount(Int)
+  RepeatAutoFill
+  RepeatAutoFit
+}
+
+pub(all) enum LengthPercentage {
+  LengthPercentageLength(Double)
+  LengthPercentagePercent(Double)
+}
+
+pub(all) enum LengthPercentageAuto {
+  LengthPercentageAutoLength(Double)
+  LengthPercentageAutoPercent(Double)
+  LengthPercentageAutoAuto
+}
+pub fn LengthPercentageAuto::is_auto(Self) -> Bool
+pub fn LengthPercentageAuto::resolve_to_option(Self, Double) -> Double?
+
+pub(all) enum MaxTrackSizingFunction {
+  MaxTrackFixed(LengthPercentage)
+  MaxTrackMinContent
+  MaxTrackMaxContent
+  MaxTrackFitContent(LengthPercentage)
+  MaxTrackAuto
+  MaxTrackFraction(Double)
+}
+pub fn MaxTrackSizingFunction::definite_limit(Self, Double?) -> Double?
+pub fn MaxTrackSizingFunction::definite_value(Self, Double?) -> Double?
+pub fn MaxTrackSizingFunction::is_flexible(Self) -> Bool
+pub fn MaxTrackSizingFunction::is_intrinsic(Self) -> Bool
+pub fn MaxTrackSizingFunction::is_max_content_alike(Self) -> Bool
+pub fn MaxTrackSizingFunction::resolved_percentage_size(Self, Double) -> Double?
+pub fn MaxTrackSizingFunction::to_dimension(Self) -> Dimension
+pub fn MaxTrackSizingFunction::uses_percentage(Self) -> Bool
+
+pub(all) enum MinTrackSizingFunction {
+  MinTrackFixed(LengthPercentage)
+  MinTrackMinContent
+  MinTrackMaxContent
+  MinTrackAuto
+}
+pub fn MinTrackSizingFunction::definite_value(Self, Double?) -> Double?
+pub fn MinTrackSizingFunction::is_intrinsic(Self) -> Bool
+pub fn MinTrackSizingFunction::resolved_percentage_size(Self, Double) -> Double?
+pub fn MinTrackSizingFunction::to_dimension(Self) -> Dimension
+pub fn MinTrackSizingFunction::uses_percentage(Self) -> Bool
+
+pub(all) struct NonRepeatedTrackSizingFunction {
+  min : MinTrackSizingFunction
+  max : MaxTrackSizingFunction
+}
+pub fn NonRepeatedTrackSizingFunction::NonRepeatedTrackSizingFunction(min~ : MinTrackSizingFunction, max~ : MaxTrackSizingFunction) -> Self
+pub fn NonRepeatedTrackSizingFunction::has_fixed_component(Self) -> Bool
+pub fn NonRepeatedTrackSizingFunction::max_sizing_function(Self) -> MaxTrackSizingFunction
+pub fn NonRepeatedTrackSizingFunction::min_sizing_function(Self) -> MinTrackSizingFunction
+pub fn NonRepeatedTrackSizingFunction::to_dimension(Self) -> Dimension
+
+pub(all) enum Overflow {
+  OverflowVisible
+  OverflowClip
+  OverflowHidden
+  OverflowScroll
+}
+
+pub(all) enum Position {
+  PosRelative
+  PosAbsolute
+}
+
+pub(all) struct Style {
+  display : Display
+  box_sizing : BoxSizing
+  overflow : @geometry.Point[Overflow]
+  scrollbar_width : Double
+  position : Position
+  inset : @geometry.Rect[Dimension]
+  size : @geometry.Size[Dimension]
+  min_size : @geometry.Size[Dimension]
+  max_size : @geometry.Size[Dimension]
+  aspect_ratio : Double?
+  margin : @geometry.Rect[Dimension]
+  padding : @geometry.Rect[Dimension]
+  border : @geometry.Rect[Dimension]
+  align_items : AlignItems?
+  align_self : AlignItems?
+  justify_items : AlignItems?
+  justify_self : AlignItems?
+  align_content : AlignContent?
+  justify_content : AlignContent?
+  gap : @geometry.Size[Dimension]
+  flex_direction : FlexDirection
+  flex_wrap : FlexWrap
+  flex_basis : Dimension
+  flex_grow : Double
+  flex_shrink : Double
+  grid_template_rows : Array[Dimension]
+  grid_template_columns : Array[Dimension]
+  grid_auto_rows : Array[Dimension]
+  grid_auto_columns : Array[Dimension]
+  grid_auto_flow : GridAutoFlow
+  grid_row : @geometry.Line[GridPlacement]
+  grid_column : @geometry.Line[GridPlacement]
+  grid_row_start : Int?
+  grid_column_start : Int?
+}
+pub fn Style::default() -> Self
+pub fn Style::with_align_content(Self, AlignContent) -> Self
+pub fn Style::with_align_items(Self, AlignItems) -> Self
+pub fn Style::with_align_self(Self, AlignItems) -> Self
+pub fn Style::with_aspect_ratio(Self, Double) -> Self
+pub fn Style::with_border(Self, @geometry.Rect[Dimension]) -> Self
+pub fn Style::with_box_sizing(Self, BoxSizing) -> Self
+pub fn Style::with_display(Self, Display) -> Self
+pub fn Style::with_flex_basis(Self, Dimension) -> Self
+pub fn Style::with_flex_direction(Self, FlexDirection) -> Self
+pub fn Style::with_flex_grow(Self, Double) -> Self
+pub fn Style::with_flex_shrink(Self, Double) -> Self
+pub fn Style::with_flex_wrap(Self, FlexWrap) -> Self
+pub fn Style::with_gap(Self, @geometry.Size[Dimension]) -> Self
+pub fn Style::with_grid_auto_columns(Self, Array[Dimension]) -> Self
+pub fn Style::with_grid_auto_columns_taffy(Self, Array[NonRepeatedTrackSizingFunction]) -> Self
+pub fn Style::with_grid_auto_flow(Self, GridAutoFlow) -> Self
+pub fn Style::with_grid_auto_rows(Self, Array[Dimension]) -> Self
+pub fn Style::with_grid_auto_rows_taffy(Self, Array[NonRepeatedTrackSizingFunction]) -> Self
+pub fn Style::with_grid_column(Self, @geometry.Line[GridPlacement]) -> Self
+pub fn Style::with_grid_column_start(Self, Int) -> Self
+pub fn Style::with_grid_row(Self, @geometry.Line[GridPlacement]) -> Self
+pub fn Style::with_grid_row_start(Self, Int) -> Self
+pub fn Style::with_grid_template_columns(Self, Array[Dimension]) -> Self
+pub fn Style::with_grid_template_columns_taffy(Self, Array[TrackSizingFunction]) -> Self
+pub fn Style::with_grid_template_rows(Self, Array[Dimension]) -> Self
+pub fn Style::with_grid_template_rows_taffy(Self, Array[TrackSizingFunction]) -> Self
+pub fn Style::with_inset(Self, @geometry.Rect[Dimension]) -> Self
+pub fn Style::with_justify_content(Self, AlignContent) -> Self
+pub fn Style::with_justify_items(Self, AlignItems) -> Self
+pub fn Style::with_justify_self(Self, AlignItems) -> Self
+pub fn Style::with_margin(Self, @geometry.Rect[Dimension]) -> Self
+pub fn Style::with_max_size(Self, @geometry.Size[Dimension]) -> Self
+pub fn Style::with_min_size(Self, @geometry.Size[Dimension]) -> Self
+pub fn Style::with_overflow(Self, @geometry.Point[Overflow]) -> Self
+pub fn Style::with_padding(Self, @geometry.Rect[Dimension]) -> Self
+pub fn Style::with_position(Self, Position) -> Self
+pub fn Style::with_scrollbar_width(Self, Double) -> Self
+pub fn Style::with_size(Self, @geometry.Size[Dimension]) -> Self
+pub impl ToJson for Style
+pub impl @json.FromJson for Style
+
+pub(all) enum TrackSizingFunction {
+  Single(NonRepeatedTrackSizingFunction)
+  Repeat(GridTrackRepetition, Array[NonRepeatedTrackSizingFunction])
+}
+pub fn TrackSizingFunction::to_dimensions(Self) -> Array[Dimension]
+
+// Type aliases
+pub using @geometry {type AbsoluteAxis}
+
+pub using @geometry {type AbstractAxis}
+
+pub using @geometry {type AvailableSpace}
+
+pub using @geometry {type Line}
+
+pub using @geometry {type Point}
+
+pub using @geometry {type Rect}
+
+pub using @geometry {type Size}
+
+// Traits
+

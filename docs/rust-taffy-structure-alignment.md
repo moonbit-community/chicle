@@ -4,14 +4,18 @@ This document records architecture alignment between `moon_taffy` and the pinned
 
 ## Structural constraints
 
-MoonBit directories are package boundaries. The public root package owns all user-facing types and methods so downstream packages can import only `Milky2018/moon_taffy`. Rust module boundaries are represented by focused root-package files instead of nested MoonBit packages; only code that is never part of the public API should live under `internal/`.
+MoonBit directories are package boundaries, and only a package named `internal` receives special hidden visibility. The port therefore exposes Rust-like public module boundaries as importable MoonBit packages instead of routing users through a root facade.
 
 ## Local source layout
 
-- `src/*.mbt` contains the root `Milky2018/moon_taffy` package. Public types, public methods, and implementation code stay together here because moving public implementation types behind another package boundary breaks downstream method lookup.
-- `src/tests/regression` contains focused issue and behavior regression tests that exercise the public root package as a downstream user would.
+- `src/geometry` contains geometry primitives and `AvailableSpace`.
+- `src/style` contains style enums, `Style`, style builders, and JSON conversion.
+- `src/style_helpers` contains ergonomic constructor helpers for style values.
+- `src/tree` contains `TaffyTree`, tree storage, cache/layout types, and compute algorithms. MoonBit does not allow defining methods for foreign package types, so compute methods that operate on `TaffyTree` must stay in this package even though the file names keep Rust's `compute/*` layout.
+- `src/util` contains shared math and dimension-resolution helpers used by tree algorithms.
+- `src/tests/regression` contains focused issue and behavior regression tests that exercise the public subpackages as downstream users would.
 - `src/tests/upstream` contains generated and upstream-derived compatibility tests, plus shared measurement fixtures used by those tests.
-- Root-package tests should stay out of `src/*.mbt` unless they truly need white-box access to implementation internals.
+- Tests stay in downstream-style packages and import the public subpackages directly.
 
 ## Architecture alignment status
 
@@ -47,39 +51,39 @@ MoonBit directories are package boundaries. The public root package owns all use
 
 ## File mapping
 
-| Rust upstream path | MoonBit root file |
+| Rust upstream path | MoonBit package/file |
 | --- | --- |
-| `src/geometry.rs` | `geometry.mbt` |
-| `src/prelude.rs` | folded into root package exports; a literal `prelude` package conflicts with MoonBit core prelude aliasing |
-| `src/style/mod.rs` | `style_mod.mbt` |
-| `src/style/alignment.rs` | `style_alignment.mbt` |
-| `src/style/dimension.rs` | `style_dimension.mbt` |
-| `src/style/flex.rs` | `style_flex.mbt` |
-| `src/style/grid.rs` | `style_grid.mbt` |
-| `src/style_helpers.rs` | `style_helpers.mbt` |
-| `src/tree/cache.rs` | `tree_cache.mbt` |
-| `src/tree/layout.rs` | `tree_layout.mbt` |
-| `src/tree/node.rs` | `tree_node.mbt` |
-| `src/tree/taffy_tree.rs` | `tree_taffy_tree.mbt` |
-| `src/tree/traits.rs` | `tree_traits.mbt` |
-| `src/compute/mod.rs` | `compute_mod.mbt` |
-| `src/compute/leaf.rs` | `compute_leaf.mbt` |
-| `src/compute/block.rs` | `compute_block.mbt` |
-| `src/compute/flexbox.rs` | `compute_flexbox.mbt` |
-| `src/compute/common/*` | `compute_common_alignment.mbt`, `compute_common_content_size.mbt`, `compute_common_margin.mbt` |
-| `src/compute/grid/mod.rs` | `compute_grid_mod.mbt` |
-| `src/compute/grid/alignment.rs` | `compute_grid_alignment.mbt` |
-| `src/compute/grid/explicit_grid.rs` | `compute_grid_explicit_grid.mbt` |
-| `src/compute/grid/implicit_grid.rs` | `compute_grid_implicit_grid.mbt` |
-| `src/compute/grid/placement.rs` | `compute_grid_placement.mbt` |
-| `src/compute/grid/track_sizing.rs` | `compute_grid_track_sizing.mbt`, `compute_grid_track_sizing_item_snapshot.mbt`, `compute_grid_track_sizing_spanning.mbt`, `compute_grid_track_sizing_primitives.mbt`, `compute_grid_track_sizing_basis.mbt`, `compute_grid_track_sizing_contributions.mbt` |
-| `src/compute/grid/types/coordinates.rs` | `compute_grid_types_coordinates.mbt` |
-| `src/compute/grid/types/cell_occupancy.rs` | `compute_grid_types_cell_occupancy.mbt` |
-| `src/compute/grid/types/grid_item.rs` | `compute_grid_types_grid_item.mbt` |
-| `src/compute/grid/types/grid_track.rs` | `compute_grid_types_grid_track.mbt` |
-| `src/compute/grid/types/grid_track_counts.rs` | `compute_grid_types_grid_track_counts.mbt` |
-| `src/util/math.rs` | `util_math.mbt` |
-| `src/util/resolve.rs` | `util_resolve.mbt` |
+| `src/geometry.rs` | `src/geometry/geometry.mbt` |
+| `src/prelude.rs` | downstream imports focused packages directly; there is no root facade |
+| `src/style/mod.rs` | `src/style/style_mod.mbt` |
+| `src/style/alignment.rs` | `src/style/style_alignment.mbt` |
+| `src/style/dimension.rs` | `src/style/style_dimension.mbt` |
+| `src/style/flex.rs` | `src/style/style_flex.mbt` |
+| `src/style/grid.rs` | `src/style/style_grid.mbt` |
+| `src/style_helpers.rs` | `src/style_helpers/style_helpers.mbt` |
+| `src/tree/cache.rs` | `src/tree/tree_cache.mbt` |
+| `src/tree/layout.rs` | `src/tree/tree_layout.mbt` |
+| `src/tree/node.rs` | `src/tree/tree_node.mbt` |
+| `src/tree/taffy_tree.rs` | `src/tree/tree_taffy_tree.mbt` |
+| `src/tree/traits.rs` | `src/tree/tree_traits.mbt` |
+| `src/compute/mod.rs` | `src/tree/compute_mod.mbt` |
+| `src/compute/leaf.rs` | `src/tree/compute_leaf.mbt` |
+| `src/compute/block.rs` | `src/tree/compute_block.mbt` |
+| `src/compute/flexbox.rs` | `src/tree/compute_flexbox.mbt` |
+| `src/compute/common/*` | `src/tree/compute_common_alignment.mbt`, `src/tree/compute_common_content_size.mbt`, `src/tree/compute_common_margin.mbt` |
+| `src/compute/grid/mod.rs` | `src/tree/compute_grid_mod.mbt` |
+| `src/compute/grid/alignment.rs` | `src/tree/compute_grid_alignment.mbt` |
+| `src/compute/grid/explicit_grid.rs` | `src/tree/compute_grid_explicit_grid.mbt` |
+| `src/compute/grid/implicit_grid.rs` | `src/tree/compute_grid_implicit_grid.mbt` |
+| `src/compute/grid/placement.rs` | `src/tree/compute_grid_placement.mbt` |
+| `src/compute/grid/track_sizing.rs` | `src/tree/compute_grid_track_sizing.mbt`, `src/tree/compute_grid_track_sizing_item_snapshot.mbt`, `src/tree/compute_grid_track_sizing_spanning.mbt`, `src/tree/compute_grid_track_sizing_primitives.mbt`, `src/tree/compute_grid_track_sizing_basis.mbt`, `src/tree/compute_grid_track_sizing_contributions.mbt` |
+| `src/compute/grid/types/coordinates.rs` | `src/tree/compute_grid_types_coordinates.mbt` |
+| `src/compute/grid/types/cell_occupancy.rs` | `src/tree/compute_grid_types_cell_occupancy.mbt` |
+| `src/compute/grid/types/grid_item.rs` | `src/tree/compute_grid_types_grid_item.mbt` |
+| `src/compute/grid/types/grid_track.rs` | `src/tree/compute_grid_types_grid_track.mbt` |
+| `src/compute/grid/types/grid_track_counts.rs` | `src/tree/compute_grid_types_grid_track_counts.mbt` |
+| `src/util/math.rs` | `src/util/util_math.mbt` |
+| `src/util/resolve.rs` | `src/util/util_resolve.mbt` |
 | `src/util/debug.rs`, `src/util/print.rs`, `src/util/sys.rs` | not ported as public utilities |
 
 ## Current verification contract

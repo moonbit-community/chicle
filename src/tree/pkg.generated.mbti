@@ -1,0 +1,164 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_taffy/tree"
+
+import {
+  "Milky2018/moon_taffy/geometry",
+  "Milky2018/moon_taffy/style",
+}
+
+// Values
+pub fn layout_input_for_compute_size(@geometry.Size[Double?], @geometry.Size[Double?], @geometry.Size[@geometry.AvailableSpace], SizingMode, RequestedAxis, @geometry.Line[Bool]) -> LayoutInput
+
+pub fn layout_input_for_perform_layout(@geometry.Size[Double?], @geometry.Size[@geometry.AvailableSpace]) -> LayoutInput
+
+pub fn requested_axis_from_absolute(@geometry.AbsoluteAxis) -> RequestedAxis
+
+// Errors
+type TaffyError
+
+// Types and methods
+pub(all) struct Layout {
+  order : Int
+  location : @geometry.Point[Double]
+  size : @geometry.Size[Double]
+  content_size : @geometry.Size[Double]
+  scrollbar_size : @geometry.Size[Double]
+  border : @geometry.Rect[Double]
+  padding : @geometry.Rect[Double]
+}
+pub fn Layout::scroll_height(Self) -> Double
+pub fn Layout::scroll_width(Self) -> Double
+pub fn Layout::zero() -> Self
+
+pub(all) struct LayoutInput {
+  run_mode : RunMode
+  sizing_mode : SizingMode
+  axis : RequestedAxis
+  known_dimensions : @geometry.Size[Double?]
+  parent_size : @geometry.Size[Double?]
+  available_space : @geometry.Size[@geometry.AvailableSpace]
+  vertical_margins_are_collapsible : @geometry.Line[Bool]
+}
+pub fn LayoutInput::hidden() -> Self
+
+pub(all) struct LayoutOutput {
+  size : @geometry.Size[Double]
+  content_size : @geometry.Size[Double]
+  first_baselines : @geometry.Point[Double?]
+  top_margin : (Double, Double)
+  bottom_margin : (Double, Double)
+  margins_can_collapse_through : Bool
+}
+pub fn LayoutOutput::from_layout(Layout) -> Self
+pub fn LayoutOutput::from_outer_size(@geometry.Size[Double]) -> Self
+pub fn LayoutOutput::outer_size(Self) -> @geometry.Size[Double]
+
+type NodeData
+
+pub(all) enum RequestedAxis {
+  RequestedHorizontal
+  RequestedVertical
+  RequestedBoth
+}
+
+pub(all) enum RunMode {
+  PerformLayout
+  ComputeSize
+  PerformHiddenLayout
+}
+
+pub(all) enum SizingMode {
+  ContentSize
+  InherentSize
+}
+
+pub struct TaffyTree[C] {
+  // private fields
+}
+pub fn[C] TaffyTree::TaffyTree() -> Self[C]
+pub fn[C] TaffyTree::add_child(Self[C], Int, Int) -> Unit raise TaffyError
+pub fn[C] TaffyTree::clear_node_context(Self[C], Int) -> Unit raise TaffyError
+pub fn[C] TaffyTree::compute_layout(Self[C], Int, @geometry.Size[@geometry.AvailableSpace]) -> Unit raise TaffyError
+pub fn[C] TaffyTree::compute_layout_with_measure(Self[C], Int, @geometry.Size[@geometry.AvailableSpace], (@geometry.Size[Double?], @geometry.Size[@geometry.AvailableSpace], Int, C?, @style.Style) -> @geometry.Size[Double]) -> Unit raise TaffyError
+pub fn[C] TaffyTree::dirty(Self[C], Int) -> Bool raise TaffyError
+pub fn[C] TaffyTree::disable_rounding(Self[C]) -> Unit
+pub fn[C] TaffyTree::enable_rounding(Self[C]) -> Unit
+pub fn[C] TaffyTree::layout(Self[C], Int) -> Layout raise TaffyError
+pub fn[C] TaffyTree::mark_dirty(Self[C], Int) -> Unit raise TaffyError
+pub fn[C] TaffyTree::new_leaf(Self[C], @style.Style) -> Int
+pub fn[C] TaffyTree::new_leaf_with_context(Self[C], @style.Style, C) -> Int
+pub fn[C] TaffyTree::new_with_children(Self[C], @style.Style, Array[Int]) -> Int
+pub fn[C] TaffyTree::node_context(Self[C], Int) -> C? raise TaffyError
+pub fn[C] TaffyTree::remove(Self[C], Int) -> Unit raise TaffyError
+pub fn[C] TaffyTree::remove_child(Self[C], Int, Int) -> Int raise TaffyError
+pub fn[C] TaffyTree::remove_subtree(Self[C], Int) -> Unit raise TaffyError
+pub fn[C] TaffyTree::set_children(Self[C], Int, Array[Int]) -> Unit raise TaffyError
+pub fn[C] TaffyTree::set_node_context(Self[C], Int, C) -> Unit raise TaffyError
+pub fn[C] TaffyTree::set_style(Self[C], Int, @style.Style) -> Unit raise TaffyError
+pub fn[C] TaffyTree::with_capacity(Int) -> Self[C]
+
+// Type aliases
+pub using @geometry {type AbsoluteAxis}
+
+pub using @geometry {type AbstractAxis}
+
+pub using @style {type AlignContent}
+
+pub using @style {type AlignItems}
+
+pub using @style {type AlignItems as AlignSelf}
+
+pub using @geometry {type AvailableSpace}
+
+pub using @style {type BoxSizing}
+
+pub using @style {type Dimension}
+
+pub using @style {type Display}
+
+pub using @style {type FlexDirection}
+
+pub using @style {type FlexWrap}
+
+pub using @style {type GridAutoFlow}
+
+pub using @style {type GridPlacement}
+
+pub using @style {type GridTrackRepetition}
+
+pub using @style {type AlignContent as JustifyContent}
+
+pub using @style {type AlignItems as JustifyItems}
+
+pub using @style {type AlignItems as JustifySelf}
+
+pub using @style {type LengthPercentage}
+
+pub using @style {type LengthPercentageAuto}
+
+pub using @geometry {type Line}
+
+pub using @style {type MaxTrackSizingFunction}
+
+pub using @style {type MinTrackSizingFunction}
+
+pub type NodeId = Int
+
+pub using @style {type NonRepeatedTrackSizingFunction}
+
+pub using @style {type Overflow}
+
+pub using @geometry {type Point}
+
+pub using @style {type Position}
+
+pub using @geometry {type Rect}
+
+pub using @geometry {type Size}
+
+pub using @style {type Style}
+
+pub using @style {type TrackSizingFunction}
+
+// Traits
+

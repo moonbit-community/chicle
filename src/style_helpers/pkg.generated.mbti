@@ -1,17 +1,12 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Milky2018/moon_taffy/tests/regression"
+package "Milky2018/moon_taffy/style_helpers"
 
 import {
   "Milky2018/moon_taffy/geometry",
   "Milky2018/moon_taffy/style",
-  "Milky2018/moon_taffy/tree",
 }
 
 // Values
-pub fn abstract_axis_block() -> @geometry.AbstractAxis
-
-pub fn abstract_axis_inline() -> @geometry.AbstractAxis
-
 pub fn align_content_center() -> @style.AlignContent
 
 pub fn align_content_end() -> @style.AlignContent
@@ -112,21 +107,7 @@ pub fn justify_content_start() -> @style.AlignContent
 
 pub fn justify_content_stretch() -> @style.AlignContent
 
-pub fn layout_input_for_compute_size(@geometry.Size[Double?], @geometry.Size[Double?], @geometry.Size[@geometry.AvailableSpace], @tree.SizingMode, @tree.RequestedAxis, @geometry.Line[Bool]) -> @tree.LayoutInput
-
-pub fn layout_input_for_perform_layout(@geometry.Size[Double?], @geometry.Size[@geometry.AvailableSpace]) -> @tree.LayoutInput
-
 pub fn length(Double) -> @style.Dimension
-
-pub fn length_percentage_auto_auto() -> @style.LengthPercentageAuto
-
-pub fn length_percentage_auto_length(Double) -> @style.LengthPercentageAuto
-
-pub fn length_percentage_auto_percent(Double) -> @style.LengthPercentageAuto
-
-pub fn length_percentage_length(Double) -> @style.LengthPercentage
-
-pub fn length_percentage_percent(Double) -> @style.LengthPercentage
 
 pub fn line(Int) -> @style.GridPlacement
 
@@ -182,8 +163,6 @@ pub fn repeat_count(Int) -> @style.GridTrackRepetition
 
 pub fn repeated_track_sizing_function(@style.GridTrackRepetition, Array[@style.NonRepeatedTrackSizingFunction]) -> @style.TrackSizingFunction
 
-pub fn requested_axis_from_absolute(@geometry.AbsoluteAxis) -> @tree.RequestedAxis
-
 pub fn span(Int) -> @style.GridPlacement
 
 pub fn track_sizing_function(@style.NonRepeatedTrackSizingFunction) -> @style.TrackSizingFunction
@@ -195,10 +174,6 @@ pub fn zero() -> @style.Dimension
 // Types and methods
 
 // Type aliases
-pub using @geometry {type AbsoluteAxis}
-
-pub using @geometry {type AbstractAxis}
-
 pub using @style {type AlignContent}
 
 pub using @style {type AlignItems}
@@ -229,47 +204,23 @@ pub using @style {type AlignItems as JustifyItems}
 
 pub using @style {type AlignItems as JustifySelf}
 
-pub using @tree {type Layout}
-
-pub using @tree {type LayoutInput}
-
-pub using @tree {type LayoutOutput}
-
 pub using @style {type LengthPercentage}
 
 pub using @style {type LengthPercentageAuto}
-
-pub using @geometry {type Line}
 
 pub using @style {type MaxTrackSizingFunction}
 
 pub using @style {type MinTrackSizingFunction}
 
-pub type NodeId = Int
-
 pub using @style {type NonRepeatedTrackSizingFunction}
 
 pub using @style {type Overflow}
 
-pub using @geometry {type Point}
-
 pub using @style {type Position}
-
-pub using @geometry {type Rect}
-
-pub using @tree {type RequestedAxis}
-
-pub using @tree {type RunMode}
 
 pub using @geometry {type Size}
 
-pub using @tree {type SizingMode}
-
 pub using @style {type Style}
-
-pub using @tree {type TaffyError}
-
-pub using @tree {type TaffyTree}
 
 pub using @style {type TrackSizingFunction}
 

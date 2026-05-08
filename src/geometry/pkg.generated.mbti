@@ -1,0 +1,65 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_taffy/geometry"
+
+// Values
+pub fn abstract_axis_block() -> AbstractAxis
+
+pub fn abstract_axis_inline() -> AbstractAxis
+
+// Errors
+
+// Types and methods
+pub(all) enum AbsoluteAxis {
+  Horizontal
+  Vertical
+}
+
+pub(all) enum AbstractAxis {
+  Inline
+  Block
+}
+
+pub(all) enum AvailableSpace {
+  AvailDefinite(Double)
+  AvailMinContent
+  AvailMaxContent
+}
+pub fn AvailableSpace::into_option(Self) -> Double?
+pub fn AvailableSpace::is_definite(Self) -> Bool
+pub fn AvailableSpace::maybe_set(Self, Double?) -> Self
+pub fn AvailableSpace::or(Self, Self) -> Self
+pub fn AvailableSpace::unwrap_or(Self, Double) -> Double
+
+pub(all) struct Line[T] {
+  start : T
+  end : T
+}
+pub fn[T] Line::Line(start~ : T, end~ : T) -> Self[T]
+
+pub(all) struct Point[T] {
+  x : T
+  y : T
+}
+pub fn[T] Point::Point(x~ : T, y~ : T) -> Self[T]
+pub fn Point::zero() -> Self[Double]
+
+pub(all) struct Rect[T] {
+  left : T
+  right : T
+  top : T
+  bottom : T
+}
+pub fn[T] Rect::Rect(left~ : T, right~ : T, top~ : T, bottom~ : T) -> Self[T]
+
+pub(all) struct Size[T] {
+  width : T
+  height : T
+}
+pub fn[T] Size::Size(width~ : T, height~ : T) -> Self[T]
+pub fn Size::max_content() -> Self[AvailableSpace]
+pub fn Size::zero() -> Self[Double]
+
+// Type aliases
+
+// Traits
+

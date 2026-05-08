@@ -1,0 +1,46 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_taffy/util"
+
+import {
+  "Milky2018/moon_taffy/geometry",
+  "Milky2018/moon_taffy/style",
+}
+
+// Values
+pub fn abs_double(Double) -> Double
+
+pub fn available_space_equal(@geometry.AvailableSpace, @geometry.AvailableSpace) -> Bool
+
+pub fn clamp_dimension(Double, @style.Dimension, @style.Dimension, @geometry.AvailableSpace) -> Double
+
+pub fn double_approx_equal(Double, Double) -> Bool
+
+pub fn max_double(Double, Double) -> Double
+
+pub fn min_double(Double, Double) -> Double
+
+pub fn optional_double_equal(Double?, Double?) -> Bool
+
+pub fn resolve_dimension(@style.Dimension, @geometry.AvailableSpace) -> Double
+
+pub fn resolve_dimension_width_basis(@style.Dimension, Double) -> Double
+
+pub fn resolve_optional_dimension(@style.Dimension, @geometry.AvailableSpace) -> Double?
+
+pub fn resolve_rect_width_basis(@geometry.Rect[@style.Dimension], @geometry.Size[@geometry.AvailableSpace]) -> @geometry.Rect[Double]
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @geometry {type AvailableSpace}
+
+pub using @style {type Dimension}
+
+pub using @geometry {type Rect}
+
+pub using @geometry {type Size}
+
+// Traits
+

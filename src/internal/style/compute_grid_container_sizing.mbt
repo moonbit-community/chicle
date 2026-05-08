@@ -123,6 +123,7 @@ fn[C] compute_initial_grid_track_sizing(
   specified_width : Double?,
   specified_height : Double?,
   justify_content_for_contrib : AlignContent,
+  default_align_items_for_contrib : AlignItems,
   default_justify_items_for_contrib : AlignItems,
 ) -> (
   Array[Double],
@@ -201,7 +202,7 @@ fn[C] compute_initial_grid_track_sizing(
   )
   compute_grid_row_track_contributions(
     view, grid_items, placement_count, col_sizes, contributions, col_gap, col_gutter_alignment_adjustment,
-    row_gap, default_justify_items_for_contrib,
+    row_gap, default_align_items_for_contrib, default_justify_items_for_contrib,
   )
   let mut row_min_basis = axis_min_content_basis(
     row_tracks,
@@ -273,6 +274,7 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
   specified_width : Double?,
   specified_height : Double?,
   justify_content_for_contrib : AlignContent,
+  default_align_items_for_contrib : AlignItems,
   default_justify_items_for_contrib : AlignItems,
 ) -> (Array[Double], Array[Double], Double, Double) raise TaffyError {
   contributions.reset()
@@ -301,7 +303,7 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
   )
   compute_grid_row_track_contributions(
     view, grid_items, placement_count, col_sizes, contributions, col_gap, col_gutter_alignment_adjustment,
-    row_gap, default_justify_items_for_contrib,
+    row_gap, default_align_items_for_contrib, default_justify_items_for_contrib,
   )
   let row_sizes = track_sizing_algorithm(
       GridTrackSizingAlgorithmInput(

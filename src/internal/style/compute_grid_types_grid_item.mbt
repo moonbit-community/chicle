@@ -149,14 +149,13 @@ fn GridItem::set_baseline(self : GridItem, baseline~ : Double) -> Unit {
 }
 
 ///|
-fn GridItem::set_baseline_shim(
+fn GridItem::set_baseline_and_shim(
   self : GridItem,
-  row_baseline_before_max : Array[Double],
-  resolved_margin : Rect[Double],
+  baseline~ : Double,
+  baseline_shim~ : Double,
 ) -> Unit {
-  self.baseline_shim = self.baseline_alignment_offset(
-    row_baseline_before_max, resolved_margin,
-  )
+  self.baseline = baseline
+  self.baseline_shim = baseline_shim
 }
 
 ///|
@@ -276,21 +275,4 @@ fn GridItem::is_in_bounds(
 ///|
 fn GridItem::is_relative_grid_child(self : GridItem) -> Bool {
   !(self.style.display is DisplayNone) && self.style.position is PosRelative
-}
-
-///|
-fn GridItem::baseline_alignment_offset(
-  self : GridItem,
-  row_baseline_before_max : Array[Double],
-  resolved_margin : Rect[Double],
-) -> Double {
-  if self.row_span == 1 {
-    if self.baseline_shim == 0.0 {
-      row_baseline_before_max[self.row] - resolved_margin.top - self.baseline
-    } else {
-      self.baseline_shim
-    }
-  } else {
-    0.0
-  }
 }

@@ -198,7 +198,7 @@ fn[C] compute_grid_relative_children_final_placement(
           child_style.margin,
           child_available,
         )
-        item.set_baseline_shim(row_baseline_before_max, resolved_margin)
+        let baseline_shim = item.baseline_shim
         let margin_left_auto = child_style.margin.left is DimAuto
         let margin_right_auto = child_style.margin.right is DimAuto
         let margin_top_auto = child_style.margin.top is DimAuto
@@ -210,7 +210,7 @@ fn[C] compute_grid_relative_children_final_placement(
           0.0,
         )
         let available_h_for_item = max_double(
-          cell_h - resolved_margin.top - resolved_margin.bottom,
+          cell_h - resolved_margin.top - resolved_margin.bottom - baseline_shim,
           0.0,
         )
         let item_available = Size(
@@ -341,12 +341,12 @@ fn[C] compute_grid_relative_children_final_placement(
         }
         let margin_top = if margin_top_auto {
           if margin_bottom_auto {
-            free_y / 2.0
+            free_y / 2.0 + baseline_shim
           } else {
-            free_y
+            free_y + baseline_shim
           }
         } else {
-          resolved_margin.top
+          resolved_margin.top + baseline_shim
         }
         let offset_x = if has_auto_margin_x {
           0.0
@@ -363,10 +363,7 @@ fn[C] compute_grid_relative_children_final_placement(
           match align {
             ItemsEnd | ItemsFlexEnd => available_h_for_item - intrinsic.height
             ItemsCenter => (available_h_for_item - intrinsic.height) / 2.0
-            ItemsBaseline =>
-              item.baseline_alignment_offset(
-                row_baseline_before_max, resolved_margin,
-              )
+            ItemsBaseline => 0.0
             _ => 0.0
           }
         }

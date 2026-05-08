@@ -133,6 +133,151 @@ fn compute_alignment_gutter_adjustment(
 }
 
 ///|
+fn grid_item_contribution_column_width(
+  item : GridItem,
+  col_sizes : Array[Double],
+  col_gap : Double,
+  col_gutter_alignment_adjustment : Double,
+) -> Double {
+  let mut col_w = 0.0
+  for j in item.column..<(item.column + item.column_span) {
+    col_w = col_w + col_sizes[j]
+  }
+  if item.column_span > 1 {
+    col_w = col_w +
+      (col_gap + col_gutter_alignment_adjustment) *
+      (item.column_span - 1).to_double()
+  }
+  col_w
+}
+
+///|
+fn grid_item_known_width_for_row_contribution(
+  child_style : Style,
+  col_w : Double,
+  resolved_margin : Rect[Double],
+  default_justify_items_for_contrib : AlignItems,
+) -> Double? {
+  let margin_left_auto = child_style.margin.left is DimAuto
+  let margin_right_auto = child_style.margin.right is DimAuto
+  let has_auto_margin_x = margin_left_auto || margin_right_auto
+  let justify = match child_style.justify_self {
+    Some(value) => value
+    None => default_justify_items_for_contrib
+  }
+  let available_w_for_item = max_double(
+    col_w - resolved_margin.left - resolved_margin.right,
+    0.0,
+  )
+  let mut known_w_for_contrib = resolve_optional_dimension(
+    child_style.size.width,
+    AvailDefinite(col_w),
+  )
+  if known_w_for_contrib is None &&
+    child_style.size.width is DimAuto &&
+    justify is ItemsStretch &&
+    !has_auto_margin_x {
+    known_w_for_contrib = Some(available_w_for_item)
+  }
+  known_w_for_contrib
+}
+
+///|
+fn[C] resolve_grid_item_baseline_shims_for_track_sizing(
+  view : TaffyView[C],
+  grid_items : Array[GridItem],
+  placement_count : Int,
+  col_sizes : Array[Double],
+  col_gap : Double,
+  col_gutter_alignment_adjustment : Double,
+  default_align_items_for_contrib : AlignItems,
+  default_justify_items_for_contrib : AlignItems,
+) -> Unit raise TaffyError {
+  let mut row_count = 0
+  for item in grid_items {
+    if item.placed && item.row_span == 1 && item.row + 1 > row_count {
+      row_count = item.row + 1
+    }
+  }
+  if row_count == 0 {
+    return
+  }
+  let baseline_item_count : Array[Int] = Array::make(row_count, 0)
+  let row_max_baseline : Array[Double] = Array::make(row_count, 0.0)
+  let measured_baseline : Array[Double] = Array::make(placement_count, 0.0)
+  let measured_margin_top : Array[Double] = Array::make(placement_count, 0.0)
+  let tree = view.tree
+  for i in 0..<placement_count {
+    let item = grid_items[i]
+    if !item.is_relative_grid_child() || !item.placed || item.row_span != 1 {
+      continue
+    }
+    let child_style = item.style
+    let align = match child_style.align_self {
+      Some(v) => v
+      None => default_align_items_for_contrib
+    }
+    if !(align is ItemsBaseline) {
+      continue
+    }
+    baseline_item_count[item.row] = baseline_item_count[item.row] + 1
+  }
+  for i in 0..<placement_count {
+    let item = grid_items[i]
+    if !item.is_relative_grid_child() ||
+      !item.placed ||
+      item.row_span != 1 ||
+      baseline_item_count[item.row] <= 1 {
+      continue
+    }
+    let child_style = item.style
+    let col_w = grid_item_contribution_column_width(
+      item, col_sizes, col_gap, col_gutter_alignment_adjustment,
+    )
+    let resolved_margin = resolve_rect_width_basis(
+      child_style.margin,
+      Size(width=AvailDefinite(col_w), height=AvailMaxContent),
+    )
+    let known_w_for_contrib = grid_item_known_width_for_row_contribution(
+      child_style, col_w, resolved_margin, default_justify_items_for_contrib,
+    )
+    view.perform_child_layout(
+      item.node,
+      Size(width=known_w_for_contrib, height=None),
+      Size(width=AvailDefinite(col_w), height=AvailMinContent),
+      Point::zero(),
+      false,
+    )
+    let baseline = grid_item_baseline_offset_y(tree, item.node)
+    let baseline_before = resolved_margin.top + baseline
+    measured_baseline[i] = baseline
+    measured_margin_top[i] = resolved_margin.top
+    row_max_baseline[item.row] = max_double(
+      row_max_baseline[item.row],
+      baseline_before,
+    )
+  }
+  for i in 0..<placement_count {
+    let item = grid_items[i]
+    if !item.is_relative_grid_child() ||
+      !item.placed ||
+      item.row_span != 1 ||
+      baseline_item_count[item.row] <= 1 {
+      continue
+    }
+    item.set_baseline_and_shim(
+      baseline=measured_baseline[i],
+      baseline_shim=max_double(
+        row_max_baseline[item.row] -
+        measured_margin_top[i] -
+        measured_baseline[i],
+        0.0,
+      ),
+    )
+  }
+}
+
+///|
 fn[C] compute_grid_column_track_contributions(
   view : TaffyView[C],
   grid_items : Array[GridItem],
@@ -223,9 +368,14 @@ fn[C] compute_grid_row_track_contributions(
   col_gap : Double,
   col_gutter_alignment_adjustment : Double,
   row_gap : Double,
+  default_align_items_for_contrib : AlignItems,
   default_justify_items_for_contrib : AlignItems,
 ) -> Unit raise TaffyError {
   let tree = view.tree
+  resolve_grid_item_baseline_shims_for_track_sizing(
+    view, grid_items, placement_count, col_sizes, col_gap, col_gutter_alignment_adjustment,
+    default_align_items_for_contrib, default_justify_items_for_contrib,
+  )
   for i in 0..<placement_count {
     if !grid_items[i].placed {
       continue
@@ -233,41 +383,17 @@ fn[C] compute_grid_row_track_contributions(
     let item = grid_items[i]
     let child_id = item.node
     let child_style = item.style
-    let mut col_w = 0.0
-    for j in item.column..<(item.column + item.column_span) {
-      col_w = col_w + col_sizes[j]
-    }
-    if item.column_span > 1 {
-      col_w = col_w +
-        (col_gap + col_gutter_alignment_adjustment) *
-        (item.column_span - 1).to_double()
-    }
+    let col_w = grid_item_contribution_column_width(
+      item, col_sizes, col_gap, col_gutter_alignment_adjustment,
+    )
     let row_gap_total = row_gap * (item.row_span - 1).to_double()
     let resolved_margin = resolve_rect_width_basis(
       child_style.margin,
       Size(width=AvailDefinite(col_w), height=AvailMaxContent),
     )
-    let margin_left_auto = child_style.margin.left is DimAuto
-    let margin_right_auto = child_style.margin.right is DimAuto
-    let has_auto_margin_x = margin_left_auto || margin_right_auto
-    let justify = match child_style.justify_self {
-      Some(value) => value
-      None => default_justify_items_for_contrib
-    }
-    let available_w_for_item = max_double(
-      col_w - resolved_margin.left - resolved_margin.right,
-      0.0,
+    let known_w_for_contrib = grid_item_known_width_for_row_contribution(
+      child_style, col_w, resolved_margin, default_justify_items_for_contrib,
     )
-    let mut known_w_for_contrib = resolve_optional_dimension(
-      child_style.size.width,
-      AvailDefinite(col_w),
-    )
-    if known_w_for_contrib is None &&
-      child_style.size.width is DimAuto &&
-      justify is ItemsStretch &&
-      !has_auto_margin_x {
-      known_w_for_contrib = Some(available_w_for_item)
-    }
     view.perform_child_layout(
       child_id,
       Size(width=known_w_for_contrib, height=None),
@@ -277,7 +403,11 @@ fn[C] compute_grid_row_track_contributions(
     )
     let max_h = tree.nodes[child_id].unrounded_layout.size.height
     let max_needed = max_double(
-      max_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
+      max_h +
+      resolved_margin.top +
+      resolved_margin.bottom +
+      item.baseline_shim -
+      row_gap_total,
       0.0,
     )
     view.perform_child_layout(
@@ -293,7 +423,11 @@ fn[C] compute_grid_row_track_contributions(
       _ => 0.0
     }
     let min_needed = max_double(
-      min_h + resolved_margin.top + resolved_margin.bottom - row_gap_total,
+      min_h +
+      resolved_margin.top +
+      resolved_margin.bottom +
+      item.baseline_shim -
+      row_gap_total,
       0.0,
     )
     item.set_row_contributions(minimum=min_needed, max_content=max_needed)

@@ -228,6 +228,16 @@ pub fn display_none() -> Display {
 }
 
 ///|
+pub fn box_sizing_border_box() -> BoxSizing {
+  BorderBox
+}
+
+///|
+pub fn box_sizing_content_box() -> BoxSizing {
+  ContentBox
+}
+
+///|
 pub fn position_relative() -> Position {
   PosRelative
 }

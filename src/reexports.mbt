@@ -73,6 +73,9 @@ pub type Position = @style.Position
 pub type Overflow = @style.Overflow
 
 ///|
+pub type BoxSizing = @style.BoxSizing
+
+///|
 pub type FlexDirection = @style.FlexDirection
 
 ///|

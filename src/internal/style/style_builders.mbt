@@ -41,6 +41,11 @@ pub fn Style::with_display(self : Style, display : Display) -> Style {
 }
 
 ///|
+pub fn Style::with_box_sizing(self : Style, box_sizing : BoxSizing) -> Style {
+  { ..self, box_sizing, }
+}
+
+///|
 pub fn Style::with_position(self : Style, position : Position) -> Style {
   { ..self, position, }
 }

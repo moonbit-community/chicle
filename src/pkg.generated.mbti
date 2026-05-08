@@ -46,6 +46,10 @@ pub fn auto() -> @style.Dimension
 
 pub fn available_space_definite(Double) -> @style.AvailableSpace
 
+pub fn box_sizing_border_box() -> @style.BoxSizing
+
+pub fn box_sizing_content_box() -> @style.BoxSizing
+
 pub fn display_block() -> @style.Display
 
 pub fn display_flex() -> @style.Display
@@ -192,6 +196,8 @@ pub using @style {type AlignItems}
 pub using @style {type AlignItems as AlignSelf}
 
 pub using @style {type AvailableSpace}
+
+pub using @style {type BoxSizing}
 
 pub using @style {type Dimension}
 

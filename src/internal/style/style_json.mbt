@@ -135,6 +135,27 @@ pub impl @json.FromJson for GridPlacement with from_json(json, path) {
 }
 
 ///|
+pub impl ToJson for BoxSizing with to_json(self) {
+  match self {
+    BorderBox => Json::string("BorderBox")
+    ContentBox => Json::string("ContentBox")
+  }
+}
+
+///|
+pub impl @json.FromJson for BoxSizing with from_json(json, path) {
+  match json {
+    String(s) =>
+      match s {
+        "BorderBox" => BorderBox
+        "ContentBox" => ContentBox
+        _ => raise JsonDecodeError((path, "BoxSizing: unsupported string"))
+      }
+    _ => raise JsonDecodeError((path, "BoxSizing: expected string"))
+  }
+}
+
+///|
 fn parse_dimension_rect_partial(
   json : Json,
   base : Rect[Dimension],
@@ -216,6 +237,7 @@ fn parse_grid_line_partial(
 ///|
 pub impl ToJson for Style with to_json(self) {
   Json::object({
+    "box_sizing": self.box_sizing.to_json(),
     "inset": Json::object({
       "left": self.inset.left.to_json(),
       "right": self.inset.right.to_json(),
@@ -273,6 +295,13 @@ pub impl @json.FromJson for Style with from_json(json, path) {
     raise JsonDecodeError((path, "Style: expected object"))
   }
   let mut style = Style::default()
+  match obj.get("box_sizing") {
+    Some(v) =>
+      style = style.with_box_sizing(
+        @json.from_json(v, path=path.add_key("box_sizing")),
+      )
+    None => ()
+  }
   match obj.get("inset") {
     Some(v) =>
       style = style.with_inset(

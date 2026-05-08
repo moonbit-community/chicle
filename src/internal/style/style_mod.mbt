@@ -35,8 +35,15 @@ pub enum Overflow {
 }
 
 ///|
+pub enum BoxSizing {
+  BorderBox
+  ContentBox
+}
+
+///|
 pub struct Style {
   display : Display
+  box_sizing : BoxSizing
   overflow : Point[Overflow]
   scrollbar_width : Double
   position : Position
@@ -75,6 +82,7 @@ pub struct Style {
 pub fn Style::default() -> Style {
   {
     display: DisplayFlex,
+    box_sizing: BorderBox,
     overflow: { x: OverflowVisible, y: OverflowVisible },
     scrollbar_width: 0.0,
     position: PosRelative,

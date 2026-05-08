@@ -257,6 +257,79 @@ fn dimension_is_length_zero(value : Dimension) -> Bool {
 }
 
 ///|
+fn dimension_with_box_sizing_inset(
+  value : Dimension,
+  available : AvailableSpace,
+  inset : Double,
+) -> Dimension {
+  match resolve_optional_dimension(value, available) {
+    Some(resolved) => DimLength(resolved + inset)
+    None => value
+  }
+}
+
+///|
+fn style_with_border_box_sizing(
+  style : Style,
+  available_space : Size[AvailableSpace],
+) -> Style {
+  match style.box_sizing {
+    BorderBox => style
+    ContentBox => {
+      let padding = resolve_rect_width_basis(style.padding, available_space)
+      let border = resolve_rect_width_basis(style.border, available_space)
+      let horizontal_inset = padding.left +
+        padding.right +
+        border.left +
+        border.right
+      let vertical_inset = padding.top +
+        padding.bottom +
+        border.top +
+        border.bottom
+      {
+        ..style,
+        size: Size(
+          width=dimension_with_box_sizing_inset(
+            style.size.width,
+            available_space.width,
+            horizontal_inset,
+          ),
+          height=dimension_with_box_sizing_inset(
+            style.size.height,
+            available_space.height,
+            vertical_inset,
+          ),
+        ),
+        min_size: Size(
+          width=dimension_with_box_sizing_inset(
+            style.min_size.width,
+            available_space.width,
+            horizontal_inset,
+          ),
+          height=dimension_with_box_sizing_inset(
+            style.min_size.height,
+            available_space.height,
+            vertical_inset,
+          ),
+        ),
+        max_size: Size(
+          width=dimension_with_box_sizing_inset(
+            style.max_size.width,
+            available_space.width,
+            horizontal_inset,
+          ),
+          height=dimension_with_box_sizing_inset(
+            style.max_size.height,
+            available_space.height,
+            vertical_inset,
+          ),
+        ),
+      }
+    }
+  }
+}
+
+///|
 fn rect_is_zero(rect : Rect[Dimension]) -> Bool {
   dimension_is_length_zero(rect.left) &&
   dimension_is_length_zero(rect.right) &&
@@ -389,6 +462,14 @@ fn[C] TaffyView::compute_child_layout(
     Some(output) => return output
     None => ()
   }
+  let original_style = node.style
+  let uses_content_box = original_style.box_sizing is ContentBox
+  if uses_content_box {
+    tree.nodes[node_id].style = style_with_border_box_sizing(
+      original_style,
+      inputs.available_space,
+    )
+  }
   tree.set_first_baselines(node_id, Point(x=None, y=None))
   if run_mode is PerformHiddenLayout {
     compute_hidden_layout(tree, node_id, absolute_origin)
@@ -474,6 +555,9 @@ fn[C] TaffyView::compute_child_layout(
     run_mode,
     can_use_layout_cache,
   )
+  if uses_content_box {
+    tree.nodes[node_id].style = original_style
+  }
   output
 }
 

@@ -46,6 +46,10 @@ pub fn auto() -> Dimension
 
 pub fn available_space_definite(Double) -> AvailableSpace
 
+pub fn box_sizing_border_box() -> BoxSizing
+
+pub fn box_sizing_content_box() -> BoxSizing
+
 pub fn display_block() -> Display
 
 pub fn display_flex() -> Display
@@ -234,6 +238,13 @@ pub fn AvailableSpace::is_definite(Self) -> Bool
 pub fn AvailableSpace::maybe_set(Self, Double?) -> Self
 pub fn AvailableSpace::or(Self, Self) -> Self
 pub fn AvailableSpace::unwrap_or(Self, Double) -> Double
+
+pub enum BoxSizing {
+  BorderBox
+  ContentBox
+}
+pub impl ToJson for BoxSizing
+pub impl @json.FromJson for BoxSizing
 
 pub enum Dimension {
   DimAuto
@@ -443,6 +454,7 @@ pub enum SizingMode {
 
 pub struct Style {
   display : Display
+  box_sizing : BoxSizing
   overflow : Point[Overflow]
   scrollbar_width : Double
   position : Position
@@ -482,6 +494,7 @@ pub fn Style::with_align_items(Self, AlignItems) -> Self
 pub fn Style::with_align_self(Self, AlignItems) -> Self
 pub fn Style::with_aspect_ratio(Self, Double) -> Self
 pub fn Style::with_border(Self, Rect[Dimension]) -> Self
+pub fn Style::with_box_sizing(Self, BoxSizing) -> Self
 pub fn Style::with_display(Self, Display) -> Self
 pub fn Style::with_flex_basis(Self, Dimension) -> Self
 pub fn Style::with_flex_direction(Self, FlexDirection) -> Self

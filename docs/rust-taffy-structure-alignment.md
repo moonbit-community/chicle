@@ -4,7 +4,7 @@ This document records architecture alignment between `moon_taffy` and the pinned
 
 ## Structural constraints
 
-MoonBit directories are package boundaries. The public root package owns all user-facing types and methods so downstream packages can import only `Milky2018/moon_taffy`. Rust module boundaries are represented by focused root-package files instead of nested MoonBit packages; only code that is never part of the public API should live under `internal/`.
+MoonBit directories are package boundaries. A direct copy of Rust's nested module tree (`compute/grid`, `tree`, `style`, `util`) would create many MoonBit packages and force public cross-package APIs or circular dependencies. The implementation therefore keeps one internal package at `Milky2018/moon_taffy/internal/style`, but names files after the Rust module paths.
 
 ## Architecture alignment status
 
@@ -40,7 +40,7 @@ MoonBit directories are package boundaries. The public root package owns all use
 
 ## File mapping
 
-| Rust upstream path | MoonBit root file |
+| Rust upstream path | MoonBit internal file |
 | --- | --- |
 | `src/geometry.rs` | `geometry.mbt` |
 | `src/prelude.rs` | folded into root package exports; a literal `prelude` package conflicts with MoonBit core prelude aliasing |

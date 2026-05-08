@@ -535,20 +535,19 @@ fn[C] compute_grid_layout(
   initialize_grid_item_track_crossings(grid_items, col_tracks, row_tracks)
 
   // Compute min-content and max-content contributions for each track.
-  let col_min_contrib : Array[Double] = Array::make(col_count, 0.0)
-  let col_max_contrib : Array[Double] = Array::make(col_count, 0.0)
-  let row_min_contrib : Array[Double] = Array::make(row_count, 0.0)
-  let row_max_contrib : Array[Double] = Array::make(row_count, 0.0)
+  let track_contributions = GridTrackContributions(
+    column_count=col_count,
+    row_count~,
+  )
 
   let default_justify_items_for_contrib = match node.style.justify_items {
     Some(v) => v
     None => ItemsStretch
   }
   let initial_sizing = compute_initial_grid_track_sizing(
-    view, grid_items, placement_count, col_tracks, row_tracks, col_min_contrib, col_max_contrib,
-    row_min_contrib, row_max_contrib, col_gap, row_gap, content_width, content_height,
-    available_space, horiz_inset, vert_inset, specified_width, specified_height,
-    default_justify_items_for_contrib,
+    view, grid_items, placement_count, col_tracks, row_tracks, track_contributions,
+    col_gap, row_gap, content_width, content_height, available_space, horiz_inset,
+    vert_inset, specified_width, specified_height, default_justify_items_for_contrib,
   )
   let mut col_sizes = initial_sizing.0
   let mut row_sizes = initial_sizing.1
@@ -601,9 +600,9 @@ fn[C] compute_grid_layout(
   let rerun_track_sizing = resolved_gap_rerun.2
   if rerun_track_sizing {
     let rerun_result = rerun_grid_track_sizing_after_percent_gap_resolution(
-      view, grid_items, placement_count, col_tracks, row_tracks, col_min_contrib,
-      col_max_contrib, row_min_contrib, row_max_contrib, col_available_base, row_available_base,
-      col_gap, row_gap, content_height, specified_width, specified_height, default_justify_items_for_contrib,
+      view, grid_items, placement_count, col_tracks, row_tracks, track_contributions,
+      col_available_base, row_available_base, col_gap, row_gap, content_height, specified_width,
+      specified_height, default_justify_items_for_contrib,
     )
     col_sizes = rerun_result.0
     row_sizes = rerun_result.1

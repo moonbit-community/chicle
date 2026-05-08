@@ -849,13 +849,21 @@ fn compute_max_content_spanning_track_sizes(
   snapshot : GridTrackSizingItemSnapshot,
 ) -> (Array[Double], Double)? {
   let mut has_spanning_item = false
+  let mut has_flexible_spanning_item = false
+  let mut has_intrinsic_spanning_item = false
   for i in 0..<snapshot.placed.length() {
     if snapshot.placed[i] && snapshot.span[i] > 1 {
       has_spanning_item = true
-      break
+      if snapshot.crosses_flexible_track[i] {
+        has_flexible_spanning_item = true
+      }
+      if snapshot.crosses_intrinsic_track[i] {
+        has_intrinsic_spanning_item = true
+      }
     }
   }
-  if !has_spanning_item {
+  if !has_spanning_item ||
+    (!has_flexible_spanning_item && !has_intrinsic_spanning_item) {
     return None
   }
   let mut has_percent_track = false

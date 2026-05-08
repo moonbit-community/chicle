@@ -117,15 +117,7 @@ fn compute_max_content_spanning_track_sizes_for_snapshot(
     (!has_flexible_spanning_item && !has_intrinsic_spanning_item) {
     return None
   }
-  compute_max_content_spanning_track_sizes(
-    tracks,
-    snapshot.start,
-    snapshot.span,
-    snapshot.minimum_contribution,
-    snapshot.min_content_contribution,
-    snapshot.max_content_contribution,
-    snapshot.placed,
-  )
+  compute_max_content_spanning_track_sizes(tracks, snapshot)
 }
 
 ///|

@@ -417,16 +417,13 @@ fn track_has_flexible_max(track : Dimension) -> Bool {
 ///|
 fn compute_spanned_max_track_size(
   tracks : Array[Dimension],
-  starts : Array[Int],
-  spans : Array[Int],
-  max_needed : Array[Double],
-  placed : Array[Bool],
+  snapshot : GridTrackSizingItemSnapshot,
 ) -> Double {
   let mut space = 0.0
-  for i in 0..<placed.length() {
-    if placed[i] && spans[i] > 1 {
-      let start = starts[i]
-      let end = start + spans[i]
+  for i in 0..<snapshot.placed.length() {
+    if snapshot.placed[i] && snapshot.span[i] > 1 {
+      let start = snapshot.start[i]
+      let end = start + snapshot.span[i]
       let mut crosses_flex = false
       for j in start..<end {
         if track_has_flexible_max(tracks[j]) {
@@ -434,8 +431,8 @@ fn compute_spanned_max_track_size(
           break
         }
       }
-      if crosses_flex && max_needed[i] > space {
-        space = max_needed[i]
+      if crosses_flex && snapshot.max_content_contribution[i] > space {
+        space = snapshot.max_content_contribution[i]
       }
     }
   }
@@ -626,12 +623,7 @@ fn grid_track_base_sizes(states : Array[GridTrack]) -> Array[Double] {
 ///|
 fn compute_intrinsic_base_sizes_max_content(
   tracks : Array[Dimension],
-  col_start : Array[Int],
-  col_span : Array[Int],
-  minimum_needed : Array[Double],
-  min_content_needed : Array[Double],
-  max_needed : Array[Double],
-  placed : Array[Bool],
+  snapshot : GridTrackSizingItemSnapshot,
   percent_basis : Double?,
 ) -> Array[Double] {
   let count = tracks.length()
@@ -643,24 +635,28 @@ fn compute_intrinsic_base_sizes_max_content(
   }
 
   let mut max_span = 1
-  for i in 0..<placed.length() {
-    if placed[i] && col_span[i] > max_span {
-      max_span = col_span[i]
+  for i in 0..<snapshot.placed.length() {
+    if snapshot.placed[i] && snapshot.span[i] > max_span {
+      max_span = snapshot.span[i]
     }
   }
 
   for span in 1..<(max_span + 1) {
-    for i in 0..<placed.length() {
-      if !placed[i] || col_span[i] != span {
+    for i in 0..<snapshot.placed.length() {
+      if !snapshot.placed[i] || snapshot.span[i] != span {
         continue
       }
-      let s = col_start[i]
-      let sp = col_span[i]
-      let scroll_container = minimum_needed[i] + eps < min_content_needed[i]
+      let s = snapshot.start[i]
+      let sp = snapshot.span[i]
+      let scroll_container = snapshot.minimum_contribution[i] + eps <
+        snapshot.min_content_contribution[i]
       let min_space = if scroll_container {
-        minimum_needed[i]
+        snapshot.minimum_contribution[i]
       } else {
-        max_double(minimum_needed[i], min_content_needed[i])
+        max_double(
+          snapshot.minimum_contribution[i],
+          snapshot.min_content_contribution[i],
+        )
       }
       let limit_of = if scroll_container {
         fn(state : GridTrack) -> Double {
@@ -688,13 +684,14 @@ fn compute_intrinsic_base_sizes_max_content(
   flush_track_base_size_increases(states)
 
   for span in 1..<(max_span + 1) {
-    for i in 0..<placed.length() {
-      if !placed[i] || col_span[i] != span {
+    for i in 0..<snapshot.placed.length() {
+      if !snapshot.placed[i] || snapshot.span[i] != span {
         continue
       }
-      let s = col_start[i]
-      let sp = col_span[i]
-      let scroll_container = minimum_needed[i] + eps < min_content_needed[i]
+      let s = snapshot.start[i]
+      let sp = snapshot.span[i]
+      let scroll_container = snapshot.minimum_contribution[i] + eps <
+        snapshot.min_content_contribution[i]
       let limit_of = if scroll_container {
         fn(state : GridTrack) -> Double {
           track_fit_content_limit(state.dimension, percent_basis, inf)
@@ -706,7 +703,7 @@ fn compute_intrinsic_base_sizes_max_content(
         states,
         s,
         sp,
-        min_content_needed[i],
+        snapshot.min_content_contribution[i],
         fn(state : GridTrack) -> Bool {
           let k = track_min_sizing_kind(state.dimension)
           k == 1 || k == 2
@@ -722,13 +719,13 @@ fn compute_intrinsic_base_sizes_max_content(
   flush_track_base_size_increases(states)
 
   for span in 1..<(max_span + 1) {
-    for i in 0..<placed.length() {
-      if !placed[i] || col_span[i] != span {
+    for i in 0..<snapshot.placed.length() {
+      if !snapshot.placed[i] || snapshot.span[i] != span {
         continue
       }
-      let s = col_start[i]
-      let sp = col_span[i]
-      let max_space = max_needed[i]
+      let s = snapshot.start[i]
+      let sp = snapshot.span[i]
+      let max_space = snapshot.max_content_contribution[i]
       let mut has_max_content = false
       for j in s..<(s + sp) {
         if track_min_sizing_kind(states[j].dimension) == 2 {
@@ -764,17 +761,17 @@ fn compute_intrinsic_base_sizes_max_content(
   flush_track_base_size_increases(states)
 
   for span in 1..<(max_span + 1) {
-    for i in 0..<placed.length() {
-      if !placed[i] || col_span[i] != span {
+    for i in 0..<snapshot.placed.length() {
+      if !snapshot.placed[i] || snapshot.span[i] != span {
         continue
       }
-      let s = col_start[i]
-      let sp = col_span[i]
+      let s = snapshot.start[i]
+      let sp = snapshot.span[i]
       distribute_item_space_to_base_size(
         states,
         s,
         sp,
-        max_needed[i],
+        snapshot.max_content_contribution[i],
         fn(state : GridTrack) -> Bool {
           track_min_sizing_kind(state.dimension) == 2
         },
@@ -795,14 +792,9 @@ fn compute_intrinsic_base_sizes_max_content(
 ///|
 fn compute_flexible_percent_max_content_track_sizes(
   tracks : Array[Dimension],
-  col_start : Array[Int],
-  col_span : Array[Int],
-  max_needed : Array[Double],
-  placed : Array[Bool],
+  snapshot : GridTrackSizingItemSnapshot,
 ) -> (Array[Double], Double)? {
-  let flex_space = compute_spanned_max_track_size(
-    tracks, col_start, col_span, max_needed, placed,
-  )
+  let flex_space = compute_spanned_max_track_size(tracks, snapshot)
   if flex_space <= 0.0 {
     return None
   }
@@ -854,16 +846,11 @@ fn compute_flexible_percent_max_content_track_sizes(
 ///|
 fn compute_max_content_spanning_track_sizes(
   tracks : Array[Dimension],
-  col_start : Array[Int],
-  col_span : Array[Int],
-  minimum_needed : Array[Double],
-  min_content_needed : Array[Double],
-  max_needed : Array[Double],
-  placed : Array[Bool],
+  snapshot : GridTrackSizingItemSnapshot,
 ) -> (Array[Double], Double)? {
   let mut has_spanning_item = false
-  for i in 0..<placed.length() {
-    if placed[i] && col_span[i] > 1 {
+  for i in 0..<snapshot.placed.length() {
+    if snapshot.placed[i] && snapshot.span[i] > 1 {
       has_spanning_item = true
       break
     }
@@ -886,23 +873,12 @@ fn compute_max_content_spanning_track_sizes(
     }
   }
   if has_flexible_track && has_percent_track {
-    return compute_flexible_percent_max_content_track_sizes(
-      tracks, col_start, col_span, max_needed, placed,
-    )
+    return compute_flexible_percent_max_content_track_sizes(tracks, snapshot)
   }
   if !has_intrinsic_track || has_flexible_track {
     return None
   }
-  let sizes1 = compute_intrinsic_base_sizes_max_content(
-    tracks,
-    col_start,
-    col_span,
-    minimum_needed,
-    min_content_needed,
-    max_needed,
-    placed,
-    None,
-  )
+  let sizes1 = compute_intrinsic_base_sizes_max_content(tracks, snapshot, None)
   let mut basis = 0.0
   for size in sizes1 {
     basis = basis + size
@@ -910,12 +886,7 @@ fn compute_max_content_spanning_track_sizes(
   if has_percent_track {
     let sizes2 = compute_intrinsic_base_sizes_max_content(
       tracks,
-      col_start,
-      col_span,
-      minimum_needed,
-      min_content_needed,
-      max_needed,
-      placed,
+      snapshot,
       Some(basis),
     )
     basis = 0.0

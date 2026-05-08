@@ -1,0 +1,269 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_taffy/tests/regression"
+
+import {
+  "Milky2018/moon_taffy",
+}
+
+// Values
+pub fn abstract_axis_block() -> @moon_taffy.AbstractAxis
+
+pub fn abstract_axis_inline() -> @moon_taffy.AbstractAxis
+
+pub fn align_content_center() -> @moon_taffy.AlignContent
+
+pub fn align_content_end() -> @moon_taffy.AlignContent
+
+pub fn align_content_flex_end() -> @moon_taffy.AlignContent
+
+pub fn align_content_flex_start() -> @moon_taffy.AlignContent
+
+pub fn align_content_space_around() -> @moon_taffy.AlignContent
+
+pub fn align_content_space_between() -> @moon_taffy.AlignContent
+
+pub fn align_content_space_evenly() -> @moon_taffy.AlignContent
+
+pub fn align_content_start() -> @moon_taffy.AlignContent
+
+pub fn align_content_stretch() -> @moon_taffy.AlignContent
+
+pub fn align_items_baseline() -> @moon_taffy.AlignItems
+
+pub fn align_items_center() -> @moon_taffy.AlignItems
+
+pub fn align_items_end() -> @moon_taffy.AlignItems
+
+pub fn align_items_flex_end() -> @moon_taffy.AlignItems
+
+pub fn align_items_flex_start() -> @moon_taffy.AlignItems
+
+pub fn align_items_start() -> @moon_taffy.AlignItems
+
+pub fn align_items_stretch() -> @moon_taffy.AlignItems
+
+pub fn auto() -> @moon_taffy.Dimension
+
+pub fn available_space_definite(Double) -> @moon_taffy.AvailableSpace
+
+pub fn box_sizing_border_box() -> @moon_taffy.BoxSizing
+
+pub fn box_sizing_content_box() -> @moon_taffy.BoxSizing
+
+pub fn display_block() -> @moon_taffy.Display
+
+pub fn display_flex() -> @moon_taffy.Display
+
+pub fn display_grid() -> @moon_taffy.Display
+
+pub fn display_none() -> @moon_taffy.Display
+
+pub fn evenly_sized_tracks(Int) -> Array[@moon_taffy.Dimension]
+
+pub fn fit_content(@moon_taffy.Dimension) -> @moon_taffy.Dimension
+
+pub fn flex(Double) -> @moon_taffy.Dimension
+
+pub fn flex_direction_column() -> @moon_taffy.FlexDirection
+
+pub fn flex_direction_column_reverse() -> @moon_taffy.FlexDirection
+
+pub fn flex_direction_row() -> @moon_taffy.FlexDirection
+
+pub fn flex_direction_row_reverse() -> @moon_taffy.FlexDirection
+
+pub fn flex_wrap_no_wrap() -> @moon_taffy.FlexWrap
+
+pub fn flex_wrap_wrap() -> @moon_taffy.FlexWrap
+
+pub fn flex_wrap_wrap_reverse() -> @moon_taffy.FlexWrap
+
+pub fn fr(Double) -> @moon_taffy.Dimension
+
+pub fn grid_auto_flow_column() -> @moon_taffy.GridAutoFlow
+
+pub fn grid_auto_flow_column_dense() -> @moon_taffy.GridAutoFlow
+
+pub fn grid_auto_flow_row() -> @moon_taffy.GridAutoFlow
+
+pub fn grid_auto_flow_row_dense() -> @moon_taffy.GridAutoFlow
+
+pub fn grid_max_content() -> @moon_taffy.Dimension
+
+pub fn grid_min_content() -> @moon_taffy.Dimension
+
+pub fn justify_content_center() -> @moon_taffy.AlignContent
+
+pub fn justify_content_end() -> @moon_taffy.AlignContent
+
+pub fn justify_content_flex_end() -> @moon_taffy.AlignContent
+
+pub fn justify_content_flex_start() -> @moon_taffy.AlignContent
+
+pub fn justify_content_space_around() -> @moon_taffy.AlignContent
+
+pub fn justify_content_space_between() -> @moon_taffy.AlignContent
+
+pub fn justify_content_space_evenly() -> @moon_taffy.AlignContent
+
+pub fn justify_content_start() -> @moon_taffy.AlignContent
+
+pub fn justify_content_stretch() -> @moon_taffy.AlignContent
+
+pub fn length(Double) -> @moon_taffy.Dimension
+
+pub fn length_percentage_auto_auto() -> @moon_taffy.LengthPercentageAuto
+
+pub fn length_percentage_auto_length(Double) -> @moon_taffy.LengthPercentageAuto
+
+pub fn length_percentage_auto_percent(Double) -> @moon_taffy.LengthPercentageAuto
+
+pub fn length_percentage_length(Double) -> @moon_taffy.LengthPercentage
+
+pub fn length_percentage_percent(Double) -> @moon_taffy.LengthPercentage
+
+pub fn line(Int) -> @moon_taffy.GridPlacement
+
+pub fn max_content() -> @moon_taffy.AvailableSpace
+
+pub fn max_track_auto() -> @moon_taffy.MaxTrackSizingFunction
+
+pub fn max_track_fit_content(@moon_taffy.LengthPercentage) -> @moon_taffy.MaxTrackSizingFunction
+
+pub fn max_track_fixed(@moon_taffy.LengthPercentage) -> @moon_taffy.MaxTrackSizingFunction
+
+pub fn max_track_fraction(Double) -> @moon_taffy.MaxTrackSizingFunction
+
+pub fn max_track_max_content() -> @moon_taffy.MaxTrackSizingFunction
+
+pub fn max_track_min_content() -> @moon_taffy.MaxTrackSizingFunction
+
+pub fn min_content() -> @moon_taffy.AvailableSpace
+
+pub fn min_track_auto() -> @moon_taffy.MinTrackSizingFunction
+
+pub fn min_track_fixed(@moon_taffy.LengthPercentage) -> @moon_taffy.MinTrackSizingFunction
+
+pub fn min_track_max_content() -> @moon_taffy.MinTrackSizingFunction
+
+pub fn min_track_min_content() -> @moon_taffy.MinTrackSizingFunction
+
+pub fn minmax(@moon_taffy.Dimension, @moon_taffy.Dimension) -> @moon_taffy.Dimension
+
+pub fn overflow_clip() -> @moon_taffy.Overflow
+
+pub fn overflow_hidden() -> @moon_taffy.Overflow
+
+pub fn overflow_scroll() -> @moon_taffy.Overflow
+
+pub fn overflow_visible() -> @moon_taffy.Overflow
+
+pub fn percent(Double) -> @moon_taffy.Dimension
+
+pub fn place_auto() -> @moon_taffy.GridPlacement
+
+pub fn position_absolute() -> @moon_taffy.Position
+
+pub fn position_relative() -> @moon_taffy.Position
+
+pub fn repeat(@moon_taffy.GridTrackRepetition, Array[@moon_taffy.Dimension]) -> @moon_taffy.Dimension
+
+pub fn repeat_auto_fill() -> @moon_taffy.GridTrackRepetition
+
+pub fn repeat_auto_fit() -> @moon_taffy.GridTrackRepetition
+
+pub fn repeat_count(Int) -> @moon_taffy.GridTrackRepetition
+
+pub fn repeated_track_sizing_function(@moon_taffy.GridTrackRepetition, Array[@moon_taffy.NonRepeatedTrackSizingFunction]) -> @moon_taffy.TrackSizingFunction
+
+pub fn span(Int) -> @moon_taffy.GridPlacement
+
+pub fn track_sizing_function(@moon_taffy.NonRepeatedTrackSizingFunction) -> @moon_taffy.TrackSizingFunction
+
+pub fn zero() -> @moon_taffy.Dimension
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_taffy {type AbsoluteAxis}
+
+pub using @moon_taffy {type AbstractAxis}
+
+pub using @moon_taffy {type AlignContent}
+
+pub using @moon_taffy {type AlignItems}
+
+pub using @moon_taffy {type AlignItems as AlignSelf}
+
+pub using @moon_taffy {type AvailableSpace}
+
+pub using @moon_taffy {type BoxSizing}
+
+pub using @moon_taffy {type Dimension}
+
+pub using @moon_taffy {type Display}
+
+pub using @moon_taffy {type FlexDirection}
+
+pub using @moon_taffy {type FlexWrap}
+
+pub using @moon_taffy {type GridAutoFlow}
+
+pub using @moon_taffy {type GridPlacement}
+
+pub using @moon_taffy {type GridTrackRepetition}
+
+pub using @moon_taffy {type AlignContent as JustifyContent}
+
+pub using @moon_taffy {type AlignItems as JustifyItems}
+
+pub using @moon_taffy {type AlignItems as JustifySelf}
+
+pub using @moon_taffy {type Layout}
+
+pub using @moon_taffy {type LayoutInput}
+
+pub using @moon_taffy {type LayoutOutput}
+
+pub using @moon_taffy {type LengthPercentage}
+
+pub using @moon_taffy {type LengthPercentageAuto}
+
+pub using @moon_taffy {type Line}
+
+pub using @moon_taffy {type MaxTrackSizingFunction}
+
+pub using @moon_taffy {type MinTrackSizingFunction}
+
+pub type NodeId = Int
+
+pub using @moon_taffy {type NonRepeatedTrackSizingFunction}
+
+pub using @moon_taffy {type Overflow}
+
+pub using @moon_taffy {type Point}
+
+pub using @moon_taffy {type Position}
+
+pub using @moon_taffy {type Rect}
+
+pub using @moon_taffy {type RequestedAxis}
+
+pub using @moon_taffy {type RunMode}
+
+pub using @moon_taffy {type Size}
+
+pub using @moon_taffy {type SizingMode}
+
+pub using @moon_taffy {type Style}
+
+pub using @moon_taffy {type TaffyError}
+
+pub using @moon_taffy {type TaffyTree}
+
+pub using @moon_taffy {type TrackSizingFunction}
+
+// Traits
+

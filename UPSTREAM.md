@@ -11,8 +11,9 @@ The upstream source is checked out locally in `taffy-reference/` and is gitignor
 
 ## Port coverage
 
-- Generated upstream layout tests under `taffy-reference/tests/generated/` are ported into MoonBit tests.
+- Generated upstream layout tests under `taffy-reference/tests/generated/` are ported into `src/tests/upstream`.
 - Top-level upstream compatibility tests for caching, measure, min/max overrides, relayout, root constraints, rounding, serde, and border/padding regressions are ported.
+- Focused issue and behavior regressions live in `src/tests/regression`.
 - Generated tests are split into small package-local files to keep review and regeneration manageable.
 
 ## Architecture guardrails

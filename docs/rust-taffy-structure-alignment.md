@@ -6,6 +6,13 @@ This document records architecture alignment between `moon_taffy` and the pinned
 
 MoonBit directories are package boundaries. The public root package owns all user-facing types and methods so downstream packages can import only `Milky2018/moon_taffy`. Rust module boundaries are represented by focused root-package files instead of nested MoonBit packages; only code that is never part of the public API should live under `internal/`.
 
+## Local source layout
+
+- `src/*.mbt` contains the root `Milky2018/moon_taffy` package. Public types, public methods, and implementation code stay together here because moving public implementation types behind another package boundary breaks downstream method lookup.
+- `src/tests/regression` contains focused issue and behavior regression tests that exercise the public root package as a downstream user would.
+- `src/tests/upstream` contains generated and upstream-derived compatibility tests, plus shared measurement fixtures used by those tests.
+- `src/*_wbtest.mbt` files stay beside the implementation when they need white-box access to root-package internals.
+
 ## Architecture alignment status
 
 - Rust uses a trait-driven layout engine (`LayoutPartialTree`, `LayoutPartialTreeExt`, `TraverseTree`, `RoundTree`, `PrintTree`) that can run over custom tree implementations. MoonBit keeps a concrete `TaffyTree` arena, but routes all internal algorithms through an internal `TaffyView` that owns the measure callback for the layout run; compute functions no longer pass `measure_function` as a loose argument through the algorithm stack.

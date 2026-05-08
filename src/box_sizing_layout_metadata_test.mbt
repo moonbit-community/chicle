@@ -81,4 +81,6 @@ test "layout_exposes_bevy_metadata_fields" {
   assert_eq(layout.scrollbar_size.height, 7.0)
   assert_eq(layout.border.right, 2.0)
   assert_eq(layout.padding.bottom, 4.0)
+  assert_eq(layout.scroll_width(), 0.0)
+  assert_eq(layout.scroll_height(), 0.0)
 }

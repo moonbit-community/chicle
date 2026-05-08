@@ -315,6 +315,8 @@ pub struct Layout {
   border : Rect[Double]
   padding : Rect[Double]
 }
+pub fn Layout::scroll_height(Self) -> Double
+pub fn Layout::scroll_width(Self) -> Double
 pub fn Layout::zero() -> Self
 
 pub struct LayoutInput {

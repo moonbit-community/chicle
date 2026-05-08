@@ -48,6 +48,28 @@ pub fn Layout::zero() -> Layout {
 }
 
 ///|
+pub fn Layout::scroll_width(self : Layout) -> Double {
+  max_double(
+    0.0,
+    self.content_size.width +
+    min_double(self.scrollbar_size.width, self.size.width) -
+    self.size.width +
+    self.border.right,
+  )
+}
+
+///|
+pub fn Layout::scroll_height(self : Layout) -> Double {
+  max_double(
+    0.0,
+    self.content_size.height +
+    min_double(self.scrollbar_size.height, self.size.height) -
+    self.size.height +
+    self.border.bottom,
+  )
+}
+
+///|
 pub enum RunMode {
   PerformLayout
   ComputeSize

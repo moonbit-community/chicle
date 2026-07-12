@@ -12,6 +12,4 @@ keywords = [ "layout", "flexbox", "css" ]
 
 description = "MoonBit port of the Rust crate taffy (v0.5.x)"
 
-options(
-  source: "src",
-)
+source = "src"

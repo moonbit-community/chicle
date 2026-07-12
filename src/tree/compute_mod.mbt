@@ -544,6 +544,9 @@ fn[C] TaffyView::compute_child_layout(
     node.style,
     inputs.available_space,
   )
+  if run_mode is PerformLayout && tree.children[node_id].length() > 0 {
+    assign_child_layout_orders(tree, node_id, node.style.display)
+  }
   finalize_layout_metadata(tree, node_id, node.style, inputs.available_space)
   let output = LayoutOutput::from_layout_and_first_baselines(
     tree.nodes[node_id].unrounded_layout,
@@ -562,6 +565,58 @@ fn[C] TaffyView::compute_child_layout(
     tree.nodes[node_id].style = original_style
   }
   output
+}
+
+///|
+fn[C] assign_child_layout_orders(
+  tree : TaffyTree[C],
+  node_id : NodeId,
+  display : Display,
+) -> Unit {
+  match display {
+    DisplayGrid => {
+      let mut order = 0
+      for child_id in tree.children[node_id] {
+        let child = tree.nodes[child_id]
+        if !(child.style.display is DisplayNone) &&
+          child.style.position is PosRelative {
+          let layout = child.unrounded_layout
+          tree.set_unrounded_layout(child_id, { ..layout, order, })
+          order = order + 1
+        }
+      }
+      for child_id in tree.children[node_id] {
+        let child = tree.nodes[child_id]
+        if child.style.display is DisplayNone {
+          order = order + 1
+        } else if child.style.position is PosAbsolute {
+          let layout = child.unrounded_layout
+          tree.set_unrounded_layout(child_id, { ..layout, order, })
+          order = order + 1
+        }
+      }
+    }
+    DisplayFlex =>
+      for source_order, child_id in tree.children[node_id] {
+        let child = tree.nodes[child_id]
+        if !(child.style.display is DisplayNone) {
+          let layout = child.unrounded_layout
+          tree.set_unrounded_layout(child_id, { ..layout, order: source_order })
+        }
+      }
+    DisplayBlock => {
+      let mut order = 0
+      for child_id in tree.children[node_id] {
+        let child = tree.nodes[child_id]
+        if !(child.style.display is DisplayNone) {
+          let layout = child.unrounded_layout
+          tree.set_unrounded_layout(child_id, { ..layout, order, })
+          order = order + 1
+        }
+      }
+    }
+    DisplayNone => ()
+  }
 }
 
 ///|
@@ -601,10 +656,36 @@ fn[C] finalize_layout_metadata(
   let content_size = if tree.children[node_id].length() == 0 {
     layout.content_size
   } else {
-    Size(
+    let mut container_content_size = Size(
       width=@util.max_double(layout.size.width - horizontal_inset, 0.0),
       height=@util.max_double(layout.size.height - vertical_inset, 0.0),
     )
+    for child_id in tree.children[node_id] {
+      let child = tree.nodes[child_id]
+      if !(child.style.display is DisplayNone) {
+        let child_layout = child.unrounded_layout
+        let contribution = compute_content_size_contribution(
+          Point(
+            x=child_layout.location.x - layout.location.x,
+            y=child_layout.location.y - layout.location.y,
+          ),
+          child_layout.size,
+          child_layout.content_size,
+          child.style.overflow,
+        )
+        container_content_size = Size(
+          width=@util.max_double(
+            container_content_size.width,
+            contribution.width,
+          ),
+          height=@util.max_double(
+            container_content_size.height,
+            contribution.height,
+          ),
+        )
+      }
+    }
+    container_content_size
   }
   tree.set_unrounded_layout(node_id, {
     ..layout,

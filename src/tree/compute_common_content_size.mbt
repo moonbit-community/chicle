@@ -13,6 +13,33 @@
 // limitations under the License.
 
 ///|
+fn compute_content_size_contribution(
+  location : Point[Double],
+  size : Size[Double],
+  content_size : Size[Double],
+  overflow : Point[Overflow],
+) -> Size[Double] {
+  let contribution_size = Size(
+    width=match overflow.x {
+      OverflowVisible => @util.max_double(size.width, content_size.width)
+      _ => size.width
+    },
+    height=match overflow.y {
+      OverflowVisible => @util.max_double(size.height, content_size.height)
+      _ => size.height
+    },
+  )
+  if contribution_size.width > 0.0 && contribution_size.height > 0.0 {
+    Size(
+      width=location.x + contribution_size.width,
+      height=location.y + contribution_size.height,
+    )
+  } else {
+    Size::zero()
+  }
+}
+
+///|
 fn is_column(direction : FlexDirection) -> Bool {
   match direction {
     FlexRow => false

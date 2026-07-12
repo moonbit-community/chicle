@@ -16,7 +16,7 @@
 type JsonDecodeError = @json.JsonDecodeError
 
 ///|
-pub impl ToJson for Dimension with to_json(self) {
+pub impl ToJson for Dimension with fn to_json(self) {
   match self {
     DimAuto => Json::string("Auto")
     DimLength(v) => Json::object({ "Length": Json::number(v) })
@@ -32,79 +32,38 @@ pub impl ToJson for Dimension with to_json(self) {
 }
 
 ///|
-pub impl @json.FromJson for Dimension with from_json(json, path) {
+pub impl @json.FromJson for Dimension with fn from_json(json, path) {
   match json {
-    String(s) =>
-      match s {
-        "Auto" => DimAuto
-        "MinContent" => DimMinContent
-        "MaxContent" => DimMaxContent
-        _ => raise JsonDecodeError((path, "Dimension: unsupported string"))
-      }
-    Object(obj) =>
-      match obj.get("Length") {
-        Some(v) => DimLength(@json.from_json(v, path=path.add_key("Length")))
-        None =>
-          match obj.get("Percent") {
-            Some(v) =>
-              DimPercent(@json.from_json(v, path=path.add_key("Percent")))
-            None =>
-              match obj.get("Fr") {
-                Some(v) => DimFr(@json.from_json(v, path=path.add_key("Fr")))
-                None =>
-                  match obj.get("Flex") {
-                    Some(v) =>
-                      DimFr(@json.from_json(v, path=path.add_key("Flex")))
-                    None =>
-                      match obj.get("FitContent") {
-                        Some(v) =>
-                          DimFitContent(
-                            @json.from_json(v, path=path.add_key("FitContent")),
-                          )
-                        None =>
-                          match obj.get("MinMax") {
-                            Some(v) =>
-                              match v {
-                                Array(arr) =>
-                                  if arr.length() == 2 {
-                                    DimMinMax(
-                                      @json.from_json(
-                                        arr[0],
-                                        path=path.add_key("MinMax").add_index(0),
-                                      ),
-                                      @json.from_json(
-                                        arr[1],
-                                        path=path.add_key("MinMax").add_index(1),
-                                      ),
-                                    )
-                                  } else {
-                                    raise JsonDecodeError(
-                                      (
-                                        path, "Dimension: MinMax expects 2 values",
-                                      ),
-                                    )
-                                  }
-                                _ =>
-                                  raise JsonDecodeError(
-                                    (path, "Dimension: MinMax expects array"),
-                                  )
-                              }
-                            None =>
-                              raise JsonDecodeError(
-                                (path, "Dimension: unsupported object"),
-                              )
-                          }
-                      }
-                  }
-              }
-          }
-      }
+    String("Auto") => DimAuto
+    String("MinContent") => DimMinContent
+    String("MaxContent") => DimMaxContent
+    String(_) => raise JsonDecodeError((path, "Dimension: unsupported string"))
+    { "Length": value, .. } =>
+      DimLength(@json.from_json(value, path=path.add_key("Length")))
+    { "Percent": value, .. } =>
+      DimPercent(@json.from_json(value, path=path.add_key("Percent")))
+    { "Fr": value, .. } =>
+      DimFr(@json.from_json(value, path=path.add_key("Fr")))
+    { "Flex": value, .. } =>
+      DimFr(@json.from_json(value, path=path.add_key("Flex")))
+    { "FitContent": value, .. } =>
+      DimFitContent(@json.from_json(value, path=path.add_key("FitContent")))
+    { "MinMax": Array([min, max]), .. } =>
+      DimMinMax(
+        @json.from_json(min, path=path.add_key("MinMax").add_index(0)),
+        @json.from_json(max, path=path.add_key("MinMax").add_index(1)),
+      )
+    { "MinMax": Array(_), .. } =>
+      raise JsonDecodeError((path, "Dimension: MinMax expects 2 values"))
+    { "MinMax": _, .. } =>
+      raise JsonDecodeError((path, "Dimension: MinMax expects array"))
+    Object(_) => raise JsonDecodeError((path, "Dimension: unsupported object"))
     _ => raise JsonDecodeError((path, "Dimension: unsupported json"))
   }
 }
 
 ///|
-pub impl ToJson for GridPlacement with to_json(self) {
+pub impl ToJson for GridPlacement with fn to_json(self) {
   match self {
     PlaceAuto => Json::string("Auto")
     PlaceLine(v) => Json::object({ "Line": Json::number(v.to_double()) })
@@ -113,29 +72,23 @@ pub impl ToJson for GridPlacement with to_json(self) {
 }
 
 ///|
-pub impl @json.FromJson for GridPlacement with from_json(json, path) {
+pub impl @json.FromJson for GridPlacement with fn from_json(json, path) {
   match json {
-    String(s) =>
-      match s {
-        "Auto" => PlaceAuto
-        _ => raise JsonDecodeError((path, "GridPlacement: unsupported string"))
-      }
-    Object(obj) =>
-      match obj.get("Line") {
-        Some(v) => PlaceLine(@json.from_json(v, path=path.add_key("Line")))
-        None =>
-          match obj.get("Span") {
-            Some(v) => PlaceSpan(@json.from_json(v, path=path.add_key("Span")))
-            None =>
-              raise JsonDecodeError((path, "GridPlacement: unsupported object"))
-          }
-      }
+    String("Auto") => PlaceAuto
+    String(_) =>
+      raise JsonDecodeError((path, "GridPlacement: unsupported string"))
+    { "Line": value, .. } =>
+      PlaceLine(@json.from_json(value, path=path.add_key("Line")))
+    { "Span": value, .. } =>
+      PlaceSpan(@json.from_json(value, path=path.add_key("Span")))
+    Object(_) =>
+      raise JsonDecodeError((path, "GridPlacement: unsupported object"))
     _ => raise JsonDecodeError((path, "GridPlacement: unsupported json"))
   }
 }
 
 ///|
-pub impl ToJson for BoxSizing with to_json(self) {
+pub impl ToJson for BoxSizing with fn to_json(self) {
   match self {
     BorderBox => Json::string("BorderBox")
     ContentBox => Json::string("ContentBox")
@@ -143,14 +96,11 @@ pub impl ToJson for BoxSizing with to_json(self) {
 }
 
 ///|
-pub impl @json.FromJson for BoxSizing with from_json(json, path) {
+pub impl @json.FromJson for BoxSizing with fn from_json(json, path) {
   match json {
-    String(s) =>
-      match s {
-        "BorderBox" => BorderBox
-        "ContentBox" => ContentBox
-        _ => raise JsonDecodeError((path, "BoxSizing: unsupported string"))
-      }
+    String("BorderBox") => BorderBox
+    String("ContentBox") => ContentBox
+    String(_) => raise JsonDecodeError((path, "BoxSizing: unsupported string"))
     _ => raise JsonDecodeError((path, "BoxSizing: expected string"))
   }
 }
@@ -161,26 +111,33 @@ fn parse_dimension_rect_partial(
   base : Rect[Dimension],
   path : @json.JsonPath,
 ) -> Rect[Dimension] raise JsonDecodeError {
-  guard json is Object(obj) else {
+  guard json
+    is {
+      "left"? : left,
+      "right"? : right,
+      "top"? : top,
+      "bottom"? : bottom,
+      ..
+    } else {
     raise JsonDecodeError((path, "Rect<Dimension>: expected object"))
   }
   let mut out = base
-  match obj.get("left") {
+  match left {
     Some(v) =>
       out = { ..out, left: @json.from_json(v, path=path.add_key("left")) }
     None => ()
   }
-  match obj.get("right") {
+  match right {
     Some(v) =>
       out = { ..out, right: @json.from_json(v, path=path.add_key("right")) }
     None => ()
   }
-  match obj.get("top") {
+  match top {
     Some(v) =>
       out = { ..out, top: @json.from_json(v, path=path.add_key("top")) }
     None => ()
   }
-  match obj.get("bottom") {
+  match bottom {
     Some(v) =>
       out = { ..out, bottom: @json.from_json(v, path=path.add_key("bottom")) }
     None => ()
@@ -194,16 +151,16 @@ fn parse_dimension_size_partial(
   base : Size[Dimension],
   path : @json.JsonPath,
 ) -> Size[Dimension] raise JsonDecodeError {
-  guard json is Object(obj) else {
+  guard json is { "width"? : width, "height"? : height, .. } else {
     raise JsonDecodeError((path, "Size<Dimension>: expected object"))
   }
   let mut out = base
-  match obj.get("width") {
+  match width {
     Some(v) =>
       out = { ..out, width: @json.from_json(v, path=path.add_key("width")) }
     None => ()
   }
-  match obj.get("height") {
+  match height {
     Some(v) =>
       out = { ..out, height: @json.from_json(v, path=path.add_key("height")) }
     None => ()
@@ -217,16 +174,16 @@ fn parse_grid_line_partial(
   base : Line[GridPlacement],
   path : @json.JsonPath,
 ) -> Line[GridPlacement] raise JsonDecodeError {
-  guard json is Object(obj) else {
+  guard json is { "start"? : start, "end"? : end, .. } else {
     raise JsonDecodeError((path, "Line<GridPlacement>: expected object"))
   }
   let mut out = base
-  match obj.get("start") {
+  match start {
     Some(v) =>
       out = { ..out, start: @json.from_json(v, path=path.add_key("start")) }
     None => ()
   }
-  match obj.get("end") {
+  match end {
     Some(v) =>
       out = { ..out, end: @json.from_json(v, path=path.add_key("end")) }
     None => ()
@@ -235,7 +192,7 @@ fn parse_grid_line_partial(
 }
 
 ///|
-pub impl ToJson for Style with to_json(self) {
+pub impl ToJson for Style with fn to_json(self) {
   Json::object({
     "box_sizing": self.box_sizing.to_json(),
     "inset": Json::object({
@@ -290,33 +247,47 @@ pub impl ToJson for Style with to_json(self) {
 }
 
 ///|
-pub impl @json.FromJson for Style with from_json(json, path) {
-  guard json is Object(obj) else {
+pub impl @json.FromJson for Style with fn from_json(json, path) {
+  guard json
+    is {
+      "box_sizing"? : box_sizing,
+      "inset"? : inset,
+      "size"? : size,
+      "min_size"? : min_size,
+      "max_size"? : max_size,
+      "margin"? : margin,
+      "padding"? : padding,
+      "border"? : border,
+      "gap"? : gap,
+      "grid_row"? : grid_row,
+      "grid_column"? : grid_column,
+      ..
+    } else {
     raise JsonDecodeError((path, "Style: expected object"))
   }
   let mut style = Style::default()
-  match obj.get("box_sizing") {
+  match box_sizing {
     Some(v) =>
       style = style.with_box_sizing(
         @json.from_json(v, path=path.add_key("box_sizing")),
       )
     None => ()
   }
-  match obj.get("inset") {
+  match inset {
     Some(v) =>
       style = style.with_inset(
         parse_dimension_rect_partial(v, style.inset, path.add_key("inset")),
       )
     None => ()
   }
-  match obj.get("size") {
+  match size {
     Some(v) =>
       style = style.with_size(
         parse_dimension_size_partial(v, style.size, path.add_key("size")),
       )
     None => ()
   }
-  match obj.get("min_size") {
+  match min_size {
     Some(v) =>
       style = style.with_min_size(
         parse_dimension_size_partial(
@@ -327,7 +298,7 @@ pub impl @json.FromJson for Style with from_json(json, path) {
       )
     None => ()
   }
-  match obj.get("max_size") {
+  match max_size {
     Some(v) =>
       style = style.with_max_size(
         parse_dimension_size_partial(
@@ -338,42 +309,42 @@ pub impl @json.FromJson for Style with from_json(json, path) {
       )
     None => ()
   }
-  match obj.get("margin") {
+  match margin {
     Some(v) =>
       style = style.with_margin(
         parse_dimension_rect_partial(v, style.margin, path.add_key("margin")),
       )
     None => ()
   }
-  match obj.get("padding") {
+  match padding {
     Some(v) =>
       style = style.with_padding(
         parse_dimension_rect_partial(v, style.padding, path.add_key("padding")),
       )
     None => ()
   }
-  match obj.get("border") {
+  match border {
     Some(v) =>
       style = style.with_border(
         parse_dimension_rect_partial(v, style.border, path.add_key("border")),
       )
     None => ()
   }
-  match obj.get("gap") {
+  match gap {
     Some(v) =>
       style = style.with_gap(
         parse_dimension_size_partial(v, style.gap, path.add_key("gap")),
       )
     None => ()
   }
-  match obj.get("grid_row") {
+  match grid_row {
     Some(v) =>
       style = style.with_grid_row(
         parse_grid_line_partial(v, style.grid_row, path.add_key("grid_row")),
       )
     None => ()
   }
-  match obj.get("grid_column") {
+  match grid_column {
     Some(v) =>
       style = style.with_grid_column(
         parse_grid_line_partial(

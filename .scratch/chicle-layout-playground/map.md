@@ -1,4 +1,5 @@
 Label: wayfinder:map
+Status: resolved
 
 ## Destination
 
@@ -15,13 +16,20 @@ A decision-complete implementation brief for a dependency-free Chicle GitHub Pag
 ## Decisions so far
 
 - [Set the playground product boundary](issues/01-set-the-playground-product-boundary.md) — fixed the two-pane JSON experience, generic API boundary, thin Wasm export, live Share URL, full public Style coverage, and v1 measurement boundary.
+- [Define the Layout Document contract](issues/02-define-the-layout-document-contract.md) — chose a versioned nested-node JSON document with unique ids, optional labels, partial Style values, and available-space constraints.
+- [Define the Layout Result and error contract](issues/03-define-the-layout-result-and-error-contract.md) — returns stable per-node layout metadata in a success/error JSON envelope.
+- [Place the generic JSON API](issues/04-place-the-generic-json-api.md) — placed typed contracts and computation in the root Chicle package for every backend.
+- [Validate the Wasm Adapter boundary](issues/05-validate-the-wasm-adapter-boundary.md) — verified a Wasm-GC `String -> String` export using JavaScript string builtins.
+- [Prototype the DOM Projection](issues/06-prototype-the-dom-projection.md) — projects relative node geometry into nested absolute DOM boxes without browser measurement feedback.
+- [Define editor, error, and URL state](issues/07-define-editor-error-and-url-state.md) — updates after 150 ms and replaces the Base64URL fragment only after valid computation.
+- [Choose the teaching examples](issues/08-choose-the-teaching-examples.md) — includes editable Flex, Grid, and absolute-positioning examples.
+- [Prototype the responsive accessible shell](issues/09-prototype-the-responsive-accessible-shell.md) — uses labeled controls, keyboard focus styles, and a stacked narrow-screen layout.
+- [Define the validation gates](issues/10-define-the-validation-gates.md) — requires four-backend MoonBit gates, Wasm instantiation, browser interaction, URL restoration, console, and responsive checks.
+- [Define Pages build and deployment](issues/11-define-pages-build-and-deployment.md) — builds a dependency-free artifact and deploys every relevant `main` update through GitHub Actions.
 
 ## Not yet specified
 
-- Schema evolution and migration policy after the v1 Layout Document shape is known.
-- Share URL size handling after representative examples reveal realistic document sizes.
-- The exact visual regression fixtures and browser support matrix after the DOM Projection is prototyped.
-- Whether playground deployment should follow every `main` update or only selected release points.
+None for v1.
 
 ## Out of scope
 

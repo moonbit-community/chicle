@@ -1,0 +1,15 @@
+import {
+  "Milky2018/chicle",
+}
+
+supported_targets = "wasm-gc"
+
+options(
+  link: {
+    "wasm-gc": {
+      "exports": [ "compute_layout_json" ],
+      "use-js-builtin-string": true,
+      "imported-string-constants": "_",
+    },
+  },
+)

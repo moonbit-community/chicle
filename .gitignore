@@ -4,3 +4,6 @@ target/
 target
 .mooncakes/
 .moonagent/
+dist/
+.playwright-cli/
+output/

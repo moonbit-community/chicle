@@ -108,3 +108,91 @@ test "grid placement and box sizing json behavior" {
     ),
   )
 }
+
+///|
+test "dimension repeat json round trip" {
+  let dimension = DimRepeat(RepeatCount(3), [
+    DimMinMax(DimLength(80.0), DimFr(1.0)),
+    DimAuto,
+  ])
+  let encoded = dimension.to_json()
+  let decoded : Dimension = @json.from_json(encoded)
+  assert_eq(decoded.to_json().stringify(), encoded.stringify())
+}
+
+///|
+test "style json covers every public field" {
+  let style : Style = {
+    display: DisplayGrid,
+    box_sizing: ContentBox,
+    overflow: Point(x=OverflowHidden, y=OverflowScroll),
+    scrollbar_width: 12.0,
+    position: PosAbsolute,
+    inset: Rect(
+      left=DimLength(1.0),
+      right=DimPercent(0.1),
+      top=DimAuto,
+      bottom=DimLength(4.0),
+    ),
+    size: Size(width=DimLength(640.0), height=DimPercent(0.5)),
+    min_size: Size(width=DimLength(200.0), height=DimMinContent),
+    max_size: Size(width=DimMaxContent, height=DimLength(900.0)),
+    aspect_ratio: Some(1.5),
+    margin: Rect(
+      left=DimLength(5.0),
+      right=DimLength(6.0),
+      top=DimLength(7.0),
+      bottom=DimLength(8.0),
+    ),
+    padding: Rect(
+      left=DimLength(9.0),
+      right=DimLength(10.0),
+      top=DimLength(11.0),
+      bottom=DimLength(12.0),
+    ),
+    border: Rect(
+      left=DimLength(1.0),
+      right=DimLength(2.0),
+      top=DimLength(3.0),
+      bottom=DimLength(4.0),
+    ),
+    align_items: Some(ItemsCenter),
+    align_self: Some(ItemsFlexEnd),
+    justify_items: Some(ItemsStart),
+    justify_self: Some(ItemsStretch),
+    align_content: Some(AlignSpaceBetween),
+    justify_content: Some(AlignSpaceEvenly),
+    gap: Size(width=DimLength(16.0), height=DimPercent(0.02)),
+    flex_direction: FlexColumnReverse,
+    flex_wrap: FlexWrapReverse,
+    flex_basis: DimLength(120.0),
+    flex_grow: 2.0,
+    flex_shrink: 0.5,
+    grid_template_rows: [DimLength(80.0), DimFr(1.0)],
+    grid_template_columns: [
+      DimRepeat(RepeatAutoFit, [DimMinMax(DimLength(120.0), DimFr(1.0))]),
+    ],
+    grid_auto_rows: [DimMinContent],
+    grid_auto_columns: [DimMaxContent],
+    grid_auto_flow: ColumnDense,
+    grid_row: Line(start=PlaceLine(2), end=PlaceSpan(3)),
+    grid_column: Line(start=PlaceAuto, end=PlaceLine(4)),
+    grid_row_start: Some(2),
+    grid_column_start: Some(3),
+  }
+  let encoded = style.to_json()
+  let decoded : Style = @json.from_json(encoded)
+  assert_eq(decoded.to_json().stringify(), encoded.stringify())
+}
+
+///|
+test "style json keeps defaults for omitted fields" {
+  let style : Style = @json.from_json(
+    ({ "display": "Block", "size": { "width": { "Length": 320 } } } : Json),
+  )
+  assert_true(style.display is DisplayBlock)
+  assert_true(style.size.width is DimLength(320.0))
+  assert_true(style.size.height is DimAuto)
+  assert_true(style.flex_direction is FlexRow)
+  assert_eq(style.flex_shrink, 1.0)
+}

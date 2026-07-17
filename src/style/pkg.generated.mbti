@@ -32,6 +32,8 @@ pub(all) enum AlignContent {
   AlignSpaceEvenly
   AlignSpaceAround
 }
+pub impl ToJson for AlignContent
+pub impl @json.FromJson for AlignContent
 
 #alias(AlignSelf)
 #alias(JustifyItems)
@@ -45,6 +47,8 @@ pub(all) enum AlignItems {
   ItemsBaseline
   ItemsStretch
 }
+pub impl ToJson for AlignItems
+pub impl @json.FromJson for AlignItems
 
 pub(all) enum BoxSizing {
   BorderBox
@@ -74,6 +78,8 @@ pub(all) enum Display {
   DisplayGrid
   DisplayNone
 }
+pub impl ToJson for Display
+pub impl @json.FromJson for Display
 
 pub(all) enum FlexDirection {
   FlexRow
@@ -81,12 +87,16 @@ pub(all) enum FlexDirection {
   FlexColumn
   FlexColumnReverse
 }
+pub impl ToJson for FlexDirection
+pub impl @json.FromJson for FlexDirection
 
 pub(all) enum FlexWrap {
   FlexNoWrap
   FlexWrap
   FlexWrapReverse
 }
+pub impl ToJson for FlexWrap
+pub impl @json.FromJson for FlexWrap
 
 pub(all) enum GridAutoFlow {
   Row
@@ -96,6 +106,8 @@ pub(all) enum GridAutoFlow {
 }
 pub fn GridAutoFlow::is_dense(Self) -> Bool
 pub fn GridAutoFlow::primary_axis(Self) -> @geometry.AbsoluteAxis
+pub impl ToJson for GridAutoFlow
+pub impl @json.FromJson for GridAutoFlow
 
 pub(all) enum GridPlacement {
   PlaceAuto
@@ -112,6 +124,8 @@ pub(all) enum GridTrackRepetition {
   RepeatAutoFill
   RepeatAutoFit
 }
+pub impl ToJson for GridTrackRepetition
+pub impl @json.FromJson for GridTrackRepetition
 
 pub(all) enum LengthPercentage {
   LengthPercentageLength(Double)
@@ -171,11 +185,15 @@ pub(all) enum Overflow {
   OverflowHidden
   OverflowScroll
 }
+pub impl ToJson for Overflow
+pub impl @json.FromJson for Overflow
 
 pub(all) enum Position {
   PosRelative
   PosAbsolute
 }
+pub impl ToJson for Position
+pub impl @json.FromJson for Position
 
 pub(all) struct Style {
   display : Display

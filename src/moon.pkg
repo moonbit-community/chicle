@@ -1,1 +1,6 @@
-
+import {
+  "Milky2018/chicle/geometry",
+  "Milky2018/chicle/style",
+  "Milky2018/chicle/tree",
+  "moonbitlang/core/json",
+}

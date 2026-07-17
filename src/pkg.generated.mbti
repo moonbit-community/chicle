@@ -1,11 +1,59 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "Milky2018/chicle"
 
+import {
+  "Milky2018/chicle/geometry",
+  "Milky2018/chicle/style",
+  "Milky2018/chicle/tree",
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+}
+
 // Values
+pub fn compute_layout_document(LayoutDocument) -> LayoutResult raise
+
+pub fn compute_layout_json(String) -> String
 
 // Errors
+pub(all) suberror LayoutDocumentError {
+  EmptyNodeId
+  DuplicateNodeId(String)
+} derive(@debug.Debug)
 
 // Types and methods
+pub(all) struct LayoutDocument {
+  version : Int
+  available_space : @geometry.Size[@geometry.AvailableSpace]
+  root : LayoutNode
+}
+pub fn LayoutDocument::from_json(Json) -> Self raise @json.JsonDecodeError
+pub impl ToJson for LayoutDocument
+pub impl @json.FromJson for LayoutDocument
+
+pub(all) struct LayoutNode {
+  id : String
+  label : String
+  style : @style.Style
+  children : Array[LayoutNode]
+}
+pub impl ToJson for LayoutNode
+pub impl @json.FromJson for LayoutNode
+
+pub(all) struct LayoutResult {
+  root_id : String
+  nodes : Array[LayoutResultNode]
+}
+pub fn LayoutResult::to_json(Self) -> Json
+pub impl ToJson for LayoutResult
+
+pub(all) struct LayoutResultNode {
+  id : String
+  label : String
+  parent_id : String?
+  depth : Int
+  layout : @tree.Layout
+}
+pub impl ToJson for LayoutResultNode
 
 // Type aliases
 

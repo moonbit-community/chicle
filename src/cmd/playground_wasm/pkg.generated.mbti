@@ -1,0 +1,14 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/chicle/cmd/playground_wasm"
+
+// Values
+pub fn compute_layout_json(String) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

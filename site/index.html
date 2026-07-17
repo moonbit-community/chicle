@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Explore Chicle layouts in your browser with editable JSON and a live WebAssembly preview."
+    />
+    <title>Chicle Layout Playground</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23d8ff62'/%3E%3Cpath d='M43 18a18 18 0 1 0 0 28' fill='none' stroke='%23172000' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Chicle playground home">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <span>
+          <strong>Chicle</strong>
+          <small>Layout playground</small>
+        </span>
+      </a>
+      <div class="topbar-actions">
+        <span class="runtime-status" id="runtime-status">
+          <i aria-hidden="true"></i>
+          Loading WebAssembly
+        </span>
+        <a
+          class="github-link"
+          href="https://github.com/moonbit-community/chicle"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel editor-panel" aria-labelledby="editor-title">
+        <header class="panel-header">
+          <div>
+            <p class="eyebrow">Layout Document</p>
+            <h1 id="editor-title">Describe the layout in JSON</h1>
+          </div>
+          <div class="controls">
+            <label class="select-wrap">
+              <span class="sr-only">Choose an example</span>
+              <select id="example-select">
+                <option value="flex-dashboard">Flex dashboard</option>
+                <option value="grid-workspace">Grid workspace</option>
+                <option value="absolute-overlay">Absolute overlay</option>
+              </select>
+            </label>
+            <button class="button button-quiet" id="format-button" type="button">
+              Format
+            </button>
+          </div>
+        </header>
+
+        <div class="editor-wrap">
+          <div class="line-rail" aria-hidden="true"></div>
+          <textarea
+            id="layout-editor"
+            aria-label="Editable Chicle layout JSON"
+            spellcheck="false"
+            autocomplete="off"
+          ></textarea>
+        </div>
+
+        <footer class="panel-footer editor-footer">
+          <p class="message" id="editor-message" role="status">
+            Edit any value to recompute the preview.
+          </p>
+          <button class="button button-share" id="share-button" type="button">
+            Copy share URL
+          </button>
+        </footer>
+      </section>
+
+      <section class="panel preview-panel" aria-labelledby="preview-title">
+        <header class="panel-header">
+          <div>
+            <p class="eyebrow">Layout Preview</p>
+            <h2 id="preview-title">Computed by Chicle</h2>
+          </div>
+          <span class="live-pill"><i aria-hidden="true"></i> Live</span>
+        </header>
+
+        <div class="preview-viewport" id="preview-viewport">
+          <div class="preview-grid" aria-hidden="true"></div>
+          <div class="preview-surface" id="preview-surface"></div>
+          <div class="empty-state" id="empty-state">
+            <span class="empty-icon" aria-hidden="true">◇</span>
+            <strong>Preparing the layout engine</strong>
+            <span>The preview appears as soon as WebAssembly is ready.</span>
+          </div>
+        </div>
+
+        <footer class="panel-footer preview-footer">
+          <dl class="metrics">
+            <div>
+              <dt>Nodes</dt>
+              <dd id="node-count">—</dd>
+            </div>
+            <div>
+              <dt>Root</dt>
+              <dd id="root-size">—</dd>
+            </div>
+            <div>
+              <dt>Scale</dt>
+              <dd id="preview-scale">—</dd>
+            </div>
+          </dl>
+          <p class="selection" id="selection">Select a box to inspect it.</p>
+        </footer>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <p>
+        Layout is computed in your browser by Chicle WebAssembly. Labels are
+        decorative and do not affect geometry.
+      </p>
+      <p>JSON state is stored only in the URL fragment.</p>
+    </footer>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

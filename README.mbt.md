@@ -2,11 +2,10 @@
 
 MoonBit UI layout engine.
 
-受 taffy 启发。
-
 [Open the interactive Chicle playground](https://moonbit-community.github.io/chicle/) to edit a JSON layout document and see the WebAssembly-computed layout update immediately. Valid documents are stored in the URL fragment, so every layout can be shared directly.
 
 - Public API: import the focused packages directly: `geometry`, `style`, `style_helpers`, and `tree`.
+- Inspired by [taffy](https://github.com/dioxusLabs/taffy).
 
 ## JSON layout API
 

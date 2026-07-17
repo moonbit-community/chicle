@@ -70,6 +70,12 @@ const examples = {
           style: {
             flex_direction: "Column",
             flex_grow: 1,
+            padding: {
+              left: dim(18),
+              right: dim(18),
+              top: dim(18),
+              bottom: dim(18),
+            },
             gap: { height: dim(16) },
           },
           children: [
@@ -83,6 +89,12 @@ const examples = {
               label: "Cards",
               style: {
                 flex_grow: 1,
+                padding: {
+                  left: dim(18),
+                  right: dim(18),
+                  top: dim(18),
+                  bottom: dim(18),
+                },
                 gap: { width: dim(14) },
               },
               children: [

@@ -352,6 +352,7 @@ fn shrink_tracks_to_minimum(
 fn expand_flexible_tracks(
   state : GridTrackSizingState,
   available : Double,
+  gap : Double,
 ) -> Bool {
   let sizes = state.sizes
   let min_sizes = state.min_sizes
@@ -369,7 +370,12 @@ fn expand_flexible_tracks(
       fixed_used = fixed_used + sizes[i]
     }
   }
-  let mut remaining_for_fr = @util.max_double(available - fixed_used, 0.0)
+  let gap_count = if sizes.length() > 1 { sizes.length() - 1 } else { 0 }
+  let gap_total = gap * gap_count.to_double()
+  let mut remaining_for_fr = @util.max_double(
+    available - fixed_used - gap_total,
+    0.0,
+  )
   let mut unresolved : Array[Int] = []
   for i in 0..<sizes.length() {
     if fr_weights[i] > 0.0 {
@@ -553,7 +559,7 @@ fn track_sizing_algorithm(
   // Distribute any remaining free space (only when the grid container has a definite size).
   if input.expand_to_fill {
     maximize_tracks(state, input.available, input.gap)
-    if expand_flexible_tracks(state, input.available) {
+    if expand_flexible_tracks(state, input.available, input.gap) {
       ()
     } else {
       ()

@@ -44,3 +44,69 @@ test "grid_fr_fixed_size_no_content_proportions" {
   assert_eq(l2.location.x, 100.0)
   assert_eq(l2.location.y, 0.0)
 }
+
+///|
+test "grid_fr_tracks_subtract_column_gaps" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(Style::default())
+  let node1 = chicle.new_leaf(Style::default())
+  let node2 = chicle.new_leaf(Style::default())
+  let root_style = Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(40.0)])
+    .with_grid_template_columns([length(180.0), fr(1.0), fr(1.0)])
+    .with_gap(Size(width=length(14.0), height=length(0.0)))
+    .with_padding(
+      Rect(
+        left=length(22.0),
+        right=length(22.0),
+        top=length(0.0),
+        bottom=length(0.0),
+      ),
+    )
+    .with_size(Size(width=length(760.0), height=length(40.0)))
+  let root = chicle.new_with_children(root_style, [node0, node1, node2])
+  chicle.compute_layout(root, Size::max_content())
+  let l0 = chicle.layout(node0)
+  assert_eq(l0.location.x, 22.0)
+  assert_eq(l0.size.width, 180.0)
+  let l1 = chicle.layout(node1)
+  assert_eq(l1.location.x, 216.0)
+  assert_eq(l1.size.width, 254.0)
+  let l2 = chicle.layout(node2)
+  assert_eq(l2.location.x, 484.0)
+  assert_eq(l2.size.width, 254.0)
+}
+
+///|
+test "grid_fr_tracks_subtract_row_gaps" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(Style::default())
+  let node1 = chicle.new_leaf(Style::default())
+  let node2 = chicle.new_leaf(Style::default())
+  let root_style = Style::default()
+    .with_display(display_grid())
+    .with_grid_template_rows([length(70.0), fr(1.0), length(92.0)])
+    .with_grid_template_columns([length(40.0)])
+    .with_gap(Size(width=length(0.0), height=length(14.0)))
+    .with_padding(
+      Rect(
+        left=length(0.0),
+        right=length(0.0),
+        top=length(22.0),
+        bottom=length(22.0),
+      ),
+    )
+    .with_size(Size(width=length(40.0), height=length(480.0)))
+  let root = chicle.new_with_children(root_style, [node0, node1, node2])
+  chicle.compute_layout(root, Size::max_content())
+  let l0 = chicle.layout(node0)
+  assert_eq(l0.location.y, 22.0)
+  assert_eq(l0.size.height, 70.0)
+  let l1 = chicle.layout(node1)
+  assert_eq(l1.location.y, 106.0)
+  assert_eq(l1.size.height, 246.0)
+  let l2 = chicle.layout(node2)
+  assert_eq(l2.location.y, 366.0)
+  assert_eq(l2.size.height, 92.0)
+}

@@ -91,24 +91,12 @@ fn compact_size(
         "height": compact_dimension(height, path.add_index(1)),
       })
     Object(values) => {
-      guard value is { "width"? : width, "height"? : height, .. } else {
-        return compact_yaml_error(path, "Size must be an object")
-      }
       let result : Map[String, Json] = Map([])
-      for key, _ in values {
+      for key, item in values {
         if key != "width" && key != "height" {
           compact_yaml_error(path.add_key(key), "Unknown size field: \{key}")
         }
-      }
-      match width {
-        Some(item) =>
-          result["width"] = compact_dimension(item, path.add_key("width"))
-        None => ()
-      }
-      match height {
-        Some(item) =>
-          result["height"] = compact_dimension(item, path.add_key("height"))
-        None => ()
+        result[key] = compact_dimension(item, path.add_key(key))
       }
       Json::object(result)
     }
@@ -149,41 +137,12 @@ fn compact_rect(
         "left": compact_dimension(left, path.add_index(3)),
       })
     Object(values) => {
-      guard value
-        is {
-          "left"? : left,
-          "right"? : right,
-          "top"? : top,
-          "bottom"? : bottom,
-          ..
-        } else {
-        return compact_yaml_error(path, "Edges must be an object")
-      }
       let result : Map[String, Json] = Map([])
-      for key, _ in values {
+      for key, item in values {
         if key != "left" && key != "right" && key != "top" && key != "bottom" {
           compact_yaml_error(path.add_key(key), "Unknown edge: \{key}")
         }
-      }
-      match left {
-        Some(item) =>
-          result["left"] = compact_dimension(item, path.add_key("left"))
-        None => ()
-      }
-      match right {
-        Some(item) =>
-          result["right"] = compact_dimension(item, path.add_key("right"))
-        None => ()
-      }
-      match top {
-        Some(item) =>
-          result["top"] = compact_dimension(item, path.add_key("top"))
-        None => ()
-      }
-      match bottom {
-        Some(item) =>
-          result["bottom"] = compact_dimension(item, path.add_key("bottom"))
-        None => ()
+        result[key] = compact_dimension(item, path.add_key(key))
       }
       Json::object(result)
     }
@@ -210,52 +169,17 @@ fn compact_gap(
         "width": compact_dimension(column, path.add_index(1)),
       })
     Object(values) => {
-      guard value
-        is {
-          "x"? : x,
-          "column"? : column,
-          "width"? : width,
-          "y"? : y,
-          "row"? : row,
-          "height"? : height,
-          ..
-        } else {
-        return compact_yaml_error(path, "Gap must be an object")
-      }
       let result : Map[String, Json] = Map([])
-      for key, _ in values {
-        if key != "x" &&
-          key != "column" &&
-          key != "width" &&
-          key != "y" &&
-          key != "row" &&
-          key != "height" {
-          compact_yaml_error(path.add_key(key), "Unknown gap axis: \{key}")
+      for key, item in values {
+        let canonical_key = match key {
+          "x" | "column" | "width" => "width"
+          "y" | "row" | "height" => "height"
+          _ => compact_yaml_error(path.add_key(key), "Unknown gap axis: \{key}")
         }
-      }
-      let horizontal = match (x, column, width) {
-        (Some(value), None, None) => Some(("x", value))
-        (None, Some(value), None) => Some(("column", value))
-        (None, None, Some(value)) => Some(("width", value))
-        (None, None, None) => None
-        _ => compact_yaml_error(path, "Duplicate horizontal gap axis")
-      }
-      let vertical = match (y, row, height) {
-        (Some(value), None, None) => Some(("y", value))
-        (None, Some(value), None) => Some(("row", value))
-        (None, None, Some(value)) => Some(("height", value))
-        (None, None, None) => None
-        _ => compact_yaml_error(path, "Duplicate vertical gap axis")
-      }
-      match horizontal {
-        Some((key, item)) =>
-          result["width"] = compact_dimension(item, path.add_key(key))
-        None => ()
-      }
-      match vertical {
-        Some((key, item)) =>
-          result["height"] = compact_dimension(item, path.add_key(key))
-        None => ()
+        if result.contains(canonical_key) {
+          compact_yaml_error(path.add_key(key), "Duplicate gap axis: \{key}")
+        }
+        result[canonical_key] = compact_dimension(item, path.add_key(key))
       }
       Json::object(result)
     }
@@ -381,24 +305,6 @@ fn compact_style_from_node(
   node : Json,
   path : @json.JsonPath,
 ) -> Json raise JsonDecodeError {
-  guard node
-    is {
-      "style"? : canonical_style,
-      "size"? : size,
-      "width"? : width,
-      "height"? : height,
-      "padding"? : padding,
-      "gap"? : gap,
-      "flow"? : flow,
-      "grow"? : grow,
-      "align"? : align,
-      "grid"? : grid,
-      "place"? : place,
-      "absolute"? : absolute,
-      ..
-    } else {
-    return compact_yaml_error(path, "Node definition must be an object")
-  }
   guard node is Object(fields) else {
     return compact_yaml_error(path, "Node definition must be an object")
   }
@@ -407,8 +313,8 @@ fn compact_style_from_node(
       compact_yaml_error(path.add_key(field), "Unknown node field: \{field}")
     }
   }
-  match canonical_style {
-    Some(style) => {
+  match node {
+    { "style": style, .. } => {
       for field, _ in fields {
         if field != "label" && field != "children" && field != "style" {
           compact_yaml_error(
@@ -425,18 +331,18 @@ fn compact_style_from_node(
       }
       return style
     }
-    None => ()
+    _ => ()
   }
   let style : Map[String, Json] = Map([])
-  match (size, width, height) {
-    (Some(value), None, None) =>
+  match node {
+    { "size": value, "width"? : None, "height"? : None, .. } =>
       style["size"] = compact_size(value, path.add_key("size"))
-    (Some(_), _, _) =>
+    { "size": _, .. } =>
       compact_yaml_error(
         path.add_key("size"),
         "Size cannot be combined with width or height",
       )
-    (None, width, height) => {
+    { "width"? : width, "height"? : height, .. } => {
       let size : Map[String, Json] = Map([])
       match width {
         Some(value) =>
@@ -452,133 +358,94 @@ fn compact_style_from_node(
         style["size"] = Json::object(size)
       }
     }
+    _ => abort("unreachable")
   }
-  match padding {
-    Some(value) =>
-      style["padding"] = compact_rect(value, path.add_key("padding"))
-    None => ()
+  if node is { "padding": value, .. } {
+    style["padding"] = compact_rect(value, path.add_key("padding"))
   }
-  match gap {
-    Some(value) => style["gap"] = compact_gap(value, path.add_key("gap"))
-    None => ()
+  if node is { "gap": value, .. } {
+    style["gap"] = compact_gap(value, path.add_key("gap"))
   }
-  match flow {
-    Some(value) => {
-      if grid is Some(_) {
-        compact_yaml_error(
-          path.add_key("flow"),
-          "Flow cannot be combined with grid",
-        )
-      }
-      style["display"] = Json::string("Flex")
-      style["flex_direction"] = compact_flow(value, path.add_key("flow"))
+  if node is { "flow": value, .. } {
+    if node is { "grid": _, .. } {
+      compact_yaml_error(
+        path.add_key("flow"),
+        "Flow cannot be combined with grid",
+      )
     }
-    None => ()
+    style["display"] = Json::string("Flex")
+    style["flex_direction"] = compact_flow(value, path.add_key("flow"))
   }
-  match grow {
-    Some(value) => style["flex_grow"] = value
-    None => ()
+  if node is { "grow": value, .. } {
+    style["flex_grow"] = value
   }
-  match align {
-    Some(value) =>
-      style["align_items"] = compact_align_items(value, path.add_key("align"))
-    None => ()
+  if node is { "align": value, .. } {
+    style["align_items"] = compact_align_items(value, path.add_key("align"))
   }
-  match grid {
-    Some(value) => {
-      guard value is { "columns"? : columns, "rows"? : rows, .. } else {
-        return compact_yaml_error(
-          path.add_key("grid"),
-          "Grid must be an object",
-        )
-      }
-      guard value is Object(grid_fields) else {
-        return compact_yaml_error(
-          path.add_key("grid"),
-          "Grid must be an object",
-        )
-      }
-      for field, _ in grid_fields {
-        if field != "columns" && field != "rows" {
-          compact_yaml_error(
-            path.add_key("grid").add_key(field),
-            "Unknown grid field: \{field}",
-          )
-        }
-      }
+  match node {
+    { "grid": Object(grid), .. } => {
       style["display"] = Json::string("Grid")
-      match columns {
-        Some(columns) =>
-          style["grid_template_columns"] = compact_track_list(
-            columns,
-            path.add_key("grid").add_key("columns"),
-          )
-        None => ()
-      }
-      match rows {
-        Some(rows) =>
-          style["grid_template_rows"] = compact_track_list(
-            rows,
-            path.add_key("grid").add_key("rows"),
-          )
-        None => ()
-      }
-    }
-    None => ()
-  }
-  match place {
-    Some(value) => {
-      guard value is { "column"? : column, "row"? : row, .. } else {
-        return compact_yaml_error(
-          path.add_key("place"),
-          "Place must be an object",
-        )
-      }
-      guard value is Object(place_fields) else {
-        return compact_yaml_error(
-          path.add_key("place"),
-          "Place must be an object",
-        )
-      }
-      for field, _ in place_fields {
-        if field != "column" && field != "row" {
-          compact_yaml_error(
-            path.add_key("place").add_key(field),
-            "Unknown placement field: \{field}",
-          )
+      for field, item in grid {
+        match field {
+          "columns" =>
+            style["grid_template_columns"] = compact_track_list(
+              item,
+              path.add_key("grid").add_key(field),
+            )
+          "rows" =>
+            style["grid_template_rows"] = compact_track_list(
+              item,
+              path.add_key("grid").add_key(field),
+            )
+          _ =>
+            compact_yaml_error(
+              path.add_key("grid").add_key(field),
+              "Unknown grid field: \{field}",
+            )
         }
       }
-      match column {
-        Some(value) =>
-          style["grid_column"] = compact_grid_line(
-            value,
-            path.add_key("place").add_key("column"),
-          )
-        None => ()
-      }
-      match row {
-        Some(value) =>
-          style["grid_row"] = compact_grid_line(
-            value,
-            path.add_key("place").add_key("row"),
-          )
-        None => ()
-      }
     }
-    None => ()
+    { "grid": _, .. } =>
+      compact_yaml_error(path.add_key("grid"), "Grid must be an object")
+    _ => ()
   }
-  match absolute {
-    Some(true) => style["position"] = Json::string("Absolute")
-    Some({ .. } as inset) => {
+  match node {
+    { "place": Object(place), .. } =>
+      for field, item in place {
+        match field {
+          "column" =>
+            style["grid_column"] = compact_grid_line(
+              item,
+              path.add_key("place").add_key(field),
+            )
+          "row" =>
+            style["grid_row"] = compact_grid_line(
+              item,
+              path.add_key("place").add_key(field),
+            )
+          _ =>
+            compact_yaml_error(
+              path.add_key("place").add_key(field),
+              "Unknown placement field: \{field}",
+            )
+        }
+      }
+    { "place": _, .. } =>
+      compact_yaml_error(path.add_key("place"), "Place must be an object")
+    _ => ()
+  }
+  match node {
+    { "absolute": true, .. } => style["position"] = Json::string("Absolute")
+    { "absolute": { .. } as inset, .. } => {
       style["position"] = Json::string("Absolute")
       style["inset"] = compact_rect(inset, path.add_key("absolute"))
     }
-    Some(_) =>
+    { "absolute": _, .. } =>
       compact_yaml_error(
         path.add_key("absolute"),
         "Absolute must be true or an inset object",
       )
-    None => ()
+    _ => ()
   }
   Json::object(style)
 }

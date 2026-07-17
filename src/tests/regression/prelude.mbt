@@ -154,6 +154,6 @@ pub using @tree {
   type RequestedAxis,
   type RunMode,
   type SizingMode,
-  type TaffyError,
-  type TaffyTree,
+  type ChicleError,
+  type ChicleTree,
 }

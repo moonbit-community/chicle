@@ -14,11 +14,11 @@
 
 ///|
 fn mk_grid_root(
-  taffy : TaffyTree[Unit],
+  chicle : ChicleTree[Unit],
   align : AlignContent,
   children : Array[NodeId],
 ) -> NodeId {
-  taffy.new_with_children(
+  chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_align_content(align)
@@ -31,12 +31,12 @@ fn mk_grid_root(
 
 ///|
 fn check_grid_cell(
-  taffy : TaffyTree[Unit],
+  chicle : ChicleTree[Unit],
   node : NodeId,
   expected_x : Double,
   expected_y : Double,
 ) -> Unit raise Error {
-  let l = try taffy.layout(node) catch {
+  let l = try chicle.layout(node) catch {
     _ => panic()
   } noraise {
     v => v
@@ -48,76 +48,76 @@ fn check_grid_cell(
 }
 
 ///|
-test "grid_align_content_start (upstream: generated/grid/grid_align_content_start.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
+test "grid_align_content_start" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
   let nodes = Array::make(9, 0)
   for i in 0..<9 {
-    nodes[i] = taffy.new_leaf(Style::default())
+    nodes[i] = chicle.new_leaf(Style::default())
   }
-  let root = mk_grid_root(taffy, align_content_start(), nodes)
-  taffy.compute_layout(root, Size::max_content())
-  let layout = taffy.layout(root)
+  let root = mk_grid_root(chicle, align_content_start(), nodes)
+  chicle.compute_layout(root, Size::max_content())
+  let layout = chicle.layout(root)
   assert_eq(layout.size.width, 200.0)
   assert_eq(layout.size.height, 200.0)
   assert_eq(layout.location.x, 0.0)
   assert_eq(layout.location.y, 0.0)
-  check_grid_cell(taffy, nodes[0], 0.0, 0.0)
-  check_grid_cell(taffy, nodes[1], 40.0, 0.0)
-  check_grid_cell(taffy, nodes[2], 80.0, 0.0)
-  check_grid_cell(taffy, nodes[3], 0.0, 40.0)
-  check_grid_cell(taffy, nodes[4], 40.0, 40.0)
-  check_grid_cell(taffy, nodes[5], 80.0, 40.0)
-  check_grid_cell(taffy, nodes[6], 0.0, 80.0)
-  check_grid_cell(taffy, nodes[7], 40.0, 80.0)
-  check_grid_cell(taffy, nodes[8], 80.0, 80.0)
+  check_grid_cell(chicle, nodes[0], 0.0, 0.0)
+  check_grid_cell(chicle, nodes[1], 40.0, 0.0)
+  check_grid_cell(chicle, nodes[2], 80.0, 0.0)
+  check_grid_cell(chicle, nodes[3], 0.0, 40.0)
+  check_grid_cell(chicle, nodes[4], 40.0, 40.0)
+  check_grid_cell(chicle, nodes[5], 80.0, 40.0)
+  check_grid_cell(chicle, nodes[6], 0.0, 80.0)
+  check_grid_cell(chicle, nodes[7], 40.0, 80.0)
+  check_grid_cell(chicle, nodes[8], 80.0, 80.0)
 }
 
 ///|
-test "grid_align_content_center (upstream: generated/grid/grid_align_content_center.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
+test "grid_align_content_center" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
   let nodes = Array::make(9, 0)
   for i in 0..<9 {
-    nodes[i] = taffy.new_leaf(Style::default())
+    nodes[i] = chicle.new_leaf(Style::default())
   }
-  let root = mk_grid_root(taffy, align_content_center(), nodes)
-  taffy.compute_layout(root, Size::max_content())
-  let layout = taffy.layout(root)
+  let root = mk_grid_root(chicle, align_content_center(), nodes)
+  chicle.compute_layout(root, Size::max_content())
+  let layout = chicle.layout(root)
   assert_eq(layout.size.width, 200.0)
   assert_eq(layout.size.height, 200.0)
   assert_eq(layout.location.x, 0.0)
   assert_eq(layout.location.y, 0.0)
-  check_grid_cell(taffy, nodes[0], 0.0, 40.0)
-  check_grid_cell(taffy, nodes[1], 40.0, 40.0)
-  check_grid_cell(taffy, nodes[2], 80.0, 40.0)
-  check_grid_cell(taffy, nodes[3], 0.0, 80.0)
-  check_grid_cell(taffy, nodes[4], 40.0, 80.0)
-  check_grid_cell(taffy, nodes[5], 80.0, 80.0)
-  check_grid_cell(taffy, nodes[6], 0.0, 120.0)
-  check_grid_cell(taffy, nodes[7], 40.0, 120.0)
-  check_grid_cell(taffy, nodes[8], 80.0, 120.0)
+  check_grid_cell(chicle, nodes[0], 0.0, 40.0)
+  check_grid_cell(chicle, nodes[1], 40.0, 40.0)
+  check_grid_cell(chicle, nodes[2], 80.0, 40.0)
+  check_grid_cell(chicle, nodes[3], 0.0, 80.0)
+  check_grid_cell(chicle, nodes[4], 40.0, 80.0)
+  check_grid_cell(chicle, nodes[5], 80.0, 80.0)
+  check_grid_cell(chicle, nodes[6], 0.0, 120.0)
+  check_grid_cell(chicle, nodes[7], 40.0, 120.0)
+  check_grid_cell(chicle, nodes[8], 80.0, 120.0)
 }
 
 ///|
-test "grid_align_content_end (upstream: generated/grid/grid_align_content_end.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
+test "grid_align_content_end" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
   let nodes = Array::make(9, 0)
   for i in 0..<9 {
-    nodes[i] = taffy.new_leaf(Style::default())
+    nodes[i] = chicle.new_leaf(Style::default())
   }
-  let root = mk_grid_root(taffy, align_content_end(), nodes)
-  taffy.compute_layout(root, Size::max_content())
-  let layout = taffy.layout(root)
+  let root = mk_grid_root(chicle, align_content_end(), nodes)
+  chicle.compute_layout(root, Size::max_content())
+  let layout = chicle.layout(root)
   assert_eq(layout.size.width, 200.0)
   assert_eq(layout.size.height, 200.0)
   assert_eq(layout.location.x, 0.0)
   assert_eq(layout.location.y, 0.0)
-  check_grid_cell(taffy, nodes[0], 0.0, 80.0)
-  check_grid_cell(taffy, nodes[1], 40.0, 80.0)
-  check_grid_cell(taffy, nodes[2], 80.0, 80.0)
-  check_grid_cell(taffy, nodes[3], 0.0, 120.0)
-  check_grid_cell(taffy, nodes[4], 40.0, 120.0)
-  check_grid_cell(taffy, nodes[5], 80.0, 120.0)
-  check_grid_cell(taffy, nodes[6], 0.0, 160.0)
-  check_grid_cell(taffy, nodes[7], 40.0, 160.0)
-  check_grid_cell(taffy, nodes[8], 80.0, 160.0)
+  check_grid_cell(chicle, nodes[0], 0.0, 80.0)
+  check_grid_cell(chicle, nodes[1], 40.0, 80.0)
+  check_grid_cell(chicle, nodes[2], 80.0, 80.0)
+  check_grid_cell(chicle, nodes[3], 0.0, 120.0)
+  check_grid_cell(chicle, nodes[4], 40.0, 120.0)
+  check_grid_cell(chicle, nodes[5], 80.0, 120.0)
+  check_grid_cell(chicle, nodes[6], 0.0, 160.0)
+  check_grid_cell(chicle, nodes[7], 40.0, 160.0)
+  check_grid_cell(chicle, nodes[8], 80.0, 160.0)
 }

@@ -13,8 +13,8 @@
 // limitations under the License.
 
 ///|
-fn[C] TaffyTree::set_unrounded_layout(
-  self : TaffyTree[C],
+fn[C] ChicleTree::set_unrounded_layout(
+  self : ChicleTree[C],
   node_id : NodeId,
   layout : Layout,
 ) -> Unit {
@@ -22,8 +22,8 @@ fn[C] TaffyTree::set_unrounded_layout(
 }
 
 ///|
-fn[C] TaffyTree::set_final_layout(
-  self : TaffyTree[C],
+fn[C] ChicleTree::set_final_layout(
+  self : ChicleTree[C],
   node_id : NodeId,
   layout : Layout,
 ) -> Unit {
@@ -31,8 +31,8 @@ fn[C] TaffyTree::set_final_layout(
 }
 
 ///|
-fn[C] TaffyTree::set_first_baselines(
-  self : TaffyTree[C],
+fn[C] ChicleTree::set_first_baselines(
+  self : ChicleTree[C],
   node_id : NodeId,
   first_baselines : Point[Double?],
 ) -> Unit {

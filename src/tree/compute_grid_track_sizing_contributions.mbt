@@ -184,7 +184,7 @@ fn grid_item_known_width_for_row_contribution(
 
 ///|
 fn[C] resolve_grid_item_baseline_shims_for_track_sizing(
-  view : TaffyView[C],
+  view : ChicleView[C],
   grid_items : Array[GridItem],
   placement_count : Int,
   col_sizes : Array[Double],
@@ -192,7 +192,7 @@ fn[C] resolve_grid_item_baseline_shims_for_track_sizing(
   col_gutter_alignment_adjustment : Double,
   default_align_items_for_contrib : AlignItems,
   default_justify_items_for_contrib : AlignItems,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let mut row_count = 0
   for item in grid_items {
     if item.placed && item.row_span == 1 && item.row + 1 > row_count {
@@ -279,7 +279,7 @@ fn[C] resolve_grid_item_baseline_shims_for_track_sizing(
 
 ///|
 fn[C] compute_grid_column_track_contributions(
-  view : TaffyView[C],
+  view : ChicleView[C],
   grid_items : Array[GridItem],
   placement_count : Int,
   col_tracks : Array[Dimension],
@@ -290,7 +290,7 @@ fn[C] compute_grid_column_track_contributions(
   content_height : Double,
   specified_height : Double?,
   use_row_track_constraints : Bool,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let tree = view.tree
   for i in 0..<placement_count {
     if !grid_items[i].placed {
@@ -360,7 +360,7 @@ fn[C] compute_grid_column_track_contributions(
 
 ///|
 fn[C] compute_grid_row_track_contributions(
-  view : TaffyView[C],
+  view : ChicleView[C],
   grid_items : Array[GridItem],
   placement_count : Int,
   col_sizes : Array[Double],
@@ -370,7 +370,7 @@ fn[C] compute_grid_row_track_contributions(
   row_gap : Double,
   default_align_items_for_contrib : AlignItems,
   default_justify_items_for_contrib : AlignItems,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let tree = view.tree
   resolve_grid_item_baseline_shims_for_track_sizing(
     view, grid_items, placement_count, col_sizes, col_gap, col_gutter_alignment_adjustment,

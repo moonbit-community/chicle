@@ -209,6 +209,10 @@ pub using @geometry {type AvailableSpace}
 
 pub using @style {type BoxSizing}
 
+pub using @tree {type ChicleError}
+
+pub using @tree {type ChicleTree}
+
 pub using @style {type Dimension}
 
 pub using @style {type Display}
@@ -266,10 +270,6 @@ pub using @geometry {type Size}
 pub using @tree {type SizingMode}
 
 pub using @style {type Style}
-
-pub using @tree {type TaffyError}
-
-pub using @tree {type TaffyTree}
 
 pub using @style {type TrackSizingFunction}
 

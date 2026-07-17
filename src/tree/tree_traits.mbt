@@ -13,10 +13,10 @@
 // limitations under the License.
 
 ///|
-fn[C] TaffyTree::unrounded_layout(
-  self : TaffyTree[C],
+fn[C] ChicleTree::unrounded_layout(
+  self : ChicleTree[C],
   node : NodeId,
-) -> Layout raise TaffyError {
+) -> Layout raise ChicleError {
   let node_ref = match self.nodes.get(node) {
     Some(n) => n
     None => raise InvalidNodeId(node)

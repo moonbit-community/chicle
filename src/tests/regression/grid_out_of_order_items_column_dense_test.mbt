@@ -14,32 +14,32 @@
 
 ///|
 test "grid_out_of_order_items_column_dense (regression)" {
-  // Mirror of upstream/generated/grid/grid_out_of_order_items.rs, but for column dense auto-placement.
-  // This is a MoonBit-only regression test because upstream only ships RowDense vectors.
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let node0 = taffy.new_leaf(Style::default())
-  let node1 = taffy.new_leaf(Style::default())
-  let node2 = taffy.new_leaf(
+  // Column-dense auto-placement regression.
+  // This covers the ColumnDense variant.
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(Style::default())
+  let node1 = chicle.new_leaf(Style::default())
+  let node2 = chicle.new_leaf(
     Style::default()
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_size(Size(width=length(35.0), height=length(35.0))),
   )
-  let node3 = taffy.new_leaf(Style::default())
-  let node4 = taffy.new_leaf(Style::default())
-  let node5 = taffy.new_leaf(
+  let node3 = chicle.new_leaf(Style::default())
+  let node4 = chicle.new_leaf(Style::default())
+  let node5 = chicle.new_leaf(
     Style::default()
     .with_grid_row(Line(start=line(1), end=place_auto()))
     .with_grid_column(Line(start=line(1), end=place_auto()))
     .with_size(Size(width=length(20.0), height=length(20.0))),
   )
-  let node6 = taffy.new_leaf(Style::default())
-  let node7 = taffy.new_leaf(
+  let node6 = chicle.new_leaf(Style::default())
+  let node7 = chicle.new_leaf(
     Style::default()
     .with_grid_column(Line(start=line(1), end=place_auto()))
     .with_size(Size(width=length(10.0), height=length(10.0))),
   )
-  let node8 = taffy.new_leaf(Style::default())
-  let root = taffy.new_with_children(
+  let node8 = chicle.new_leaf(Style::default())
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
@@ -48,51 +48,51 @@ test "grid_out_of_order_items_column_dense (regression)" {
     .with_size(Size(width=length(120.0), height=length(120.0))),
     [node0, node1, node2, node3, node4, node5, node6, node7, node8],
   )
-  taffy.compute_layout(root, Size::max_content())
-  let root_layout = taffy.layout(root)
+  chicle.compute_layout(root, Size::max_content())
+  let root_layout = chicle.layout(root)
   assert_eq(root_layout.size.width, 120.0)
   assert_eq(root_layout.size.height, 120.0)
-  let l0 = taffy.layout(node0)
+  let l0 = chicle.layout(node0)
   assert_eq(l0.size.width, 40.0)
   assert_eq(l0.size.height, 40.0)
   assert_eq(l0.location.x, 0.0)
   assert_eq(l0.location.y, 80.0)
-  let l1 = taffy.layout(node1)
+  let l1 = chicle.layout(node1)
   assert_eq(l1.size.width, 40.0)
   assert_eq(l1.size.height, 40.0)
   assert_eq(l1.location.x, 40.0)
   assert_eq(l1.location.y, 0.0)
-  let l2 = taffy.layout(node2)
+  let l2 = chicle.layout(node2)
   assert_eq(l2.size.width, 35.0)
   assert_eq(l2.size.height, 35.0)
   assert_eq(l2.location.x, 80.0)
   assert_eq(l2.location.y, 0.0)
-  let l3 = taffy.layout(node3)
+  let l3 = chicle.layout(node3)
   assert_eq(l3.size.width, 40.0)
   assert_eq(l3.size.height, 40.0)
   assert_eq(l3.location.x, 40.0)
   assert_eq(l3.location.y, 40.0)
-  let l4 = taffy.layout(node4)
+  let l4 = chicle.layout(node4)
   assert_eq(l4.size.width, 40.0)
   assert_eq(l4.size.height, 40.0)
   assert_eq(l4.location.x, 40.0)
   assert_eq(l4.location.y, 80.0)
-  let l5 = taffy.layout(node5)
+  let l5 = chicle.layout(node5)
   assert_eq(l5.size.width, 20.0)
   assert_eq(l5.size.height, 20.0)
   assert_eq(l5.location.x, 0.0)
   assert_eq(l5.location.y, 0.0)
-  let l6 = taffy.layout(node6)
+  let l6 = chicle.layout(node6)
   assert_eq(l6.size.width, 40.0)
   assert_eq(l6.size.height, 40.0)
   assert_eq(l6.location.x, 80.0)
   assert_eq(l6.location.y, 40.0)
-  let l7 = taffy.layout(node7)
+  let l7 = chicle.layout(node7)
   assert_eq(l7.size.width, 10.0)
   assert_eq(l7.size.height, 10.0)
   assert_eq(l7.location.x, 0.0)
   assert_eq(l7.location.y, 40.0)
-  let l8 = taffy.layout(node8)
+  let l8 = chicle.layout(node8)
   assert_eq(l8.size.width, 40.0)
   assert_eq(l8.size.height, 40.0)
   assert_eq(l8.location.x, 80.0)

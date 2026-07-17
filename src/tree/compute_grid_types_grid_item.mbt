@@ -85,9 +85,9 @@ fn GridItem::place(
 
 ///|
 fn[C] make_grid_items(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   children : Array[NodeId],
-) -> Array[GridItem] raise TaffyError {
+) -> Array[GridItem] raise ChicleError {
   let items : Array[GridItem] = []
   for i, node in children {
     let node_data = match tree.nodes.get(node) {

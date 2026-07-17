@@ -13,19 +13,19 @@
 // limitations under the License.
 
 ///|
-pub fn[C] TaffyTree::TaffyTree() -> TaffyTree[C] {
+pub fn[C] ChicleTree::ChicleTree() -> ChicleTree[C] {
   {
     nodes: [],
     children: [],
     parents: [],
     node_context_data: [],
-    config: TaffyConfig(),
+    config: ChicleConfig(),
   }
 }
 
 ///|
-pub fn[C] TaffyTree::with_capacity(_capacity : Int) -> TaffyTree[C] {
-  TaffyTree()
+pub fn[C] ChicleTree::with_capacity(_capacity : Int) -> ChicleTree[C] {
+  ChicleTree()
 }
 
 ///|
@@ -49,8 +49,8 @@ fn[C] NodeData::new(style : Style, context : C?) -> NodeData {
 }
 
 ///|
-fn[C] TaffyTree::push_node(
-  self : TaffyTree[C],
+fn[C] ChicleTree::push_node(
+  self : ChicleTree[C],
   style : Style,
   children : Array[NodeId],
   context : C?,
@@ -64,13 +64,13 @@ fn[C] TaffyTree::push_node(
 }
 
 ///|
-pub fn[C] TaffyTree::new_leaf(self : TaffyTree[C], style : Style) -> NodeId {
+pub fn[C] ChicleTree::new_leaf(self : ChicleTree[C], style : Style) -> NodeId {
   self.push_node(style, [], None)
 }
 
 ///|
-pub fn[C] TaffyTree::new_leaf_with_context(
-  self : TaffyTree[C],
+pub fn[C] ChicleTree::new_leaf_with_context(
+  self : ChicleTree[C],
   style : Style,
   context : C,
 ) -> NodeId {
@@ -78,8 +78,8 @@ pub fn[C] TaffyTree::new_leaf_with_context(
 }
 
 ///|
-pub fn[C] TaffyTree::new_with_children(
-  self : TaffyTree[C],
+pub fn[C] ChicleTree::new_with_children(
+  self : ChicleTree[C],
   style : Style,
   children : Array[NodeId],
 ) -> NodeId {

@@ -14,12 +14,12 @@
 
 ///|
 fn[C] compute_leaf_layout(
-  view : TaffyView[C],
+  view : ChicleView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let tree = view.tree
   let node = match tree.nodes.get(node_id) {
     Some(n) => n

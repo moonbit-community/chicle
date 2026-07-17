@@ -14,11 +14,11 @@
 
 ///|
 fn[C] compute_grid_size_estimate(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   children : Array[NodeId],
   explicit_col_count : Int,
   explicit_row_count : Int,
-) -> (TrackCounts, TrackCounts) raise TaffyError {
+) -> (TrackCounts, TrackCounts) raise ChicleError {
   let mut col_min = 0
   let mut col_max = 0
   let mut col_max_span = 0

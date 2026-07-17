@@ -24,9 +24,9 @@ fn measured_scroll_extent_leaf(
 }
 
 ///|
-test "layout_scroll_extent_accessors_match_taffy" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let node = taffy.new_leaf(
+test "layout_scroll_extent_accessors_match_chicle" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let node = chicle.new_leaf(
     Style::default()
     .with_size(Size(width=length(100.0), height=length(80.0)))
     .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
@@ -35,12 +35,12 @@ test "layout_scroll_extent_accessors_match_taffy" {
       Rect(left=zero(), right=length(2.0), top=zero(), bottom=length(6.0)),
     ),
   )
-  taffy.compute_layout_with_measure(
+  chicle.compute_layout_with_measure(
     node,
     Size::max_content(),
     measured_scroll_extent_leaf,
   )
-  let layout = taffy.layout(node)
+  let layout = chicle.layout(node)
   assert_eq(layout.size.width, 100.0)
   assert_eq(layout.size.height, 80.0)
   assert_eq(layout.scroll_width(), 49.0)

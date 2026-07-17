@@ -13,9 +13,9 @@
 // limitations under the License.
 
 ///|
-test "absolute_margin_bottom_left (upstream: generated/flex/absolute_margin_bottom_left.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let child = taffy.new_leaf(
+test "absolute_margin_bottom_left" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let child = chicle.new_leaf(
     Style::default()
     .with_position(position_absolute())
     .with_size(Size(width=length(10.0), height=length(10.0)))
@@ -28,20 +28,20 @@ test "absolute_margin_bottom_left (upstream: generated/flex/absolute_margin_bott
       ),
     ),
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default()
     .with_flex_direction(flex_direction_column())
     .with_justify_content(justify_content_flex_end())
     .with_size(Size(width=length(100.0), height=length(100.0))),
     [child],
   )
-  taffy.compute_layout(root, Size::max_content())
-  let layout = taffy.layout(root)
+  chicle.compute_layout(root, Size::max_content())
+  let layout = chicle.layout(root)
   assert_eq(layout.size.width, 100.0)
   assert_eq(layout.size.height, 100.0)
   assert_eq(layout.location.x, 0.0)
   assert_eq(layout.location.y, 0.0)
-  let c = taffy.layout(child)
+  let c = chicle.layout(child)
   assert_eq(c.size.width, 10.0)
   assert_eq(c.size.height, 10.0)
   assert_eq(c.location.x, 10.0)

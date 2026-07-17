@@ -76,7 +76,7 @@ fn GridItem::grid_area_size(
 
 ///|
 fn[C] compute_grid_absolute_placement(
-  view : TaffyView[C],
+  view : ChicleView[C],
   children : Array[NodeId],
   node_style : Style,
   col_sizes : Array[Double],
@@ -94,7 +94,7 @@ fn[C] compute_grid_absolute_placement(
   explicit_row_count : Int,
   negative_cols : Int,
   negative_rows : Int,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let padding_origin = Point(
     x=absolute_origin.x + border.left,
     y=absolute_origin.y + border.top,
@@ -149,7 +149,7 @@ fn[C] compute_grid_absolute_placement(
 
 ///|
 fn[C] compute_grid_absolute_children(
-  view : TaffyView[C],
+  view : ChicleView[C],
   children : Array[NodeId],
   explicit_col_lines : Array[Double],
   explicit_row_lines : Array[Double],
@@ -158,7 +158,7 @@ fn[C] compute_grid_absolute_children(
   padding_box_height : Double,
   default_abs_align : AlignItems,
   default_abs_justify : AlignItems,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let tree = view.tree
   for child_id in children {
     let child = match tree.nodes.get(child_id) {

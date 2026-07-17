@@ -14,9 +14,9 @@
 
 ///|
 fn[C] validate_node_alive(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node : NodeId,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   match tree.nodes.get(node) {
     Some(n) => if !n.alive { raise InvalidNodeId(node) }
     None => raise InvalidNodeId(node)
@@ -44,10 +44,10 @@ fn array_contains_node_before(children : Array[NodeId], child : NodeId) -> Bool 
 
 ///|
 fn[C] reject_child_cycle(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   parent : NodeId,
   child : NodeId,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   if parent == child {
     raise CycleDetected(parent~, child~)
   }
@@ -67,7 +67,7 @@ fn[C] reject_child_cycle(
 
 ///|
 fn[C] detach_from_parent(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   child : NodeId,
   new_parent : NodeId,
 ) -> Unit {
@@ -87,7 +87,7 @@ fn[C] detach_from_parent(
 
 ///|
 fn[C] attach_children_unchecked(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   parent : NodeId,
   children : Array[NodeId],
 ) -> Unit {
@@ -100,11 +100,11 @@ fn[C] attach_children_unchecked(
 }
 
 ///|
-pub fn[C] TaffyTree::add_child(
-  tree : TaffyTree[C],
+pub fn[C] ChicleTree::add_child(
+  tree : ChicleTree[C],
   parent : NodeId,
   child : NodeId,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   validate_node_alive(tree, parent)
   validate_node_alive(tree, child)
   reject_child_cycle(tree, parent, child)
@@ -119,11 +119,11 @@ pub fn[C] TaffyTree::add_child(
 }
 
 ///|
-pub fn[C] TaffyTree::set_children(
-  tree : TaffyTree[C],
+pub fn[C] ChicleTree::set_children(
+  tree : ChicleTree[C],
   parent : NodeId,
   children : Array[NodeId],
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   validate_node_alive(tree, parent)
   for child_id in children {
     validate_node_alive(tree, child_id)
@@ -142,11 +142,11 @@ pub fn[C] TaffyTree::set_children(
 }
 
 ///|
-pub fn[C] TaffyTree::remove_child(
-  tree : TaffyTree[C],
+pub fn[C] ChicleTree::remove_child(
+  tree : ChicleTree[C],
   parent : NodeId,
   child : NodeId,
-) -> NodeId raise TaffyError {
+) -> NodeId raise ChicleError {
   match tree.nodes.get(parent) {
     Some(_) => ()
     None => raise InvalidNodeId(parent)
@@ -174,10 +174,10 @@ pub fn[C] TaffyTree::remove_child(
 }
 
 ///|
-pub fn[C] TaffyTree::mark_dirty(
-  tree : TaffyTree[C],
+pub fn[C] ChicleTree::mark_dirty(
+  tree : ChicleTree[C],
   node : NodeId,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   match tree.nodes.get(node) {
     Some(_) => ()
     None => raise InvalidNodeId(node)
@@ -199,10 +199,10 @@ pub fn[C] TaffyTree::mark_dirty(
 }
 
 ///|
-pub fn[C] TaffyTree::dirty(
-  tree : TaffyTree[C],
+pub fn[C] ChicleTree::dirty(
+  tree : ChicleTree[C],
   node : NodeId,
-) -> Bool raise TaffyError {
+) -> Bool raise ChicleError {
   match tree.nodes.get(node) {
     Some(_) =>
       if tree.nodes[node].alive {
@@ -215,10 +215,10 @@ pub fn[C] TaffyTree::dirty(
 }
 
 ///|
-pub fn[C] TaffyTree::remove(
-  tree : TaffyTree[C],
+pub fn[C] ChicleTree::remove(
+  tree : ChicleTree[C],
   node : NodeId,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   match tree.nodes.get(node) {
     Some(_) => ()
     None => raise InvalidNodeId(node)
@@ -253,10 +253,10 @@ pub fn[C] TaffyTree::remove(
 }
 
 ///|
-pub fn[C] TaffyTree::remove_subtree(
-  tree : TaffyTree[C],
+pub fn[C] ChicleTree::remove_subtree(
+  tree : ChicleTree[C],
   node : NodeId,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   match tree.nodes.get(node) {
     Some(_) => ()
     None => raise InvalidNodeId(node)
@@ -305,11 +305,11 @@ pub fn[C] TaffyTree::remove_subtree(
 }
 
 ///|
-pub fn[C] TaffyTree::set_node_context(
-  tree : TaffyTree[C],
+pub fn[C] ChicleTree::set_node_context(
+  tree : ChicleTree[C],
   node : NodeId,
   context : C,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   match tree.nodes.get(node) {
     Some(_) =>
       if tree.nodes[node].alive {
@@ -324,10 +324,10 @@ pub fn[C] TaffyTree::set_node_context(
 }
 
 ///|
-pub fn[C] TaffyTree::clear_node_context(
-  tree : TaffyTree[C],
+pub fn[C] ChicleTree::clear_node_context(
+  tree : ChicleTree[C],
   node : NodeId,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   match tree.nodes.get(node) {
     Some(_) =>
       if tree.nodes[node].alive {
@@ -342,11 +342,11 @@ pub fn[C] TaffyTree::clear_node_context(
 }
 
 ///|
-pub fn[C] TaffyTree::set_style(
-  tree : TaffyTree[C],
+pub fn[C] ChicleTree::set_style(
+  tree : ChicleTree[C],
   node : NodeId,
   style : Style,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   match tree.nodes.get(node) {
     Some(_) =>
       if tree.nodes[node].alive {

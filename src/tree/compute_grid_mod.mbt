@@ -14,13 +14,13 @@
 
 ///|
 fn[C] compute_grid_layout(
-  view : TaffyView[C],
+  view : ChicleView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
   is_layout_root : Bool,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let tree = view.tree
   ignore(is_layout_root)
   let node = match tree.nodes.get(node_id) {
@@ -149,7 +149,7 @@ fn[C] compute_grid_layout(
   let has_auto_fit_rows = row_expanded.2
 
   // If an axis has no explicit tracks, treat it as having a single implicit `auto` track.
-  // This matches upstream behavior for column-only/row-only templates.
+  // This handles column-only and row-only templates consistently.
   if explicit_col_template.length() == 0 {
     explicit_col_template = [DimAuto]
     non_auto_fit_col_count = 1

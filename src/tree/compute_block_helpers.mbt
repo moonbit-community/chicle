@@ -57,9 +57,9 @@ fn collapse_state_merge(
 
 ///|
 fn[C] has_in_flow_children(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   children : Array[NodeId],
-) -> Bool raise TaffyError {
+) -> Bool raise ChicleError {
   for child_id in children {
     let child = match tree.nodes.get(child_id) {
       Some(c) => c
@@ -79,11 +79,11 @@ fn[C] has_in_flow_children(
 
 ///|
 fn[C] can_collapse_through_child(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   child_id : NodeId,
   child : NodeData,
   child_size : Size[Double],
-) -> Bool raise TaffyError {
+) -> Bool raise ChicleError {
   match child.style.display {
     DisplayBlock => ()
     _ => return false

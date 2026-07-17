@@ -14,7 +14,7 @@
 
 ///|
 fn[C] compute_block_absolute_children(
-  view : TaffyView[C],
+  view : ChicleView[C],
   abs_child_ids : Array[NodeId],
   abs_child_static_y : Array[Double],
   padding_origin : Point[Double],
@@ -24,7 +24,7 @@ fn[C] compute_block_absolute_children(
   final_border_box_height : Double,
   scrollbar_x : Double,
   scrollbar_y : Double,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let tree = view.tree
   // Absolute children: positioned relative to the final padding box.
   let final_padding_box_width = @util.max_double(
@@ -194,7 +194,7 @@ fn[C] compute_block_absolute_children(
       None => ()
     }
 
-    // Apply aspect ratio to min/max constraints (taffy 0.5 behavior).
+    // Apply aspect ratio to min/max constraints (chicle 0.5 behavior).
     let mut min_width = @util.resolve_optional_dimension(
       child.style.min_size.width,
       abs_available.width,

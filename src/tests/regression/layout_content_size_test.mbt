@@ -14,7 +14,7 @@
 
 ///|
 test "container content size includes overflowing children" {
-  let block : TaffyTree[Unit] = TaffyTree()
+  let block : ChicleTree[Unit] = ChicleTree()
   let block_child = block.new_leaf(
     Style::default()
     .with_display(display_block())
@@ -38,7 +38,7 @@ test "container content size includes overflowing children" {
     content="[200, 200, 100]",
   )
 
-  let flexbox : TaffyTree[Unit] = TaffyTree()
+  let flexbox : ChicleTree[Unit] = ChicleTree()
   let flex_child = flexbox.new_leaf(
     Style::default()
     .with_flex_shrink(0.0)
@@ -57,7 +57,7 @@ test "container content size includes overflowing children" {
     content="[200, 200]",
   )
 
-  let grid : TaffyTree[Unit] = TaffyTree()
+  let grid : ChicleTree[Unit] = ChicleTree()
   let grid_child = grid.new_leaf(
     Style::default().with_size(Size(width=length(200.0), height=length(20.0))),
   )
@@ -76,7 +76,7 @@ test "container content size includes overflowing children" {
     content="[200, 200]",
   )
 
-  let absolute : TaffyTree[Unit] = TaffyTree()
+  let absolute : ChicleTree[Unit] = ChicleTree()
   let absolute_child = absolute.new_leaf(
     Style::default()
     .with_display(display_block())
@@ -101,31 +101,31 @@ test "container content size includes overflowing children" {
 
 ///|
 test "clipped descendant overflow does not propagate to its parent" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let grandchild = taffy.new_leaf(
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let grandchild = chicle.new_leaf(
     Style::default()
     .with_display(display_block())
     .with_size(Size(width=length(200.0), height=length(20.0))),
   )
-  let clipped_child = taffy.new_with_children(
+  let clipped_child = chicle.new_with_children(
     Style::default()
     .with_display(display_block())
     .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
     .with_size(Size(width=length(50.0), height=length(30.0))),
     [grandchild],
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_block())
     .with_size(Size(width=length(100.0), height=length(50.0))),
     [clipped_child],
   )
-  taffy.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, Size::max_content())
   debug_inspect(
     [
-      taffy.layout(clipped_child).content_size.width,
-      taffy.layout(root).content_size.width,
-      taffy.layout(root).scroll_width(),
+      chicle.layout(clipped_child).content_size.width,
+      chicle.layout(root).content_size.width,
+      chicle.layout(root).scroll_width(),
     ],
     content="[200, 100, 0]",
   )
@@ -133,7 +133,7 @@ test "clipped descendant overflow does not propagate to its parent" {
 
 ///|
 test "content size uses the positive overflow edge" {
-  let positive : TaffyTree[Unit] = TaffyTree()
+  let positive : ChicleTree[Unit] = ChicleTree()
   let positive_child = positive.new_leaf(
     Style::default()
     .with_display(display_block())
@@ -158,7 +158,7 @@ test "content size uses the positive overflow edge" {
     content="[40, 140]",
   )
 
-  let negative : TaffyTree[Unit] = TaffyTree()
+  let negative : ChicleTree[Unit] = ChicleTree()
   let negative_child = negative.new_leaf(
     Style::default()
     .with_display(display_block())

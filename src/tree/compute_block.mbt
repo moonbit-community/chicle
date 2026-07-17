@@ -14,13 +14,13 @@
 
 ///|
 fn[C] compute_block_layout(
-  view : TaffyView[C],
+  view : ChicleView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
   is_layout_root : Bool,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let tree = view.tree
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
@@ -509,7 +509,7 @@ fn[C] compute_block_layout(
         vert_non_scroll_inset,
       )
   }
-  // Taffy block layout computes container width first, then performs final in-flow layout with that width.
+  // Chicle block layout computes container width first, then performs final in-flow layout with that width.
   // When this container's width is auto, do a second layout pass so that in-flow children can stretch
   // (e.g. auto-width block children) and so that absolute children's static y positions are correct.
   if !width_definite {

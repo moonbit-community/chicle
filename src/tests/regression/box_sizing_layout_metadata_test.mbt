@@ -14,8 +14,8 @@
 
 ///|
 test "box_sizing_content_box_expands_to_border_box" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let node = taffy.new_leaf(
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let node = chicle.new_leaf(
     Style::default()
     .with_box_sizing(box_sizing_content_box())
     .with_size(Size(width=length(100.0), height=length(50.0)))
@@ -36,8 +36,8 @@ test "box_sizing_content_box_expands_to_border_box" {
       ),
     ),
   )
-  taffy.compute_layout(node, Size::max_content())
-  let layout = taffy.layout(node)
+  chicle.compute_layout(node, Size::max_content())
+  let layout = chicle.layout(node)
   assert_eq(layout.size.width, 124.0)
   assert_eq(layout.size.height, 66.0)
   assert_eq(layout.padding.left, 10.0)
@@ -46,11 +46,11 @@ test "box_sizing_content_box_expands_to_border_box" {
 
 ///|
 test "layout_exposes_bevy_metadata_fields" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let child = taffy.new_leaf(
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let child = chicle.new_leaf(
     Style::default().with_size(Size(width=length(10.0), height=length(10.0))),
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default()
     .with_size(Size(width=length(100.0), height=length(80.0)))
     .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
@@ -73,8 +73,8 @@ test "layout_exposes_bevy_metadata_fields" {
     ),
     [child],
   )
-  taffy.compute_layout(root, Size::max_content())
-  let layout = taffy.layout(root)
+  chicle.compute_layout(root, Size::max_content())
+  let layout = chicle.layout(root)
   assert_eq(layout.content_size.width, 79.0)
   assert_eq(layout.content_size.height, 49.0)
   assert_eq(layout.scrollbar_size.width, 7.0)

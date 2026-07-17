@@ -107,7 +107,7 @@ fn resolve_deferred_grid_percent_gaps(
 
 ///|
 fn[C] compute_initial_grid_track_sizing(
-  view : TaffyView[C],
+  view : ChicleView[C],
   grid_items : Array[GridItem],
   placement_count : Int,
   col_tracks : Array[Dimension],
@@ -134,7 +134,7 @@ fn[C] compute_initial_grid_track_sizing(
   Double,
   Double,
   Double,
-) raise TaffyError {
+) raise ChicleError {
   compute_grid_column_track_contributions(
     view, grid_items, placement_count, col_tracks, row_tracks, contributions, col_gap,
     row_gap, content_height, specified_height, true,
@@ -260,7 +260,7 @@ fn[C] compute_initial_grid_track_sizing(
 
 ///|
 fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
-  view : TaffyView[C],
+  view : ChicleView[C],
   grid_items : Array[GridItem],
   placement_count : Int,
   col_tracks : Array[Dimension],
@@ -276,7 +276,7 @@ fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
   justify_content_for_contrib : AlignContent,
   default_align_items_for_contrib : AlignItems,
   default_justify_items_for_contrib : AlignItems,
-) -> (Array[Double], Array[Double], Double, Double) raise TaffyError {
+) -> (Array[Double], Array[Double], Double, Double) raise ChicleError {
   contributions.reset()
   compute_grid_column_track_contributions(
     view, grid_items, placement_count, col_tracks, row_tracks, contributions, col_gap,

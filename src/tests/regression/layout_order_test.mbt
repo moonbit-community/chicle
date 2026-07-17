@@ -13,8 +13,8 @@
 // limitations under the License.
 
 ///|
-test "layout order matches upstream placement order" {
-  let flex : TaffyTree[Unit] = TaffyTree()
+test "layout order follows placement order" {
+  let flex : ChicleTree[Unit] = ChicleTree()
   let flex_a = flex.new_leaf(Style::default())
   let flex_hidden = flex.new_leaf(Style::default().with_display(display_none()))
   let flex_b = flex.new_leaf(Style::default())
@@ -37,7 +37,7 @@ test "layout order matches upstream placement order" {
     content="[0, 0, 0, 2, 3]",
   )
 
-  let block : TaffyTree[Unit] = TaffyTree()
+  let block : ChicleTree[Unit] = ChicleTree()
   let block_a = block.new_leaf(Style::default())
   let block_hidden = block.new_leaf(
     Style::default().with_display(display_none()),
@@ -63,7 +63,7 @@ test "layout order matches upstream placement order" {
     content="[0, 0, 1, 2]",
   )
 
-  let grid : TaffyTree[Unit] = TaffyTree()
+  let grid : ChicleTree[Unit] = ChicleTree()
   let grid_a = grid.new_leaf(Style::default())
   let grid_hidden = grid.new_leaf(Style::default().with_display(display_none()))
   let grid_b = grid.new_leaf(Style::default())
@@ -90,19 +90,19 @@ test "layout order matches upstream placement order" {
 
 ///|
 test "layout order survives cached root layout" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let first = taffy.new_leaf(Style::default())
-  let second = taffy.new_leaf(Style::default())
-  let container = taffy.new_with_children(
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let first = chicle.new_leaf(Style::default())
+  let second = chicle.new_leaf(Style::default())
+  let container = chicle.new_with_children(
     Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
     [first, second],
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
     [container],
   )
-  taffy.compute_layout(root, Size::max_content())
-  let first_order = taffy.layout(second).order
-  taffy.compute_layout(root, Size::max_content())
-  debug_inspect([first_order, taffy.layout(second).order], content="[1, 1]")
+  chicle.compute_layout(root, Size::max_content())
+  let first_order = chicle.layout(second).order
+  chicle.compute_layout(root, Size::max_content())
+  debug_inspect([first_order, chicle.layout(second).order], content="[1, 1]")
 }

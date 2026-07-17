@@ -13,10 +13,10 @@
 // limitations under the License.
 
 ///|
-pub fn[C] TaffyTree::node_context(
-  self : TaffyTree[C],
+pub fn[C] ChicleTree::node_context(
+  self : ChicleTree[C],
   node : NodeId,
-) -> C? raise TaffyError {
+) -> C? raise ChicleError {
   let node_ref = match self.nodes.get(node) {
     Some(n) => n
     None => raise InvalidNodeId(node)
@@ -28,10 +28,10 @@ pub fn[C] TaffyTree::node_context(
 }
 
 ///|
-pub fn[C] TaffyTree::layout(
-  self : TaffyTree[C],
+pub fn[C] ChicleTree::layout(
+  self : ChicleTree[C],
   node : NodeId,
-) -> Layout raise TaffyError {
+) -> Layout raise ChicleError {
   let node_ref = match self.nodes.get(node) {
     Some(n) => n
     None => raise InvalidNodeId(node)
@@ -63,11 +63,11 @@ pub fn[C] TaffyTree::layout(
 }
 
 ///|
-pub fn[C] TaffyTree::compute_layout(
-  self : TaffyTree[C],
+pub fn[C] ChicleTree::compute_layout(
+  self : ChicleTree[C],
   root : NodeId,
   available_space : Size[AvailableSpace],
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   fn default_measure(
     _known_dimensions : Size[Double?],
     _available_space : Size[AvailableSpace],
@@ -82,24 +82,24 @@ pub fn[C] TaffyTree::compute_layout(
 }
 
 ///|
-pub fn[C] TaffyTree::enable_rounding(self : TaffyTree[C]) -> Unit {
+pub fn[C] ChicleTree::enable_rounding(self : ChicleTree[C]) -> Unit {
   self.config.use_rounding = true
 }
 
 ///|
-pub fn[C] TaffyTree::disable_rounding(self : TaffyTree[C]) -> Unit {
+pub fn[C] ChicleTree::disable_rounding(self : ChicleTree[C]) -> Unit {
   self.config.use_rounding = false
 }
 
 ///|
-pub fn[C] TaffyTree::compute_layout_with_measure(
-  self : TaffyTree[C],
+pub fn[C] ChicleTree::compute_layout_with_measure(
+  self : ChicleTree[C],
   root : NodeId,
   available_space : Size[AvailableSpace],
   measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
     Double,
   ],
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   match self.nodes.get(root) {
     Some(_) =>
       if !self.nodes[root].alive {
@@ -109,6 +109,6 @@ pub fn[C] TaffyTree::compute_layout_with_measure(
       }
     None => raise InvalidNodeId(root)
   }
-  let view : TaffyView[C] = { tree: self, measure_function }
+  let view : ChicleView[C] = { tree: self, measure_function }
   view.compute_root_layout(root, available_space)
 }

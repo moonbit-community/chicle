@@ -49,7 +49,7 @@ fn margin_collapse_state_value(state : (Double, Double)) -> Double {
 
 ///|
 fn[C] set_effective_margin_states(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
   top_state : (Double, Double),
   bottom_state : (Double, Double),

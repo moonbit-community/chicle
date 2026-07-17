@@ -14,12 +14,12 @@
 
 ///|
 fn[C] resolve_flex_auto_min_main(
-  view : TaffyView[C],
+  view : ChicleView[C],
   child_id : NodeId,
   is_col : Bool,
   parent_available_for_children : Size[AvailableSpace],
   main_axis_available : AvailableSpace,
-) -> Double raise TaffyError {
+) -> Double raise ChicleError {
   let tree = view.tree
   let child = match tree.nodes.get(child_id) {
     Some(c) => c
@@ -108,7 +108,7 @@ fn[C] resolve_flex_auto_min_main(
 
 ///|
 fn[C] resolve_wrap_line_main_sizes(
-  view : TaffyView[C],
+  view : ChicleView[C],
   flow_children : Array[NodeId],
   indices : Array[Int],
   is_col : Bool,
@@ -123,7 +123,7 @@ fn[C] resolve_wrap_line_main_sizes(
   max_main_sizes : Array[Double?],
   main_available_pre : AvailableSpace,
   parent_available_for_children : Size[AvailableSpace],
-) -> Array[Double] raise TaffyError {
+) -> Array[Double] raise ChicleError {
   let tree = view.tree
   let flow_count = flow_children.length()
   let count = indices.length()

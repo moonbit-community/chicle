@@ -13,21 +13,21 @@
 // limitations under the License.
 
 ///|
-test "grid_align_items_sized_start (upstream: generated/grid/grid_align_items_sized_start.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let node0 = taffy.new_leaf(
+test "grid_align_items_sized_start" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(
     Style::default()
     .with_grid_row_start(1)
     .with_grid_column_start(1)
     .with_size(Size(width=length(20.0), height=length(20.0))),
   )
-  let node1 = taffy.new_leaf(
+  let node1 = chicle.new_leaf(
     Style::default()
     .with_grid_row_start(3)
     .with_grid_column_start(3)
     .with_size(Size(width=length(60.0), height=length(60.0))),
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_align_items(align_items_start())
@@ -36,13 +36,13 @@ test "grid_align_items_sized_start (upstream: generated/grid/grid_align_items_si
     .with_size(Size(width=length(120.0), height=length(120.0))),
     [node0, node1],
   )
-  taffy.compute_layout(root, Size::max_content())
-  let l0 = taffy.layout(node0)
+  chicle.compute_layout(root, Size::max_content())
+  let l0 = chicle.layout(node0)
   assert_eq(l0.size.width, 20.0)
   assert_eq(l0.size.height, 20.0)
   assert_eq(l0.location.x, 0.0)
   assert_eq(l0.location.y, 0.0)
-  let l1 = taffy.layout(node1)
+  let l1 = chicle.layout(node1)
   assert_eq(l1.size.width, 60.0)
   assert_eq(l1.size.height, 60.0)
   assert_eq(l1.location.x, 80.0)
@@ -50,21 +50,21 @@ test "grid_align_items_sized_start (upstream: generated/grid/grid_align_items_si
 }
 
 ///|
-test "grid_align_items_sized_end (upstream: generated/grid/grid_align_items_sized_end.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let node0 = taffy.new_leaf(
+test "grid_align_items_sized_end" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(
     Style::default()
     .with_grid_row_start(1)
     .with_grid_column_start(1)
     .with_size(Size(width=length(20.0), height=length(20.0))),
   )
-  let node1 = taffy.new_leaf(
+  let node1 = chicle.new_leaf(
     Style::default()
     .with_grid_row_start(3)
     .with_grid_column_start(3)
     .with_size(Size(width=length(60.0), height=length(60.0))),
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_align_items(align_items_end())
@@ -73,31 +73,31 @@ test "grid_align_items_sized_end (upstream: generated/grid/grid_align_items_size
     .with_size(Size(width=length(120.0), height=length(120.0))),
     [node0, node1],
   )
-  taffy.compute_layout(root, Size::max_content())
-  let l0 = taffy.layout(node0)
+  chicle.compute_layout(root, Size::max_content())
+  let l0 = chicle.layout(node0)
   assert_eq(l0.location.x, 0.0)
   assert_eq(l0.location.y, 20.0)
-  let l1 = taffy.layout(node1)
+  let l1 = chicle.layout(node1)
   assert_eq(l1.location.x, 80.0)
   assert_eq(l1.location.y, 60.0)
 }
 
 ///|
-test "grid_justify_items_sized_start (upstream: generated/grid/grid_justify_items_sized_start.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let node0 = taffy.new_leaf(
+test "grid_justify_items_sized_start" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(
     Style::default()
     .with_grid_row_start(1)
     .with_grid_column_start(1)
     .with_size(Size(width=length(20.0), height=length(20.0))),
   )
-  let node1 = taffy.new_leaf(
+  let node1 = chicle.new_leaf(
     Style::default()
     .with_grid_row_start(3)
     .with_grid_column_start(3)
     .with_size(Size(width=length(60.0), height=length(60.0))),
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_justify_items(align_items_start())
@@ -106,31 +106,31 @@ test "grid_justify_items_sized_start (upstream: generated/grid/grid_justify_item
     .with_size(Size(width=length(120.0), height=length(120.0))),
     [node0, node1],
   )
-  taffy.compute_layout(root, Size::max_content())
-  let l0 = taffy.layout(node0)
+  chicle.compute_layout(root, Size::max_content())
+  let l0 = chicle.layout(node0)
   assert_eq(l0.location.x, 0.0)
   assert_eq(l0.location.y, 0.0)
-  let l1 = taffy.layout(node1)
+  let l1 = chicle.layout(node1)
   assert_eq(l1.location.x, 80.0)
   assert_eq(l1.location.y, 80.0)
 }
 
 ///|
-test "grid_justify_items_sized_end (upstream: generated/grid/grid_justify_items_sized_end.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let node0 = taffy.new_leaf(
+test "grid_justify_items_sized_end" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(
     Style::default()
     .with_grid_row_start(1)
     .with_grid_column_start(1)
     .with_size(Size(width=length(20.0), height=length(20.0))),
   )
-  let node1 = taffy.new_leaf(
+  let node1 = chicle.new_leaf(
     Style::default()
     .with_grid_row_start(3)
     .with_grid_column_start(3)
     .with_size(Size(width=length(60.0), height=length(60.0))),
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_justify_items(align_items_end())
@@ -139,11 +139,11 @@ test "grid_justify_items_sized_end (upstream: generated/grid/grid_justify_items_
     .with_size(Size(width=length(120.0), height=length(120.0))),
     [node0, node1],
   )
-  taffy.compute_layout(root, Size::max_content())
-  let l0 = taffy.layout(node0)
+  chicle.compute_layout(root, Size::max_content())
+  let l0 = chicle.layout(node0)
   assert_eq(l0.location.x, 20.0)
   assert_eq(l0.location.y, 0.0)
-  let l1 = taffy.layout(node1)
+  let l1 = chicle.layout(node1)
   assert_eq(l1.location.x, 60.0)
   assert_eq(l1.location.y, 80.0)
 }

@@ -542,7 +542,7 @@ fn track_sizing_algorithm(
   let sizes = state.sizes
 
   // Intrinsic sizing for flexible tracks: derive a flex fraction from content contributions.
-  // This matches taffy 0.5 behavior for `fr` tracks under indefinite available space.
+  // This matches chicle 0.5 behavior for `fr` tracks under indefinite available space.
   if !input.expand_to_fill {
     resolve_intrinsic_track_sizes(state, input)
   }

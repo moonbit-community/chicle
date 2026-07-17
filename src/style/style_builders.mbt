@@ -164,7 +164,7 @@ pub fn Style::with_grid_template_rows(
 }
 
 ///|
-pub fn Style::with_grid_template_rows_taffy(
+pub fn Style::with_grid_template_rows_chicle(
   self : Style,
   grid_template_rows : Array[TrackSizingFunction],
 ) -> Style {
@@ -183,7 +183,7 @@ pub fn Style::with_grid_template_columns(
 }
 
 ///|
-pub fn Style::with_grid_template_columns_taffy(
+pub fn Style::with_grid_template_columns_chicle(
   self : Style,
   grid_template_columns : Array[TrackSizingFunction],
 ) -> Style {
@@ -204,7 +204,7 @@ pub fn Style::with_grid_auto_rows(
 }
 
 ///|
-pub fn Style::with_grid_auto_rows_taffy(
+pub fn Style::with_grid_auto_rows_chicle(
   self : Style,
   grid_auto_rows : Array[NonRepeatedTrackSizingFunction],
 ) -> Style {
@@ -220,7 +220,7 @@ pub fn Style::with_grid_auto_columns(
 }
 
 ///|
-pub fn Style::with_grid_auto_columns_taffy(
+pub fn Style::with_grid_auto_columns_chicle(
   self : Style,
   grid_auto_columns : Array[NonRepeatedTrackSizingFunction],
 ) -> Style {

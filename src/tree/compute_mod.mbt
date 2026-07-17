@@ -13,13 +13,13 @@
 // limitations under the License.
 
 ///|
-fn[C] TaffyView::compute_root_layout(
-  self : TaffyView[C],
+fn[C] ChicleView::compute_root_layout(
+  self : ChicleView[C],
   root : NodeId,
   available_space : Size[AvailableSpace],
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let tree = self.tree
-  // Rust taffy reaches every child through recursive `perform_child_layout`.
+  // Normal layout reaches every child through recursive `perform_child_layout`.
   // MoonBit uses the same normal path below. The trampoline is deliberately
   // checked first only for the narrow shape that overflows the legacy `wasm`
   // backend stack: a deep chain of default single-child flex containers ending
@@ -49,7 +49,7 @@ fn[C] TaffyView::compute_root_layout(
 // Stack-safety trampoline for the one layout shape that is known to exceed the
 // JavaScript call stack when running the legacy `wasm` target.
 //
-// Rust taffy computes this case by recursively walking a chain of default flex
+// The general algorithm computes this case by recursively walking a chain of default flex
 // containers until it reaches the measured leaf. For this exact shape, every
 // intermediate container has no style contribution: no margins, padding,
 // border, gap, inset, min/max/explicit size, wrapping, alignment override,
@@ -68,9 +68,9 @@ fn[C] TaffyView::compute_root_layout(
 // grid/flex setting, or short chain returns `false` and lets the normal Rust-like
 // recursive compute path handle the layout. Keep this function narrow: broadening
 // it requires a proof that the resulting layout and measure-call behavior remain
-// identical to upstream taffy.
+// identical to the general recursive path.
 fn[C] compute_default_single_child_chain_trampoline(
-  view : TaffyView[C],
+  view : ChicleView[C],
   root : NodeId,
   available_space : Size[AvailableSpace],
 ) -> Bool {
@@ -146,7 +146,7 @@ fn is_default_flex_chain_leaf(style : Style) -> Bool {
 
 ///|
 fn[C] measure_default_flex_chain_leaf(
-  view : TaffyView[C],
+  view : ChicleView[C],
   leaf : NodeId,
   available_space : Size[AvailableSpace],
 ) -> Size[Double] {
@@ -342,7 +342,7 @@ fn rect_is_zero(rect : Rect[Dimension]) -> Bool {
 
 ///|
 fn[C] round_layout_tree_and_mark_clean(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   root : NodeId,
 ) -> Unit {
   let stack : Array[NodeId] = [root]
@@ -378,7 +378,7 @@ fn[C] round_layout_tree_and_mark_clean(
 
 ///|
 fn[C] copy_unrounded_layout_tree_and_mark_clean(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   root : NodeId,
 ) -> Unit {
   let stack : Array[NodeId] = [root]
@@ -400,14 +400,14 @@ fn[C] copy_unrounded_layout_tree_and_mark_clean(
 }
 
 ///|
-fn[C] TaffyView::perform_child_layout(
-  self : TaffyView[C],
+fn[C] ChicleView::perform_child_layout(
+  self : ChicleView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
   absolute_origin : Point[Double],
   is_layout_root : Bool,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let tree = self.tree
   let inputs = match tree.nodes.get(node_id) {
     Some(node) =>
@@ -424,13 +424,13 @@ fn[C] TaffyView::perform_child_layout(
 }
 
 ///|
-fn[C] TaffyView::compute_child_layout(
-  self : TaffyView[C],
+fn[C] ChicleView::compute_child_layout(
+  self : ChicleView[C],
   node_id : NodeId,
   inputs : LayoutInput,
   absolute_origin : Point[Double],
   is_layout_root : Bool,
-) -> LayoutOutput raise TaffyError {
+) -> LayoutOutput raise ChicleError {
   let tree = self.tree
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
@@ -569,7 +569,7 @@ fn[C] TaffyView::compute_child_layout(
 
 ///|
 fn[C] assign_child_layout_orders(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
   display : Display,
 ) -> Unit {
@@ -621,7 +621,7 @@ fn[C] assign_child_layout_orders(
 
 ///|
 fn[C] finalize_layout_metadata(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
   style : Style,
   available_space : Size[AvailableSpace],
@@ -697,8 +697,8 @@ fn[C] finalize_layout_metadata(
 }
 
 ///|
-fn[C] TaffyView::measure_child_size(
-  self : TaffyView[C],
+fn[C] ChicleView::measure_child_size(
+  self : ChicleView[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   parent_size : Size[Double?],
@@ -707,7 +707,7 @@ fn[C] TaffyView::measure_child_size(
   axis : AbsoluteAxis,
   vertical_margins_are_collapsible : Line[Bool],
   absolute_origin : Point[Double],
-) -> Double raise TaffyError {
+) -> Double raise ChicleError {
   let inputs = layout_input_for_compute_size(
     known_dimensions,
     parent_size,
@@ -728,7 +728,7 @@ fn[C] TaffyView::measure_child_size(
 
 ///|
 fn[C] can_use_node_layout_cache(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
   absolute_origin : Point[Double],
 ) -> Bool {
@@ -739,7 +739,7 @@ fn[C] can_use_node_layout_cache(
 
 ///|
 fn[C] restore_node_layout_from_cache(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
@@ -773,11 +773,11 @@ fn[C] restore_node_layout_from_cache(
 
 ///|
 fn[C] apply_relative_inset_after_layout(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
   style : Style,
   available_space : Size[AvailableSpace],
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   if style.display is DisplayNone {
     return
   }
@@ -817,7 +817,7 @@ fn[C] apply_relative_inset_after_layout(
 
 ///|
 fn[C] save_node_layout_cache(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],

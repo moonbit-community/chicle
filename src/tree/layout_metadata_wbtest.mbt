@@ -14,7 +14,7 @@
 
 ///|
 test "offset_subtree only changes location" {
-  let tree : TaffyTree[Unit] = TaffyTree()
+  let tree : ChicleTree[Unit] = ChicleTree()
   let node = tree.new_leaf(Style::default())
   tree.set_unrounded_layout(node, {
     order: 7,

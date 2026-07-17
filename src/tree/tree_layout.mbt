@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-suberror TaffyError {
+suberror ChicleError {
   InvalidNodeId(Int)
   CycleDetected(parent~ : Int, child~ : Int)
   ChildNotFound(parent~ : Int, child~ : Int)
@@ -182,12 +182,12 @@ priv struct NodeLayoutCacheEntry {
 }
 
 ///|
-priv struct TaffyConfig {
+priv struct ChicleConfig {
   mut use_rounding : Bool
 }
 
 ///|
-fn TaffyConfig::TaffyConfig() -> TaffyConfig {
+fn ChicleConfig::ChicleConfig() -> ChicleConfig {
   { use_rounding: true }
 }
 
@@ -271,17 +271,17 @@ struct NodeData {
 }
 
 ///|
-pub struct TaffyTree[C] {
+pub struct ChicleTree[C] {
   priv nodes : Array[NodeData]
   priv children : Array[Array[NodeId]]
   priv parents : Array[NodeId?]
   priv node_context_data : Array[C?]
-  priv config : TaffyConfig
+  priv config : ChicleConfig
 }
 
 ///|
-priv struct TaffyView[C] {
-  tree : TaffyTree[C]
+priv struct ChicleView[C] {
+  tree : ChicleTree[C]
   measure_function : (Size[Double?], Size[AvailableSpace], NodeId, C?, Style) -> Size[
     Double,
   ]

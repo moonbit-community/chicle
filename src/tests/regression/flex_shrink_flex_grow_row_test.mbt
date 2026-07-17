@@ -13,21 +13,21 @@
 // limitations under the License.
 
 ///|
-test "flex_shrink_flex_grow_row (upstream: generated/flex/flex_shrink_flex_grow_row.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let node0 = taffy.new_leaf(
+test "flex_shrink_flex_grow_row" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(
     Style::default()
     .with_flex_grow(0.0)
     .with_flex_shrink(1.0)
     .with_size(Size(width=length(500.0), height=length(100.0))),
   )
-  let node1 = taffy.new_leaf(
+  let node1 = chicle.new_leaf(
     Style::default()
     .with_flex_grow(0.0)
     .with_flex_shrink(1.0)
     .with_size(Size(width=length(500.0), height=length(100.0))),
   )
-  let node = taffy.new_with_children(
+  let node = chicle.new_with_children(
     Style::default().with_size(Size(width=length(500.0), height=length(500.0))),
     [node0, node1],
   )
@@ -41,18 +41,18 @@ test "flex_shrink_flex_grow_row (upstream: generated/flex/flex_shrink_flex_grow_
     Size::zero()
   }
 
-  taffy.compute_layout_with_measure(node, Size::max_content(), zero_measure)
-  let layout = taffy.layout(node)
+  chicle.compute_layout_with_measure(node, Size::max_content(), zero_measure)
+  let layout = chicle.layout(node)
   assert_eq(layout.size.width, 500.0)
   assert_eq(layout.size.height, 500.0)
   assert_eq(layout.location.x, 0.0)
   assert_eq(layout.location.y, 0.0)
-  let layout0 = taffy.layout(node0)
+  let layout0 = chicle.layout(node0)
   assert_eq(layout0.size.width, 250.0)
   assert_eq(layout0.size.height, 100.0)
   assert_eq(layout0.location.x, 0.0)
   assert_eq(layout0.location.y, 0.0)
-  let layout1 = taffy.layout(node1)
+  let layout1 = chicle.layout(node1)
   assert_eq(layout1.size.width, 250.0)
   assert_eq(layout1.size.height, 100.0)
   assert_eq(layout1.location.x, 250.0)

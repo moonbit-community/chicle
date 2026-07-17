@@ -25,8 +25,8 @@ fn measured_offset_leaf(
 
 ///|
 test "relative subtree offset preserves descendant layout metadata" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let grandchild = taffy.new_leaf(
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let grandchild = chicle.new_leaf(
     Style::default()
     .with_size(Size(width=length(20.0), height=length(20.0)))
     .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
@@ -48,8 +48,8 @@ test "relative subtree offset preserves descendant layout metadata" {
       ),
     ),
   )
-  let sibling = taffy.new_leaf(Style::default())
-  let container = taffy.new_with_children(
+  let sibling = chicle.new_leaf(Style::default())
+  let container = chicle.new_with_children(
     Style::default()
     .with_size(Size(width=length(50.0), height=length(50.0)))
     .with_inset(
@@ -57,16 +57,16 @@ test "relative subtree offset preserves descendant layout metadata" {
     ),
     [sibling, grandchild],
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
     [container],
   )
-  taffy.compute_layout_with_measure(
+  chicle.compute_layout_with_measure(
     root,
     Size::max_content(),
     measured_offset_leaf,
   )
-  let layout = taffy.layout(grandchild)
+  let layout = chicle.layout(grandchild)
   debug_inspect(
     [
       layout.padding.left,
@@ -89,13 +89,13 @@ test "relative subtree offset preserves descendant layout metadata" {
 
 ///|
 test "block margin collapse offset preserves descendant metadata" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let first_flow_leaf = taffy.new_leaf(
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let first_flow_leaf = chicle.new_leaf(
     Style::default()
     .with_display(display_block())
     .with_size(Size(width=auto(), height=length(10.0))),
   )
-  let metadata_leaf = taffy.new_leaf(
+  let metadata_leaf = chicle.new_leaf(
     Style::default()
     .with_display(display_block())
     .with_position(position_absolute())
@@ -109,7 +109,7 @@ test "block margin collapse offset preserves descendant metadata" {
       ),
     ),
   )
-  let first_inner = taffy.new_with_children(
+  let first_inner = chicle.new_with_children(
     Style::default()
     .with_display(display_block())
     .with_margin(
@@ -122,7 +122,7 @@ test "block margin collapse offset preserves descendant metadata" {
     ),
     [first_flow_leaf],
   )
-  let first_middle = taffy.new_with_children(
+  let first_middle = chicle.new_with_children(
     Style::default()
     .with_display(display_block())
     .with_margin(
@@ -135,7 +135,7 @@ test "block margin collapse offset preserves descendant metadata" {
     ),
     [first_inner],
   )
-  let first_child = taffy.new_with_children(
+  let first_child = chicle.new_with_children(
     Style::default()
     .with_display(display_block())
     .with_margin(
@@ -148,12 +148,12 @@ test "block margin collapse offset preserves descendant metadata" {
     ),
     [first_middle, metadata_leaf],
   )
-  let second_flow_leaf = taffy.new_leaf(
+  let second_flow_leaf = chicle.new_leaf(
     Style::default()
     .with_display(display_block())
     .with_size(Size(width=auto(), height=length(10.0))),
   )
-  let second_inner = taffy.new_with_children(
+  let second_inner = chicle.new_with_children(
     Style::default()
     .with_display(display_block())
     .with_margin(
@@ -166,7 +166,7 @@ test "block margin collapse offset preserves descendant metadata" {
     ),
     [second_flow_leaf],
   )
-  let second_middle = taffy.new_with_children(
+  let second_middle = chicle.new_with_children(
     Style::default()
     .with_display(display_block())
     .with_margin(
@@ -179,7 +179,7 @@ test "block margin collapse offset preserves descendant metadata" {
     ),
     [second_inner],
   )
-  let second_child = taffy.new_with_children(
+  let second_child = chicle.new_with_children(
     Style::default()
     .with_display(display_block())
     .with_margin(
@@ -192,18 +192,18 @@ test "block margin collapse offset preserves descendant metadata" {
     ),
     [second_middle],
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_block())
     .with_size(Size(width=length(50.0), height=auto())),
     [first_child, second_child],
   )
-  taffy.compute_layout_with_measure(
+  chicle.compute_layout_with_measure(
     root,
     Size::max_content(),
     measured_offset_leaf,
   )
-  let layout = taffy.layout(metadata_leaf)
+  let layout = chicle.layout(metadata_leaf)
   debug_inspect(
     [
       layout.padding.left,

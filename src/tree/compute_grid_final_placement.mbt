@@ -14,7 +14,7 @@
 
 ///|
 fn[C] compute_grid_relative_children_final_placement(
-  view : TaffyView[C],
+  view : ChicleView[C],
   node_id : NodeId,
   grid_items : Array[GridItem],
   placement_count : Int,
@@ -34,7 +34,7 @@ fn[C] compute_grid_relative_children_final_placement(
   default_justify_items : AlignItems,
   row_count : Int,
   col_count : Int,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let tree = view.tree
   let base_x = absolute_origin.x + border.left + padding.left
   let base_y = absolute_origin.y + border.top + padding.top

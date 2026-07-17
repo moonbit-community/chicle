@@ -14,9 +14,34 @@ pub fn layout_input_for_perform_layout(@geometry.Size[Double?], @geometry.Size[@
 pub fn requested_axis_from_absolute(@geometry.AbsoluteAxis) -> RequestedAxis
 
 // Errors
-type TaffyError
+type ChicleError
 
 // Types and methods
+pub struct ChicleTree[C] {
+  // private fields
+}
+pub fn[C] ChicleTree::ChicleTree() -> Self[C]
+pub fn[C] ChicleTree::add_child(Self[C], Int, Int) -> Unit raise ChicleError
+pub fn[C] ChicleTree::clear_node_context(Self[C], Int) -> Unit raise ChicleError
+pub fn[C] ChicleTree::compute_layout(Self[C], Int, @geometry.Size[@geometry.AvailableSpace]) -> Unit raise ChicleError
+pub fn[C] ChicleTree::compute_layout_with_measure(Self[C], Int, @geometry.Size[@geometry.AvailableSpace], (@geometry.Size[Double?], @geometry.Size[@geometry.AvailableSpace], Int, C?, @style.Style) -> @geometry.Size[Double]) -> Unit raise ChicleError
+pub fn[C] ChicleTree::dirty(Self[C], Int) -> Bool raise ChicleError
+pub fn[C] ChicleTree::disable_rounding(Self[C]) -> Unit
+pub fn[C] ChicleTree::enable_rounding(Self[C]) -> Unit
+pub fn[C] ChicleTree::layout(Self[C], Int) -> Layout raise ChicleError
+pub fn[C] ChicleTree::mark_dirty(Self[C], Int) -> Unit raise ChicleError
+pub fn[C] ChicleTree::new_leaf(Self[C], @style.Style) -> Int
+pub fn[C] ChicleTree::new_leaf_with_context(Self[C], @style.Style, C) -> Int
+pub fn[C] ChicleTree::new_with_children(Self[C], @style.Style, Array[Int]) -> Int
+pub fn[C] ChicleTree::node_context(Self[C], Int) -> C? raise ChicleError
+pub fn[C] ChicleTree::remove(Self[C], Int) -> Unit raise ChicleError
+pub fn[C] ChicleTree::remove_child(Self[C], Int, Int) -> Int raise ChicleError
+pub fn[C] ChicleTree::remove_subtree(Self[C], Int) -> Unit raise ChicleError
+pub fn[C] ChicleTree::set_children(Self[C], Int, Array[Int]) -> Unit raise ChicleError
+pub fn[C] ChicleTree::set_node_context(Self[C], Int, C) -> Unit raise ChicleError
+pub fn[C] ChicleTree::set_style(Self[C], Int, @style.Style) -> Unit raise ChicleError
+pub fn[C] ChicleTree::with_capacity(Int) -> Self[C]
+
 pub(all) struct Layout {
   order : Int
   location : @geometry.Point[Double]
@@ -71,31 +96,6 @@ pub(all) enum SizingMode {
   ContentSize
   InherentSize
 }
-
-pub struct TaffyTree[C] {
-  // private fields
-}
-pub fn[C] TaffyTree::TaffyTree() -> Self[C]
-pub fn[C] TaffyTree::add_child(Self[C], Int, Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::clear_node_context(Self[C], Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::compute_layout(Self[C], Int, @geometry.Size[@geometry.AvailableSpace]) -> Unit raise TaffyError
-pub fn[C] TaffyTree::compute_layout_with_measure(Self[C], Int, @geometry.Size[@geometry.AvailableSpace], (@geometry.Size[Double?], @geometry.Size[@geometry.AvailableSpace], Int, C?, @style.Style) -> @geometry.Size[Double]) -> Unit raise TaffyError
-pub fn[C] TaffyTree::dirty(Self[C], Int) -> Bool raise TaffyError
-pub fn[C] TaffyTree::disable_rounding(Self[C]) -> Unit
-pub fn[C] TaffyTree::enable_rounding(Self[C]) -> Unit
-pub fn[C] TaffyTree::layout(Self[C], Int) -> Layout raise TaffyError
-pub fn[C] TaffyTree::mark_dirty(Self[C], Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::new_leaf(Self[C], @style.Style) -> Int
-pub fn[C] TaffyTree::new_leaf_with_context(Self[C], @style.Style, C) -> Int
-pub fn[C] TaffyTree::new_with_children(Self[C], @style.Style, Array[Int]) -> Int
-pub fn[C] TaffyTree::node_context(Self[C], Int) -> C? raise TaffyError
-pub fn[C] TaffyTree::remove(Self[C], Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::remove_child(Self[C], Int, Int) -> Int raise TaffyError
-pub fn[C] TaffyTree::remove_subtree(Self[C], Int) -> Unit raise TaffyError
-pub fn[C] TaffyTree::set_children(Self[C], Int, Array[Int]) -> Unit raise TaffyError
-pub fn[C] TaffyTree::set_node_context(Self[C], Int, C) -> Unit raise TaffyError
-pub fn[C] TaffyTree::set_style(Self[C], Int, @style.Style) -> Unit raise TaffyError
-pub fn[C] TaffyTree::with_capacity(Int) -> Self[C]
 
 // Type aliases
 pub using @geometry {type AbsoluteAxis}

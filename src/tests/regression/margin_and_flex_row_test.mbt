@@ -13,9 +13,9 @@
 // limitations under the License.
 
 ///|
-test "margin_and_flex_row (upstream: generated/flex/margin_and_flex_row.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let node0 = taffy.new_leaf(
+test "margin_and_flex_row" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(
     Style::default()
     .with_flex_grow(1.0)
     .with_margin(
@@ -27,17 +27,17 @@ test "margin_and_flex_row (upstream: generated/flex/margin_and_flex_row.rs)" {
       ),
     ),
   )
-  let node = taffy.new_with_children(
+  let node = chicle.new_with_children(
     Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
     [node0],
   )
-  taffy.compute_layout(node, Size::max_content())
-  let layout = taffy.layout(node)
+  chicle.compute_layout(node, Size::max_content())
+  let layout = chicle.layout(node)
   assert_eq(layout.size.width, 100.0)
   assert_eq(layout.size.height, 100.0)
   assert_eq(layout.location.x, 0.0)
   assert_eq(layout.location.y, 0.0)
-  let layout0 = taffy.layout(node0)
+  let layout0 = chicle.layout(node0)
   assert_eq(layout0.size.width, 80.0)
   assert_eq(layout0.size.height, 100.0)
   assert_eq(layout0.location.x, 10.0)

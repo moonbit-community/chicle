@@ -14,7 +14,7 @@
 
 ///|
 fn[C] compute_flex_absolute_and_hidden_children(
-  view : TaffyView[C],
+  view : ChicleView[C],
   abs_children : Array[NodeId],
   hidden_children : Array[NodeId],
   absolute_origin : Point[Double],
@@ -29,7 +29,7 @@ fn[C] compute_flex_absolute_and_hidden_children(
   is_reverse : Bool,
   is_wrap_reverse : Bool,
   align_items : AlignItems?,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let tree = view.tree
   // Absolute positioned children: compute after container size is known, and do not affect flow layout.
   // Follow the same sizing rules as the block layout absolute-positioning pass:
@@ -185,7 +185,7 @@ fn[C] compute_flex_absolute_and_hidden_children(
       None => ()
     }
 
-    // Apply aspect ratio to min/max constraints (taffy 0.5 behavior).
+    // Apply aspect ratio to min/max constraints (chicle 0.5 behavior).
     let mut min_width = @util.resolve_optional_dimension(
       child.style.min_size.width,
       abs_available.width,

@@ -13,8 +13,8 @@
 // limitations under the License.
 
 ///|
-test "upstream/generated/block/block_absolute_layout_width_height_end_bottom" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
+test "block_absolute_layout_width_height_end_bottom" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
   let child_style = Style::default()
     .with_display(display_block())
     .with_position(position_absolute())
@@ -22,13 +22,13 @@ test "upstream/generated/block/block_absolute_layout_width_height_end_bottom" {
     .with_inset(
       Rect(left=auto(), right=length(10.0), top=auto(), bottom=length(10.0)),
     )
-  let child = taffy.new_leaf(child_style)
+  let child = chicle.new_leaf(child_style)
   let root_style = Style::default()
     .with_display(display_block())
     .with_size(Size(width=length(100.0), height=length(100.0)))
-  let root = taffy.new_with_children(root_style, [child])
-  taffy.compute_layout(root, Size::max_content())
-  let layout = taffy.layout(child)
+  let root = chicle.new_with_children(root_style, [child])
+  chicle.compute_layout(root, Size::max_content())
+  let layout = chicle.layout(child)
   assert_eq(layout.size.width, 10.0)
   assert_eq(layout.size.height, 10.0)
   assert_eq(layout.location.x, 80.0)

@@ -14,9 +14,9 @@
 
 ///|
 fn[C] baseline_offset_y(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
-) -> Double raise TaffyError {
+) -> Double raise ChicleError {
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
     None => raise InvalidNodeId(node_id)
@@ -138,9 +138,9 @@ fn[C] baseline_offset_y(
 
 ///|
 fn[C] grid_item_baseline_offset_y(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
-) -> Double raise TaffyError {
+) -> Double raise ChicleError {
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
     None => raise InvalidNodeId(node_id)

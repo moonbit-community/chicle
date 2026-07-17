@@ -14,10 +14,10 @@
 
 ///|
 fn[C] compute_hidden_layout(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
   absolute_origin : Point[Double],
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   match tree.nodes.get(node_id) {
     Some(_) => ()
     None => raise InvalidNodeId(node_id)
@@ -41,11 +41,11 @@ fn[C] compute_hidden_layout(
 
 ///|
 fn[C] offset_subtree(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
   dx : Double,
   dy : Double,
-) -> Unit raise TaffyError {
+) -> Unit raise ChicleError {
   let node = match tree.nodes.get(node_id) {
     Some(n) => n
     None => raise InvalidNodeId(node_id)
@@ -62,9 +62,9 @@ fn[C] offset_subtree(
 
 ///|
 fn[C] subtree_has_measure_context(
-  tree : TaffyTree[C],
+  tree : ChicleTree[C],
   node_id : NodeId,
-) -> Bool raise TaffyError {
+) -> Bool raise ChicleError {
   match tree.nodes.get(node_id) {
     Some(_) => ()
     None => raise InvalidNodeId(node_id)

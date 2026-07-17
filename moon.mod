@@ -10,6 +10,6 @@ license = "Apache-2.0"
 
 keywords = [ "layout", "flexbox", "css" ]
 
-description = "MoonBit port of the Rust crate taffy (v0.5.x)"
+description = "A UI layout engine for MoonBit"
 
 source = "src"

@@ -13,22 +13,22 @@
 // limitations under the License.
 
 ///|
-fn mk_9_nodes(taffy : TaffyTree[Unit]) -> Array[NodeId] {
+fn mk_9_nodes(chicle : ChicleTree[Unit]) -> Array[NodeId] {
   let nodes = Array::make(9, 0)
   for i in 0..<9 {
-    nodes[i] = taffy.new_leaf(Style::default())
+    nodes[i] = chicle.new_leaf(Style::default())
   }
   nodes
 }
 
 ///|
 fn check_cell(
-  taffy : TaffyTree[Unit],
+  chicle : ChicleTree[Unit],
   node : NodeId,
   expected_x : Double,
   expected_y : Double,
 ) -> Unit raise Error {
-  let l = try taffy.layout(node) catch {
+  let l = try chicle.layout(node) catch {
     _ => panic()
   } noraise {
     v => v
@@ -40,10 +40,10 @@ fn check_cell(
 }
 
 ///|
-test "grid_justify_content_space_between (upstream: generated/grid/grid_justify_content_space_between.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let nodes = mk_9_nodes(taffy)
-  let root = taffy.new_with_children(
+test "grid_justify_content_space_between" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let nodes = mk_9_nodes(chicle)
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_justify_content(justify_content_space_between())
@@ -52,20 +52,20 @@ test "grid_justify_content_space_between (upstream: generated/grid/grid_justify_
     .with_size(Size(width=length(200.0), height=length(200.0))),
     nodes,
   )
-  taffy.compute_layout(root, Size::max_content())
-  check_cell(taffy, nodes[0], 0.0, 0.0)
-  check_cell(taffy, nodes[1], 80.0, 0.0)
-  check_cell(taffy, nodes[2], 160.0, 0.0)
-  check_cell(taffy, nodes[3], 0.0, 40.0)
-  check_cell(taffy, nodes[4], 80.0, 40.0)
-  check_cell(taffy, nodes[5], 160.0, 40.0)
+  chicle.compute_layout(root, Size::max_content())
+  check_cell(chicle, nodes[0], 0.0, 0.0)
+  check_cell(chicle, nodes[1], 80.0, 0.0)
+  check_cell(chicle, nodes[2], 160.0, 0.0)
+  check_cell(chicle, nodes[3], 0.0, 40.0)
+  check_cell(chicle, nodes[4], 80.0, 40.0)
+  check_cell(chicle, nodes[5], 160.0, 40.0)
 }
 
 ///|
-test "grid_justify_content_space_evenly (upstream: generated/grid/grid_justify_content_space_evenly.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let nodes = mk_9_nodes(taffy)
-  let root = taffy.new_with_children(
+test "grid_justify_content_space_evenly" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let nodes = mk_9_nodes(chicle)
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_justify_content(justify_content_space_evenly())
@@ -74,20 +74,20 @@ test "grid_justify_content_space_evenly (upstream: generated/grid/grid_justify_c
     .with_size(Size(width=length(200.0), height=length(200.0))),
     nodes,
   )
-  taffy.compute_layout(root, Size::max_content())
-  check_cell(taffy, nodes[0], 20.0, 0.0)
-  check_cell(taffy, nodes[1], 80.0, 0.0)
-  check_cell(taffy, nodes[2], 140.0, 0.0)
-  check_cell(taffy, nodes[3], 20.0, 40.0)
-  check_cell(taffy, nodes[4], 80.0, 40.0)
-  check_cell(taffy, nodes[5], 140.0, 40.0)
+  chicle.compute_layout(root, Size::max_content())
+  check_cell(chicle, nodes[0], 20.0, 0.0)
+  check_cell(chicle, nodes[1], 80.0, 0.0)
+  check_cell(chicle, nodes[2], 140.0, 0.0)
+  check_cell(chicle, nodes[3], 20.0, 40.0)
+  check_cell(chicle, nodes[4], 80.0, 40.0)
+  check_cell(chicle, nodes[5], 140.0, 40.0)
 }
 
 ///|
-test "grid_align_content_space_between (upstream: generated/grid/grid_align_content_space_between.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let nodes = mk_9_nodes(taffy)
-  let root = taffy.new_with_children(
+test "grid_align_content_space_between" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let nodes = mk_9_nodes(chicle)
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_align_content(align_content_space_between())
@@ -96,17 +96,17 @@ test "grid_align_content_space_between (upstream: generated/grid/grid_align_cont
     .with_size(Size(width=length(200.0), height=length(200.0))),
     nodes,
   )
-  taffy.compute_layout(root, Size::max_content())
-  check_cell(taffy, nodes[0], 0.0, 0.0)
-  check_cell(taffy, nodes[3], 0.0, 80.0)
-  check_cell(taffy, nodes[6], 0.0, 160.0)
+  chicle.compute_layout(root, Size::max_content())
+  check_cell(chicle, nodes[0], 0.0, 0.0)
+  check_cell(chicle, nodes[3], 0.0, 80.0)
+  check_cell(chicle, nodes[6], 0.0, 160.0)
 }
 
 ///|
-test "grid_align_content_space_evenly (upstream: generated/grid/grid_align_content_space_evenly.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let nodes = mk_9_nodes(taffy)
-  let root = taffy.new_with_children(
+test "grid_align_content_space_evenly" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let nodes = mk_9_nodes(chicle)
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_align_content(align_content_space_evenly())
@@ -115,17 +115,17 @@ test "grid_align_content_space_evenly (upstream: generated/grid/grid_align_conte
     .with_size(Size(width=length(200.0), height=length(200.0))),
     nodes,
   )
-  taffy.compute_layout(root, Size::max_content())
-  check_cell(taffy, nodes[0], 0.0, 20.0)
-  check_cell(taffy, nodes[3], 0.0, 80.0)
-  check_cell(taffy, nodes[6], 0.0, 140.0)
+  chicle.compute_layout(root, Size::max_content())
+  check_cell(chicle, nodes[0], 0.0, 20.0)
+  check_cell(chicle, nodes[3], 0.0, 80.0)
+  check_cell(chicle, nodes[6], 0.0, 140.0)
 }
 
 ///|
-test "grid_justify_content_center_negative_space_gap (upstream: generated/grid/grid_justify_content_center_negative_space_gap.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let leafs = mk_9_nodes(taffy)
-  let inner = taffy.new_with_children(
+test "grid_justify_content_center_negative_space_gap" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let leafs = mk_9_nodes(chicle)
+  let inner = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_align_content(align_content_center())
@@ -136,7 +136,7 @@ test "grid_justify_content_center_negative_space_gap (upstream: generated/grid/g
     .with_size(Size(width=length(120.0), height=length(120.0))),
     leafs,
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_size(Size(width=length(240.0), height=length(240.0)))
@@ -150,13 +150,13 @@ test "grid_justify_content_center_negative_space_gap (upstream: generated/grid/g
     ),
     [inner],
   )
-  taffy.compute_layout(root, Size::max_content())
-  let inner_layout = taffy.layout(inner)
+  chicle.compute_layout(root, Size::max_content())
+  let inner_layout = chicle.layout(inner)
   assert_eq(inner_layout.location.x, 60.0)
   assert_eq(inner_layout.location.y, 60.0)
   assert_eq(inner_layout.size.width, 120.0)
   assert_eq(inner_layout.size.height, 120.0)
-  let l00 = taffy.layout(leafs[0])
+  let l00 = chicle.layout(leafs[0])
   assert_eq(l00.size.width, 40.0)
   assert_eq(l00.size.height, 20.0)
   assert_eq(l00.location.x, -10.0)
@@ -164,10 +164,10 @@ test "grid_justify_content_center_negative_space_gap (upstream: generated/grid/g
 }
 
 ///|
-test "grid_align_content_center_negative_space_gap (upstream: generated/grid/grid_align_content_center_negative_space_gap.rs)" {
-  let taffy : TaffyTree[Unit] = TaffyTree()
-  let leafs = mk_9_nodes(taffy)
-  let inner = taffy.new_with_children(
+test "grid_align_content_center_negative_space_gap" {
+  let chicle : ChicleTree[Unit] = ChicleTree()
+  let leafs = mk_9_nodes(chicle)
+  let inner = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_align_content(align_content_center())
@@ -178,7 +178,7 @@ test "grid_align_content_center_negative_space_gap (upstream: generated/grid/gri
     .with_size(Size(width=length(120.0), height=length(120.0))),
     leafs,
   )
-  let root = taffy.new_with_children(
+  let root = chicle.new_with_children(
     Style::default()
     .with_display(display_grid())
     .with_size(Size(width=length(240.0), height=length(240.0)))
@@ -192,13 +192,13 @@ test "grid_align_content_center_negative_space_gap (upstream: generated/grid/gri
     ),
     [inner],
   )
-  taffy.compute_layout(root, Size::max_content())
-  let inner_layout = taffy.layout(inner)
+  chicle.compute_layout(root, Size::max_content())
+  let inner_layout = chicle.layout(inner)
   assert_eq(inner_layout.location.x, 60.0)
   assert_eq(inner_layout.location.y, 60.0)
   assert_eq(inner_layout.size.width, 120.0)
   assert_eq(inner_layout.size.height, 120.0)
-  let l00 = taffy.layout(leafs[0])
+  let l00 = chicle.layout(leafs[0])
   assert_eq(l00.size.width, 20.0)
   assert_eq(l00.size.height, 40.0)
   assert_eq(l00.location.x, 20.0)

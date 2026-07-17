@@ -4,6 +4,8 @@ package "Milky2018/chicle/cmd/playground_wasm"
 // Values
 pub fn compute_layout_json(String) -> String
 
+pub fn compute_layout_yaml(String) -> String
+
 // Errors
 
 // Types and methods

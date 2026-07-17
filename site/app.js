@@ -1,264 +1,80 @@
-const dim = (value) => ({ Length: value });
-const fr = (value) => ({ Fr: value });
-const line = (value) => ({ Line: value });
-
 const examples = {
-  "flex-dashboard": {
-    version: 1,
-    available_space: { width: 960, height: 640 },
-    root: {
-      id: "dashboard",
-      label: "Dashboard",
-      style: {
-        display: "Flex",
-        size: { width: dim(760), height: dim(480) },
-        padding: {
-          left: dim(24),
-          right: dim(24),
-          top: dim(24),
-          bottom: dim(24),
-        },
-        gap: { width: dim(18) },
-        align_items: "Stretch",
-      },
-      children: [
-        {
-          id: "sidebar",
-          label: "Sidebar",
-          style: {
-            flex_direction: "Column",
-            size: { width: dim(190) },
-            padding: {
-              left: dim(16),
-              right: dim(16),
-              top: dim(16),
-              bottom: dim(16),
-            },
-            gap: { height: dim(12) },
-          },
-          children: [
-            {
-              id: "logo",
-              label: "Logo",
-              style: { size: { height: dim(52) } },
-            },
-            {
-              id: "nav-primary",
-              label: "Primary nav",
-              style: { size: { height: dim(44) } },
-            },
-            {
-              id: "nav-secondary",
-              label: "Secondary nav",
-              style: { size: { height: dim(44) } },
-            },
-            {
-              id: "sidebar-spacer",
-              label: "Flexible space",
-              style: { flex_grow: 1 },
-            },
-            {
-              id: "profile",
-              label: "Profile",
-              style: { size: { height: dim(58) } },
-            },
-          ],
-        },
-        {
-          id: "content",
-          label: "Content",
-          style: {
-            flex_direction: "Column",
-            flex_grow: 1,
-            padding: {
-              left: dim(18),
-              right: dim(18),
-              top: dim(18),
-              bottom: dim(18),
-            },
-            gap: { height: dim(16) },
-          },
-          children: [
-            {
-              id: "toolbar",
-              label: "Toolbar",
-              style: { size: { height: dim(74) } },
-            },
-            {
-              id: "cards",
-              label: "Cards",
-              style: {
-                flex_grow: 1,
-                padding: {
-                  left: dim(18),
-                  right: dim(18),
-                  top: dim(18),
-                  bottom: dim(18),
-                },
-                gap: { width: dim(14) },
-              },
-              children: [
-                {
-                  id: "card-a",
-                  label: "Card A",
-                  style: { flex_grow: 1 },
-                },
-                {
-                  id: "card-b",
-                  label: "Card B",
-                  style: { flex_grow: 1.35 },
-                },
-                {
-                  id: "card-c",
-                  label: "Card C",
-                  style: { flex_grow: 0.8 },
-                },
-              ],
-            },
-            {
-              id: "activity",
-              label: "Recent activity",
-              style: { size: { height: dim(128) } },
-            },
-          ],
-        },
-      ],
-    },
-  },
-  "grid-workspace": {
-    version: 1,
-    available_space: { width: 960, height: 640 },
-    root: {
-      id: "workspace",
-      label: "Grid workspace",
-      style: {
-        display: "Grid",
-        size: { width: dim(760), height: dim(480) },
-        padding: {
-          left: dim(22),
-          right: dim(22),
-          top: dim(22),
-          bottom: dim(22),
-        },
-        gap: { width: dim(14), height: dim(14) },
-        grid_template_columns: [dim(180), fr(1), fr(1)],
-        grid_template_rows: [dim(70), fr(1), dim(92)],
-      },
-      children: [
-        {
-          id: "grid-header",
-          label: "Header · columns 1–3",
-          style: {
-            grid_column: { start: line(1), end: line(4) },
-            grid_row: { start: line(1), end: line(2) },
-          },
-        },
-        {
-          id: "grid-sidebar",
-          label: "Sidebar · rows 2–3",
-          style: {
-            grid_column: { start: line(1), end: line(2) },
-            grid_row: { start: line(2), end: line(4) },
-          },
-        },
-        {
-          id: "grid-chart",
-          label: "Chart · columns 2–3",
-          style: {
-            grid_column: { start: line(2), end: line(4) },
-            grid_row: { start: line(2), end: line(3) },
-          },
-        },
-        {
-          id: "grid-stat-a",
-          label: "Stat A",
-          style: {
-            grid_column: { start: line(2), end: line(3) },
-            grid_row: { start: line(3), end: line(4) },
-          },
-        },
-        {
-          id: "grid-stat-b",
-          label: "Stat B",
-          style: {
-            grid_column: { start: line(3), end: line(4) },
-            grid_row: { start: line(3), end: line(4) },
-          },
-        },
-      ],
-    },
-  },
-  "absolute-overlay": {
-    version: 1,
-    available_space: { width: 960, height: 640 },
-    root: {
-      id: "page",
-      label: "Product page",
-      style: {
-        flex_direction: "Column",
-        size: { width: dim(760), height: dim(480) },
-        padding: {
-          left: dim(24),
-          right: dim(24),
-          top: dim(24),
-          bottom: dim(24),
-        },
-        gap: { height: dim(16) },
-      },
-      children: [
-        {
-          id: "page-header",
-          label: "Header",
-          style: { size: { height: dim(58) } },
-        },
-        {
-          id: "hero",
-          label: "Relative hero",
-          style: {
-            flex_grow: 1,
-            padding: {
-              left: dim(28),
-              right: dim(28),
-              top: dim(28),
-              bottom: dim(28),
-            },
-          },
-          children: [
-            {
-              id: "hero-copy",
-              label: "Hero copy",
-              style: {
-                size: { width: dim(360), height: dim(170) },
-              },
-            },
-            {
-              id: "badge",
-              label: "Absolute badge",
-              style: {
-                position: "Absolute",
-                size: { width: dim(148), height: dim(48) },
-                inset: { right: dim(22), top: dim(22) },
-              },
-            },
-            {
-              id: "floating-action",
-              label: "Floating action",
-              style: {
-                position: "Absolute",
-                size: { width: dim(172), height: dim(48) },
-                inset: { right: dim(22), bottom: dim(22) },
-              },
-            },
-          ],
-        },
-        {
-          id: "page-footer",
-          label: "Footer",
-          style: { size: { height: dim(54) } },
-        },
-      ],
-    },
-  },
+  "flex-dashboard": `space: [960, 640]
+layout:
+  Dashboard:
+    size: [760, 480]
+    padding: 24
+    gap: { column: 18 }
+    align: stretch
+    children:
+      - Sidebar:
+          flow: column
+          width: 190
+          padding: 16
+          gap: { row: 12 }
+          children:
+            - Logo: { height: 52 }
+            - Primary nav: { height: 44 }
+            - Secondary nav: { height: 44 }
+            - Flexible space: { grow: 1 }
+            - Profile: { height: 58 }
+      - Content:
+          flow: column
+          grow: 1
+          padding: 18
+          gap: { row: 16 }
+          children:
+            - Toolbar: { height: 74 }
+            - Cards:
+                grow: 1
+                padding: 18
+                gap: { column: 14 }
+                children:
+                  - Card A: { grow: 1 }
+                  - Card B: { grow: 1.35 }
+                  - Card C: { grow: 0.8 }
+            - Recent activity: { height: 128 }`,
+  "grid-workspace": `space: [960, 640]
+layout:
+  Grid workspace:
+    size: [760, 480]
+    padding: 22
+    gap: 14
+    grid:
+      columns: [180, 1fr, 1fr]
+      rows: [70, 1fr, 92]
+    children:
+      - Header · columns 1–3:
+          place: { column: [1, 4], row: [1, 2] }
+      - Sidebar · rows 2–3:
+          place: { column: [1, 2], row: [2, 4] }
+      - Chart · columns 2–3:
+          place: { column: [2, 4], row: [2, 3] }
+      - Stat A:
+          place: { column: [2, 3], row: [3, 4] }
+      - Stat B:
+          place: { column: [3, 4], row: [3, 4] }`,
+  "absolute-overlay": `space: [960, 640]
+layout:
+  Product page:
+    flow: column
+    size: [760, 480]
+    padding: 24
+    gap: { row: 16 }
+    children:
+      - Header: { height: 58 }
+      - Relative hero:
+          grow: 1
+          padding: 28
+          children:
+            - Hero copy: { size: [360, 170] }
+            - Absolute badge:
+                size: [148, 48]
+                absolute: { right: 22, top: 22 }
+            - Floating action:
+                size: [172, 48]
+                absolute: { right: 22, bottom: 22 }
+      - Footer: { height: 54 }`,
 };
 
 const palette = [
@@ -272,7 +88,6 @@ const palette = [
 
 const editor = document.querySelector("#layout-editor");
 const exampleSelect = document.querySelector("#example-select");
-const formatButton = document.querySelector("#format-button");
 const shareButton = document.querySelector("#share-button");
 const editorMessage = document.querySelector("#editor-message");
 const runtimeStatus = document.querySelector("#runtime-status");
@@ -284,7 +99,7 @@ const rootSize = document.querySelector("#root-size");
 const previewScale = document.querySelector("#preview-scale");
 const selection = document.querySelector("#selection");
 
-let computeLayoutJson = null;
+let computeLayoutYaml = null;
 let computeTimer = null;
 let lastResult = null;
 
@@ -333,7 +148,7 @@ function setMessage(text, kind = "") {
 
 function loadExample(name) {
   const example = examples[name] || examples["flex-dashboard"];
-  editor.value = JSON.stringify(example, null, 2);
+  editor.value = example + "\n";
   scheduleCompute();
 }
 
@@ -344,10 +159,10 @@ function scheduleCompute() {
 }
 
 function runCompute() {
-  if (!computeLayoutJson) return;
+  if (!computeLayoutYaml) return;
   let response;
   try {
-    response = JSON.parse(computeLayoutJson(editor.value));
+    response = JSON.parse(computeLayoutYaml(editor.value));
   } catch (error) {
     setMessage("Wasm response error: " + error.message, "error");
     return;
@@ -490,7 +305,7 @@ async function start() {
     editor.value = shared;
     exampleSelect.value = "";
   } else {
-    editor.value = JSON.stringify(examples["flex-dashboard"], null, 2);
+    editor.value = examples["flex-dashboard"] + "\n";
   }
 
   try {
@@ -501,15 +316,15 @@ async function start() {
     const bytes = await wasmResponse.arrayBuffer();
     const { instance } = await WebAssembly.instantiate(
       bytes,
-      {},
+      { console: { log: console.log } },
       {
         builtins: ["js-string"],
         importedStringConstants: "_",
       },
     );
-    computeLayoutJson = instance.exports.compute_layout_json;
-    if (typeof computeLayoutJson !== "function") {
-      throw new Error("compute_layout_json export is missing");
+    computeLayoutYaml = instance.exports.compute_layout_yaml;
+    if (typeof computeLayoutYaml !== "function") {
+      throw new Error("compute_layout_yaml export is missing");
     }
     runtimeStatus.className = "runtime-status ready";
     runtimeStatus.innerHTML = '<i aria-hidden="true"></i> WebAssembly ready';
@@ -526,14 +341,6 @@ async function start() {
 
 editor.addEventListener("input", scheduleCompute);
 exampleSelect.addEventListener("change", () => loadExample(exampleSelect.value));
-formatButton.addEventListener("click", () => {
-  try {
-    editor.value = JSON.stringify(JSON.parse(editor.value), null, 2);
-    scheduleCompute();
-  } catch {
-    setMessage("The document must be valid JSON before formatting.", "error");
-  }
-});
 shareButton.addEventListener("click", copyShareUrl);
 window.addEventListener("resize", fitPreview);
 window.addEventListener("hashchange", () => {

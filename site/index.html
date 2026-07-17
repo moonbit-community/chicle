@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Explore Chicle layouts in your browser with editable JSON and a live WebAssembly preview."
+      content="Explore Chicle layouts in your browser with editable YAML and a live WebAssembly preview."
     />
     <title>Chicle Layout Playground</title>
     <link
@@ -45,7 +45,7 @@
         <header class="panel-header">
           <div>
             <p class="eyebrow">Layout Document</p>
-            <h1 id="editor-title">Describe the layout in JSON</h1>
+            <h1 id="editor-title">Describe the layout in YAML</h1>
           </div>
           <div class="controls">
             <label class="select-wrap">
@@ -56,9 +56,6 @@
                 <option value="absolute-overlay">Absolute overlay</option>
               </select>
             </label>
-            <button class="button button-quiet" id="format-button" type="button">
-              Format
-            </button>
           </div>
         </header>
 
@@ -66,9 +63,10 @@
           <div class="line-rail" aria-hidden="true"></div>
           <textarea
             id="layout-editor"
-            aria-label="Editable Chicle layout JSON"
+            aria-label="Editable Chicle layout YAML"
             spellcheck="false"
             autocomplete="off"
+            wrap="off"
           ></textarea>
         </div>
 
@@ -126,7 +124,7 @@
         Layout is computed in your browser by Chicle WebAssembly. Labels are
         decorative and do not affect geometry.
       </p>
-      <p>JSON state is stored only in the URL fragment.</p>
+      <p>YAML state is stored only in the URL fragment.</p>
     </footer>
 
     <script type="module" src="./app.js"></script>

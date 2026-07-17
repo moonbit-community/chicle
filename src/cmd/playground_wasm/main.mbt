@@ -16,3 +16,8 @@
 pub fn compute_layout_json(input : String) -> String {
   @chicle.compute_layout_json(input)
 }
+
+///|
+pub fn compute_layout_yaml(input : String) -> String {
+  @chicle.compute_layout_yaml(input)
+}

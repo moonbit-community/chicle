@@ -14,10 +14,17 @@ pub fn compute_layout_document(LayoutDocument) -> LayoutResult raise
 
 pub fn compute_layout_json(String) -> String
 
+pub fn compute_layout_yaml(String) -> String
+
 // Errors
 pub(all) suberror LayoutDocumentError {
   EmptyNodeId
   DuplicateNodeId(String)
+} derive(@debug.Debug)
+
+pub(all) suberror LayoutYamlError {
+  EmptyYamlDocument
+  MultipleYamlDocuments(Int)
 } derive(@debug.Debug)
 
 // Types and methods
@@ -27,6 +34,7 @@ pub(all) struct LayoutDocument {
   root : LayoutNode
 }
 pub fn LayoutDocument::from_json(Json) -> Self raise @json.JsonDecodeError
+pub fn LayoutDocument::from_yaml(String) -> Self raise
 pub impl ToJson for LayoutDocument
 pub impl @json.FromJson for LayoutDocument
 

@@ -7,7 +7,7 @@ supported_targets = "wasm-gc"
 options(
   link: {
     "wasm-gc": {
-      "exports": [ "compute_layout_json" ],
+      "exports": [ "compute_layout_json", "compute_layout_yaml" ],
       "use-js-builtin-string": true,
       "imported-string-constants": "_",
     },

@@ -34,6 +34,7 @@ jobs:
 
       - name: Verify MoonBit packages
         run: |
+          moon update
           moon check --target all --warn-list +73
           moon test --target all --no-render
 

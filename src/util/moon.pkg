@@ -1,4 +1,4 @@
 import {
-  "Milky2018/moon_taffy/geometry" @geometry,
-  "Milky2018/moon_taffy/style" @style,
+  "Milky2018/chicle/geometry",
+  "Milky2018/chicle/style",
 }

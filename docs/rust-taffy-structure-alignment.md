@@ -1,6 +1,6 @@
 # Rust taffy Structure Alignment
 
-This document records architecture alignment between `moon_taffy` and the pinned Rust upstream `taffy v0.5.2`, including language-level deltas and the local file-structure mapping used to keep the MoonBit port navigable against the Rust reference.
+This document records architecture alignment between `chicle` and the pinned Rust upstream `taffy v0.5.2`, including language-level deltas and the local file-structure mapping used to keep the MoonBit port navigable against the Rust reference.
 
 ## Structural constraints
 

@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Milky2018/moon_taffy/geometry"
+package "Milky2018/chicle/geometry"
 
 // Values
 pub fn abstract_axis_block() -> AbstractAxis

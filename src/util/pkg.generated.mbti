@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Milky2018/moon_taffy/util"
+package "Milky2018/chicle/util"
 
 import {
-  "Milky2018/moon_taffy/geometry",
-  "Milky2018/moon_taffy/style",
+  "Milky2018/chicle/geometry",
+  "Milky2018/chicle/style",
 }
 
 // Values

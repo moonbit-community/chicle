@@ -1,4 +1,4 @@
-# Milky2018/moon_taffy
+# Milky2018/chicle
 
 MoonBit port of the Rust crate **taffy** (UI layout engine).
 
@@ -11,18 +11,18 @@ MoonBit port of the Rust crate **taffy** (UI layout engine).
 ```mbt check
 ///|
 test {
-  let taffy : @Milky2018/moon_taffy/tree.TaffyTree[Unit] = @Milky2018/moon_taffy/tree.TaffyTree()
-  let child = taffy.new_leaf(@Milky2018/moon_taffy/style.Style::default())
+  let taffy : @Milky2018/chicle/tree.TaffyTree[Unit] = @Milky2018/chicle/tree.TaffyTree()
+  let child = taffy.new_leaf(@Milky2018/chicle/style.Style::default())
   let root = taffy.new_with_children(
-    @Milky2018/moon_taffy/style.Style::default().with_size(
-      @Milky2018/moon_taffy/geometry.Size(
-        width=@Milky2018/moon_taffy/style_helpers.length(100.0),
-        height=@Milky2018/moon_taffy/style_helpers.length(100.0),
+    @Milky2018/chicle/style.Style::default().with_size(
+      @Milky2018/chicle/geometry.Size(
+        width=@Milky2018/chicle/style_helpers.length(100.0),
+        height=@Milky2018/chicle/style_helpers.length(100.0),
       ),
     ),
     [child],
   )
-  taffy.compute_layout(root, @Milky2018/moon_taffy/geometry.Size::max_content())
+  taffy.compute_layout(root, @Milky2018/chicle/geometry.Size::max_content())
   let layout = taffy.layout(root)
   assert_eq(layout.size.width, 100.0)
   assert_eq(layout.size.height, 100.0)

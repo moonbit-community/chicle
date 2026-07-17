@@ -1,10 +1,10 @@
-name = "Milky2018/moon_taffy"
+name = "Milky2018/chicle"
 
 version = "0.5.3"
 
 readme = "README.mbt.md"
 
-repository = "https://github.com/moonbit-community/moon_taffy"
+repository = "https://github.com/moonbit-community/chicle"
 
 license = "Apache-2.0"
 

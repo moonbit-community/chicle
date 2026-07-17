@@ -1,10 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Milky2018/moon_taffy/tests/regression"
+package "Milky2018/chicle/tests/regression"
 
 import {
-  "Milky2018/moon_taffy/geometry",
-  "Milky2018/moon_taffy/style",
-  "Milky2018/moon_taffy/tree",
+  "Milky2018/chicle/geometry",
+  "Milky2018/chicle/style",
+  "Milky2018/chicle/tree",
 }
 
 // Values

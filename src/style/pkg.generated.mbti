@@ -1,8 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Milky2018/moon_taffy/style"
+package "Milky2018/chicle/style"
 
 import {
-  "Milky2018/moon_taffy/geometry",
+  "Milky2018/chicle/geometry",
   "moonbitlang/core/json",
 }
 

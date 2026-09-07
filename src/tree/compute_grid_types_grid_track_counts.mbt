@@ -25,5 +25,5 @@ fn TrackCounts::from_raw(
   explicit~ : Int,
   positive_implicit~ : Int,
 ) -> TrackCounts {
-  { negative_implicit, explicit, positive_implicit }
+  { negative_implicit, explicit, positive_implicit, }
 }

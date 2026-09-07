@@ -62,4 +62,3 @@ pub fn Size::zero() -> Self[Double]
 // Type aliases
 
 // Traits
-

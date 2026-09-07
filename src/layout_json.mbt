@@ -140,7 +140,7 @@ pub impl @json.FromJson for LayoutNode with fn from_json(json, path) {
     Some(value) => @json.from_json(value, path=path.add_key("children"))
     None => []
   }
-  { id, label, style, children }
+  { id, label, style, children, }
 }
 
 ///|
@@ -179,7 +179,7 @@ pub impl @json.FromJson for LayoutDocument with fn from_json(json, path) {
     None => @geometry.Size::max_content()
   }
   let root : LayoutNode = @json.from_json(root_json, path=path.add_key("root"))
-  { version, available_space, root }
+  { version, available_space, root, }
 }
 
 ///|
@@ -283,7 +283,7 @@ fn build_document_node(
   }
   seen[node.id] = true
   let tree_id = tree.new_leaf(node.style)
-  built.push({ id: node.id, label: node.label, parent_id, depth, tree_id })
+  built.push({ id: node.id, label: node.label, parent_id, depth, tree_id, })
   let child_ids : Array[@tree.NodeId] = []
   for child in node.children {
     child_ids.push(
@@ -318,7 +318,7 @@ pub fn compute_layout_document(document : LayoutDocument) -> LayoutResult raise 
       layout: tree.layout(node.tree_id),
     })
   }
-  { root_id: document.root.id, nodes }
+  { root_id: document.root.id, nodes, }
 }
 
 ///|
@@ -349,3 +349,18 @@ pub fn compute_layout_json(input : String) -> String {
     _ => response_error("layout", "Layout computation failed")
   }
 }
+
+///|
+pub extend LayoutDocument with ToJson::{to_json}
+
+///|
+pub extend LayoutDocumentError with Debug::{to_repr}
+
+///|
+pub extend LayoutNode with @json.FromJson::{from_json}
+
+///|
+pub extend LayoutNode with ToJson::{to_json}
+
+///|
+pub extend LayoutResultNode with ToJson::{to_json}

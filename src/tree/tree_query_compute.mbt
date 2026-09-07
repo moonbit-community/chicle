@@ -109,6 +109,6 @@ pub fn[C] ChicleTree::compute_layout_with_measure(
       }
     None => raise InvalidNodeId(root)
   }
-  let view : ChicleView[C] = { tree: self, measure_function }
+  let view : ChicleView[C] = { tree: self, measure_function, }
   view.compute_root_layout(root, available_space)
 }

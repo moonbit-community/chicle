@@ -21,11 +21,13 @@ pub(all) suberror LayoutDocumentError {
   EmptyNodeId
   DuplicateNodeId(String)
 } derive(@debug.Debug)
+pub fn LayoutDocumentError::to_repr(Self) -> @debug.Repr
 
 pub(all) suberror LayoutYamlError {
   EmptyYamlDocument
   MultipleYamlDocuments(Int)
 } derive(@debug.Debug)
+pub fn LayoutYamlError::to_repr(Self) -> @debug.Repr
 
 // Types and methods
 pub(all) struct LayoutDocument {
@@ -35,6 +37,7 @@ pub(all) struct LayoutDocument {
 }
 pub fn LayoutDocument::from_json(Json) -> Self raise @json.JsonDecodeError
 pub fn LayoutDocument::from_yaml(String) -> Self raise
+pub fn LayoutDocument::to_json(Self) -> Json
 pub impl ToJson for LayoutDocument
 pub impl @json.FromJson for LayoutDocument
 
@@ -44,6 +47,8 @@ pub(all) struct LayoutNode {
   style : @style.Style
   children : Array[LayoutNode]
 }
+pub fn LayoutNode::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn LayoutNode::to_json(Self) -> Json
 pub impl ToJson for LayoutNode
 pub impl @json.FromJson for LayoutNode
 
@@ -61,9 +66,9 @@ pub(all) struct LayoutResultNode {
   depth : Int
   layout : @tree.Layout
 }
+pub fn LayoutResultNode::to_json(Self) -> Json
 pub impl ToJson for LayoutResultNode
 
 // Type aliases
 
 // Traits
-

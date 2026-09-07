@@ -601,7 +601,7 @@ fn[C] assign_child_layout_orders(
         let child = tree.nodes[child_id]
         if !(child.style.display is DisplayNone) {
           let layout = child.unrounded_layout
-          tree.set_unrounded_layout(child_id, { ..layout, order: source_order })
+          tree.set_unrounded_layout(child_id, { ..layout, order: source_order, })
         }
       }
     DisplayBlock => {

@@ -95,7 +95,7 @@ pub(all) struct Point[T] {
 
 ///|
 pub fn[T] Point::Point(x~ : T, y~ : T) -> Point[T] {
-  { x, y }
+  { x, y, }
 }
 
 ///|
@@ -111,7 +111,7 @@ pub(all) struct Size[T] {
 
 ///|
 pub fn[T] Size::Size(width~ : T, height~ : T) -> Size[T] {
-  { width, height }
+  { width, height, }
 }
 
 ///|
@@ -134,7 +134,7 @@ pub(all) struct Rect[T] {
 
 ///|
 pub fn[T] Rect::Rect(left~ : T, right~ : T, top~ : T, bottom~ : T) -> Rect[T] {
-  { left, right, top, bottom }
+  { left, right, top, bottom, }
 }
 
 ///|
@@ -145,5 +145,5 @@ pub(all) struct Line[T] {
 
 ///|
 pub fn[T] Line::Line(start~ : T, end~ : T) -> Line[T] {
-  { start, end }
+  { start, end, }
 }

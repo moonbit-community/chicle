@@ -83,7 +83,7 @@ pub fn Style::default() -> Style {
   {
     display: DisplayFlex,
     box_sizing: BorderBox,
-    overflow: { x: OverflowVisible, y: OverflowVisible },
+    overflow: { x: OverflowVisible, y: OverflowVisible, },
     scrollbar_width: 0.0,
     position: PosRelative,
     inset: Rect(left=DimAuto, right=DimAuto, top=DimAuto, bottom=DimAuto),

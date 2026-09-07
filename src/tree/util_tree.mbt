@@ -53,7 +53,7 @@ fn[C] offset_subtree(
   let layout = node.unrounded_layout
   tree.set_unrounded_layout(node_id, {
     ..layout,
-    location: { x: layout.location.x + dx, y: layout.location.y + dy },
+    location: { x: layout.location.x + dx, y: layout.location.y + dy, },
   })
   for child_id in tree.children[node_id] {
     offset_subtree(tree, child_id, dx, dy)

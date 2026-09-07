@@ -369,22 +369,22 @@ fn parse_dimension_rect_partial(
   let mut out = base
   match left {
     Some(v) =>
-      out = { ..out, left: @json.from_json(v, path=path.add_key("left")) }
+      out = { ..out, left: @json.from_json(v, path=path.add_key("left")), }
     None => ()
   }
   match right {
     Some(v) =>
-      out = { ..out, right: @json.from_json(v, path=path.add_key("right")) }
+      out = { ..out, right: @json.from_json(v, path=path.add_key("right")), }
     None => ()
   }
   match top {
     Some(v) =>
-      out = { ..out, top: @json.from_json(v, path=path.add_key("top")) }
+      out = { ..out, top: @json.from_json(v, path=path.add_key("top")), }
     None => ()
   }
   match bottom {
     Some(v) =>
-      out = { ..out, bottom: @json.from_json(v, path=path.add_key("bottom")) }
+      out = { ..out, bottom: @json.from_json(v, path=path.add_key("bottom")), }
     None => ()
   }
   out
@@ -402,12 +402,12 @@ fn parse_dimension_size_partial(
   let mut out = base
   match width {
     Some(v) =>
-      out = { ..out, width: @json.from_json(v, path=path.add_key("width")) }
+      out = { ..out, width: @json.from_json(v, path=path.add_key("width")), }
     None => ()
   }
   match height {
     Some(v) =>
-      out = { ..out, height: @json.from_json(v, path=path.add_key("height")) }
+      out = { ..out, height: @json.from_json(v, path=path.add_key("height")), }
     None => ()
   }
   out
@@ -425,12 +425,12 @@ fn parse_grid_line_partial(
   let mut out = base
   match start {
     Some(v) =>
-      out = { ..out, start: @json.from_json(v, path=path.add_key("start")) }
+      out = { ..out, start: @json.from_json(v, path=path.add_key("start")), }
     None => ()
   }
   match end {
     Some(v) =>
-      out = { ..out, end: @json.from_json(v, path=path.add_key("end")) }
+      out = { ..out, end: @json.from_json(v, path=path.add_key("end")), }
     None => ()
   }
   out
@@ -447,11 +447,11 @@ fn parse_overflow_point_partial(
   }
   let mut out = base
   match x {
-    Some(v) => out = { ..out, x: @json.from_json(v, path=path.add_key("x")) }
+    Some(v) => out = { ..out, x: @json.from_json(v, path=path.add_key("x")), }
     None => ()
   }
   match y {
-    Some(v) => out = { ..out, y: @json.from_json(v, path=path.add_key("y")) }
+    Some(v) => out = { ..out, y: @json.from_json(v, path=path.add_key("y")), }
     None => ()
   }
   out
@@ -900,3 +900,81 @@ pub impl @json.FromJson for Style with fn from_json(json, path) {
   }
   style
 }
+
+///|
+pub extend AlignContent with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend AlignContent with ToJson::{to_json}
+
+///|
+pub extend AlignItems with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend AlignItems with ToJson::{to_json}
+
+///|
+pub extend BoxSizing with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend BoxSizing with ToJson::{to_json}
+
+///|
+pub extend Dimension with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend Dimension with ToJson::{to_json}
+
+///|
+pub extend Display with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend Display with ToJson::{to_json}
+
+///|
+pub extend FlexDirection with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend FlexDirection with ToJson::{to_json}
+
+///|
+pub extend FlexWrap with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend FlexWrap with ToJson::{to_json}
+
+///|
+pub extend GridAutoFlow with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend GridAutoFlow with ToJson::{to_json}
+
+///|
+pub extend GridPlacement with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend GridPlacement with ToJson::{to_json}
+
+///|
+pub extend GridTrackRepetition with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend GridTrackRepetition with ToJson::{to_json}
+
+///|
+pub extend Overflow with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend Overflow with ToJson::{to_json}
+
+///|
+pub extend Position with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend Position with ToJson::{to_json}
+
+///|
+pub extend Style with @moonbitlang/core/json.FromJson::{from_json}
+
+///|
+pub extend Style with ToJson::{to_json}

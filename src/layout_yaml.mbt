@@ -567,7 +567,7 @@ fn compact_document(
 
 ///|
 impl @json.FromJson for CompactLayoutDocument with fn from_json(json, path) {
-  { document: compact_document(json, path) }
+  { document: compact_document(json, path), }
 }
 
 ///|
@@ -606,3 +606,6 @@ pub fn compute_layout_yaml(input : String) -> String {
     _ => response_error("layout", "Layout computation failed")
   }
 }
+
+///|
+pub extend LayoutYamlError with Debug::{to_repr}

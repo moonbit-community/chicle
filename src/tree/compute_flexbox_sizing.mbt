@@ -54,7 +54,7 @@ fn[C] resolve_flex_auto_min_main(
   } else {
     Size(width=DimAuto, height=original_style.size.height)
   }
-  tree.nodes[child_id].style = { ..original_style, size: cleared_size }
+  tree.nodes[child_id].style = { ..original_style, size: cleared_size, }
   let min_content_space = if is_col {
     Size(width=parent_available_for_children.width, height=AvailMinContent)
   } else {

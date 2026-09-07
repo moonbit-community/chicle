@@ -32,7 +32,7 @@ pub fn Style::with_justify_content(
   self : Style,
   justify_content : JustifyContent,
 ) -> Style {
-  { ..self, justify_content: Some(justify_content) }
+  { ..self, justify_content: Some(justify_content), }
 }
 
 ///|
@@ -85,17 +85,17 @@ pub fn Style::with_max_size(self : Style, max_size : Size[Dimension]) -> Style {
 
 ///|
 pub fn Style::with_aspect_ratio(self : Style, aspect_ratio : Double) -> Style {
-  { ..self, aspect_ratio: Some(aspect_ratio) }
+  { ..self, aspect_ratio: Some(aspect_ratio), }
 }
 
 ///|
 pub fn Style::with_align_items(self : Style, align_items : AlignItems) -> Style {
-  { ..self, align_items: Some(align_items) }
+  { ..self, align_items: Some(align_items), }
 }
 
 ///|
 pub fn Style::with_align_self(self : Style, align_self : AlignSelf) -> Style {
-  { ..self, align_self: Some(align_self) }
+  { ..self, align_self: Some(align_self), }
 }
 
 ///|
@@ -103,7 +103,7 @@ pub fn Style::with_justify_items(
   self : Style,
   justify_items : JustifyItems,
 ) -> Style {
-  { ..self, justify_items: Some(justify_items) }
+  { ..self, justify_items: Some(justify_items), }
 }
 
 ///|
@@ -111,7 +111,7 @@ pub fn Style::with_justify_self(
   self : Style,
   justify_self : JustifySelf,
 ) -> Style {
-  { ..self, justify_self: Some(justify_self) }
+  { ..self, justify_self: Some(justify_self), }
 }
 
 ///|
@@ -119,7 +119,7 @@ pub fn Style::with_align_content(
   self : Style,
   align_content : AlignContent,
 ) -> Style {
-  { ..self, align_content: Some(align_content) }
+  { ..self, align_content: Some(align_content), }
 }
 
 ///|
@@ -208,7 +208,7 @@ pub fn Style::with_grid_auto_rows_chicle(
   self : Style,
   grid_auto_rows : Array[NonRepeatedTrackSizingFunction],
 ) -> Style {
-  { ..self, grid_auto_rows: non_repeated_tracks_to_dimensions(grid_auto_rows) }
+  { ..self, grid_auto_rows: non_repeated_tracks_to_dimensions(grid_auto_rows), }
 }
 
 ///|

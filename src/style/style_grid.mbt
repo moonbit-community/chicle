@@ -63,7 +63,7 @@ pub fn NonRepeatedTrackSizingFunction::NonRepeatedTrackSizingFunction(
   min~ : MinTrackSizingFunction,
   max~ : MaxTrackSizingFunction,
 ) -> NonRepeatedTrackSizingFunction {
-  { min, max }
+  { min, max, }
 }
 
 ///|

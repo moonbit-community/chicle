@@ -32,6 +32,8 @@ pub(all) enum AlignContent {
   AlignSpaceEvenly
   AlignSpaceAround
 }
+pub fn AlignContent::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn AlignContent::to_json(Self) -> Json
 pub impl ToJson for AlignContent
 pub impl @json.FromJson for AlignContent
 
@@ -47,6 +49,8 @@ pub(all) enum AlignItems {
   ItemsBaseline
   ItemsStretch
 }
+pub fn AlignItems::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn AlignItems::to_json(Self) -> Json
 pub impl ToJson for AlignItems
 pub impl @json.FromJson for AlignItems
 
@@ -54,6 +58,8 @@ pub(all) enum BoxSizing {
   BorderBox
   ContentBox
 }
+pub fn BoxSizing::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn BoxSizing::to_json(Self) -> Json
 pub impl ToJson for BoxSizing
 pub impl @json.FromJson for BoxSizing
 
@@ -68,7 +74,9 @@ pub(all) enum Dimension {
   DimFitContent(Dimension)
   DimRepeat(GridTrackRepetition, Array[Dimension])
 }
+pub fn Dimension::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 pub fn Dimension::into_option(Self) -> Double?
+pub fn Dimension::to_json(Self) -> Json
 pub impl ToJson for Dimension
 pub impl @json.FromJson for Dimension
 
@@ -78,6 +86,8 @@ pub(all) enum Display {
   DisplayGrid
   DisplayNone
 }
+pub fn Display::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Display::to_json(Self) -> Json
 pub impl ToJson for Display
 pub impl @json.FromJson for Display
 
@@ -87,6 +97,8 @@ pub(all) enum FlexDirection {
   FlexColumn
   FlexColumnReverse
 }
+pub fn FlexDirection::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn FlexDirection::to_json(Self) -> Json
 pub impl ToJson for FlexDirection
 pub impl @json.FromJson for FlexDirection
 
@@ -95,6 +107,8 @@ pub(all) enum FlexWrap {
   FlexWrap
   FlexWrapReverse
 }
+pub fn FlexWrap::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn FlexWrap::to_json(Self) -> Json
 pub impl ToJson for FlexWrap
 pub impl @json.FromJson for FlexWrap
 
@@ -104,8 +118,10 @@ pub(all) enum GridAutoFlow {
   RowDense
   ColumnDense
 }
+pub fn GridAutoFlow::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 pub fn GridAutoFlow::is_dense(Self) -> Bool
 pub fn GridAutoFlow::primary_axis(Self) -> @geometry.AbsoluteAxis
+pub fn GridAutoFlow::to_json(Self) -> Json
 pub impl ToJson for GridAutoFlow
 pub impl @json.FromJson for GridAutoFlow
 
@@ -114,8 +130,10 @@ pub(all) enum GridPlacement {
   PlaceLine(Int)
   PlaceSpan(Int)
 }
+pub fn GridPlacement::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
 pub fn GridPlacement::indefinite_span(@geometry.Line[Self]) -> Int
 pub fn GridPlacement::is_definite(@geometry.Line[Self]) -> Bool
+pub fn GridPlacement::to_json(Self) -> Json
 pub impl ToJson for GridPlacement
 pub impl @json.FromJson for GridPlacement
 
@@ -124,6 +142,8 @@ pub(all) enum GridTrackRepetition {
   RepeatAutoFill
   RepeatAutoFit
 }
+pub fn GridTrackRepetition::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn GridTrackRepetition::to_json(Self) -> Json
 pub impl ToJson for GridTrackRepetition
 pub impl @json.FromJson for GridTrackRepetition
 
@@ -185,6 +205,8 @@ pub(all) enum Overflow {
   OverflowHidden
   OverflowScroll
 }
+pub fn Overflow::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Overflow::to_json(Self) -> Json
 pub impl ToJson for Overflow
 pub impl @json.FromJson for Overflow
 
@@ -192,6 +214,8 @@ pub(all) enum Position {
   PosRelative
   PosAbsolute
 }
+pub fn Position::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Position::to_json(Self) -> Json
 pub impl ToJson for Position
 pub impl @json.FromJson for Position
 
@@ -232,6 +256,8 @@ pub(all) struct Style {
   grid_column_start : Int?
 }
 pub fn Style::default() -> Self
+pub fn Style::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Style::to_json(Self) -> Json
 pub fn Style::with_align_content(Self, AlignContent) -> Self
 pub fn Style::with_align_items(Self, AlignItems) -> Self
 pub fn Style::with_align_self(Self, AlignItems) -> Self
@@ -295,4 +321,3 @@ pub using @geometry {type Rect}
 pub using @geometry {type Size}
 
 // Traits
-

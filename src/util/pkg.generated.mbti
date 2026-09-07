@@ -43,4 +43,3 @@ pub using @geometry {type Rect}
 pub using @geometry {type Size}
 
 // Traits
-

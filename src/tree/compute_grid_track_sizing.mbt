@@ -242,7 +242,7 @@ fn initialize_track_sizes(
       }
     }
   }
-  { sizes, min_sizes, fr_weights, stretch_auto, max_limits, inf }
+  { sizes, min_sizes, fr_weights, stretch_auto, max_limits, inf, }
 }
 
 ///|

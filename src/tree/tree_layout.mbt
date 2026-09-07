@@ -188,7 +188,7 @@ priv struct ChicleConfig {
 
 ///|
 fn ChicleConfig::ChicleConfig() -> ChicleConfig {
-  { use_rounding: true }
+  { use_rounding: true, }
 }
 
 ///|

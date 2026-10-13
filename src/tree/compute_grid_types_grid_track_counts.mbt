@@ -14,16 +14,16 @@
 
 ///|
 priv struct TrackCounts {
-  negative_implicit : Int
-  explicit : Int
-  positive_implicit : Int
+  negative_implicit : Int32
+  explicit : Int32
+  positive_implicit : Int32
 }
 
 ///|
 fn TrackCounts::from_raw(
-  negative_implicit~ : Int,
-  explicit~ : Int,
-  positive_implicit~ : Int,
+  negative_implicit~ : Int32,
+  explicit~ : Int32,
+  positive_implicit~ : Int32,
 ) -> TrackCounts {
   { negative_implicit, explicit, positive_implicit, }
 }

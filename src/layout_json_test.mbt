@@ -31,7 +31,7 @@ test "compute layout json returns generic node geometry" {
     #|    ]
     #|  }
     #|}
-  let response = @json.parse(compute_layout_json(input))
+  let response = @json.parse(@chicle.compute_layout_json(input))
   guard response
     is {
       "ok": True,
@@ -56,13 +56,13 @@ test "compute layout json returns generic node geometry" {
 
 ///|
 test "compute layout json reports parse and validation errors" {
-  guard @json.parse(compute_layout_json("{"))
+  guard @json.parse(@chicle.compute_layout_json("{"))
     is { "ok": False, "error": { "kind": String("parse"), .. }, .. } else {
     fail("expected parse error")
   }
   let duplicate =
     #|{"root":{"id":"same","children":[{"id":"same"}]}}
-  guard @json.parse(compute_layout_json(duplicate))
+  guard @json.parse(@chicle.compute_layout_json(duplicate))
     is { "ok": False, "error": { "kind": String("input"), .. }, .. } else {
     fail("expected duplicate id error")
   }

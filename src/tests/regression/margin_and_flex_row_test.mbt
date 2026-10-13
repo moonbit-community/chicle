@@ -14,24 +14,26 @@
 
 ///|
 test "margin_and_flex_row" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let node0 = chicle.new_leaf(
-    Style::default()
+    @regression.Style::default()
     .with_flex_grow(1.0)
     .with_margin(
       Rect(
-        left=length(10.0),
-        right=length(10.0),
-        top=length(0.0),
-        bottom=length(0.0),
+        left=@regression.length(10.0),
+        right=@regression.length(10.0),
+        top=@regression.length(0.0),
+        bottom=@regression.length(0.0),
       ),
     ),
   )
   let node = chicle.new_with_children(
-    Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(100.0)),
+    ),
     [node0],
   )
-  chicle.compute_layout(node, Size::max_content())
+  chicle.compute_layout(node, @regression.Size::max_content())
   let layout = chicle.layout(node)
   assert_eq(layout.size.width, 100.0)
   assert_eq(layout.size.height, 100.0)

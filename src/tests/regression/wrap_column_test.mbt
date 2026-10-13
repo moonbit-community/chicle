@@ -14,27 +14,37 @@
 
 ///|
 test "wrap_column" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let node0 = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(30.0), height=length(31.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(30.0), height=@regression.length(31.0)),
+    ),
   )
   let node1 = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(30.0), height=length(32.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(30.0), height=@regression.length(32.0)),
+    ),
   )
   let node2 = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(30.0), height=length(33.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(30.0), height=@regression.length(33.0)),
+    ),
   )
   let node3 = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(30.0), height=length(34.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(30.0), height=@regression.length(34.0)),
+    ),
   )
   let root = chicle.new_with_children(
-    Style::default()
-    .with_flex_direction(flex_direction_column())
-    .with_flex_wrap(flex_wrap_wrap())
-    .with_size(Size(width=length(100.0), height=length(100.0))),
+    @regression.Style::default()
+    .with_flex_direction(@regression.flex_direction_column())
+    .with_flex_wrap(@regression.flex_wrap_wrap())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(100.0)),
+    ),
     [node0, node1, node2, node3],
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let layout = chicle.layout(root)
   assert_eq(layout.size.width, 100.0)
   assert_eq(layout.size.height, 100.0)

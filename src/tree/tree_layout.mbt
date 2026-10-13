@@ -14,18 +14,18 @@
 
 ///|
 suberror ChicleError {
-  InvalidNodeId(Int)
-  CycleDetected(parent~ : Int, child~ : Int)
-  ChildNotFound(parent~ : Int, child~ : Int)
-  DuplicateChild(parent~ : Int, child~ : Int)
+  InvalidNodeId(Int32)
+  CycleDetected(parent~ : Int32, child~ : Int32)
+  ChildNotFound(parent~ : Int32, child~ : Int32)
+  DuplicateChild(parent~ : Int32, child~ : Int32)
 }
 
 ///|
-pub type NodeId = Int
+pub type NodeId = Int32
 
 ///|
 pub(all) struct Layout {
-  order : Int
+  order : Int32
   location : Point[Double]
   size : Size[Double]
   content_size : Size[Double]

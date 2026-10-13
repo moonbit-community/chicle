@@ -16,8 +16,8 @@
 fn[C] compute_grid_size_estimate(
   tree : ChicleTree[C],
   children : Array[NodeId],
-  explicit_col_count : Int,
-  explicit_row_count : Int,
+  explicit_col_count : Int32,
+  explicit_row_count : Int32,
 ) -> (TrackCounts, TrackCounts) raise ChicleError {
   let mut col_min = 0
   let mut col_max = 0
@@ -86,8 +86,8 @@ fn[C] compute_grid_size_estimate(
 ///|
 fn child_min_line_max_line_span(
   line : Line[GridPlacement],
-  explicit_track_count : Int,
-) -> (Int, Int, Int) {
+  explicit_track_count : Int32,
+) -> (Int32, Int32, Int32) {
   let resolved = axis_resolve_start_line_and_span(line, explicit_track_count)
   let min_line = match resolved.0 {
     Some(sl) => sl
@@ -105,7 +105,7 @@ fn child_min_line_max_line_span(
 }
 
 ///|
-fn min_int(a : Int, b : Int) -> Int {
+fn min_int(a : Int32, b : Int32) -> Int32 {
   if a < b {
     a
   } else {
@@ -114,7 +114,7 @@ fn min_int(a : Int, b : Int) -> Int {
 }
 
 ///|
-fn max_int(a : Int, b : Int) -> Int {
+fn max_int(a : Int32, b : Int32) -> Int32 {
   if a > b {
     a
   } else {

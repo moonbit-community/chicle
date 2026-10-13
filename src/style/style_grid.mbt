@@ -14,7 +14,7 @@
 
 ///|
 pub(all) enum GridTrackRepetition {
-  RepeatCount(Int)
+  RepeatCount(Int32)
   RepeatAutoFill
   RepeatAutoFit
 }
@@ -30,8 +30,8 @@ pub(all) enum GridAutoFlow {
 ///|
 pub(all) enum GridPlacement {
   PlaceAuto
-  PlaceLine(Int)
-  PlaceSpan(Int)
+  PlaceLine(Int32)
+  PlaceSpan(Int32)
 }
 
 ///|
@@ -89,7 +89,7 @@ pub fn GridAutoFlow::primary_axis(self : GridAutoFlow) -> AbsoluteAxis {
 }
 
 ///|
-pub fn GridPlacement::indefinite_span(self : Line[GridPlacement]) -> Int {
+pub fn GridPlacement::indefinite_span(self : Line[GridPlacement]) -> Int32 {
   match (self.start, self.end) {
     (PlaceLine(_), PlaceAuto) => 1
     (PlaceAuto, PlaceLine(_)) => 1

@@ -319,7 +319,7 @@ fn shrink_tracks_to_minimum(
   }
   let eps = 0.000001
   let mut over = used - available
-  let mut shrinkable : Array[Int] = []
+  let mut shrinkable : Array[Int32] = []
   for i in 0..<sizes.length() {
     if sizes[i] > min_sizes[i] + eps {
       shrinkable.push(i)
@@ -328,7 +328,7 @@ fn shrink_tracks_to_minimum(
   while over > eps && shrinkable.length() > 0 {
     let per_track = over / shrinkable.length().to_double()
     let mut shrunk = 0.0
-    let next : Array[Int] = []
+    let next : Array[Int32] = []
     for idx in shrinkable {
       let can_shrink = sizes[idx] - min_sizes[idx]
       let shrink = if can_shrink < per_track { can_shrink } else { per_track }
@@ -376,7 +376,7 @@ fn expand_flexible_tracks(
     available - fixed_used - gap_total,
     0.0,
   )
-  let mut unresolved : Array[Int] = []
+  let mut unresolved : Array[Int32] = []
   for i in 0..<sizes.length() {
     if fr_weights[i] > 0.0 {
       unresolved.push(i)
@@ -391,7 +391,7 @@ fn expand_flexible_tracks(
     let denom = if unresolved_sum < 1.0 { 1.0 } else { unresolved_sum }
     let flex_fraction = remaining_for_fr / denom
     let mut froze_any = false
-    let next_unresolved : Array[Int] = []
+    let next_unresolved : Array[Int32] = []
     for idx in unresolved {
       let proposed = flex_fraction * fr_weights[idx]
       if proposed + 0.000001 < min_sizes[idx] {
@@ -413,7 +413,7 @@ fn expand_flexible_tracks(
       }
       if is_near_int(total_fr_space) {
         let total_int = total_fr_space.floor().to_int()
-        let raw_bases : Array[Int] = []
+        let raw_bases : Array[Int32] = []
         let raw_fracs : Array[Double] = []
         let mut sum_bases = 0
         for idx in unresolved {
@@ -460,7 +460,7 @@ fn distribute_space_up_to_growth_limits(
   let sizes = state.sizes
   let max_limits = state.max_limits
   let mut remaining = free
-  let mut growable : Array[Int] = []
+  let mut growable : Array[Int32] = []
   for i in 0..<sizes.length() {
     if max_limits[i] < state.inf && sizes[i] + 0.000001 < max_limits[i] {
       growable.push(i)
@@ -469,7 +469,7 @@ fn distribute_space_up_to_growth_limits(
   while remaining > 0.000001 && growable.length() > 0 {
     let extra = remaining / growable.length().to_double()
     let mut used_extra = 0.0
-    let next : Array[Int] = []
+    let next : Array[Int32] = []
     for idx in growable {
       let cap = max_limits[idx] - sizes[idx]
       let increase = if cap < extra { cap } else { extra }
@@ -516,7 +516,7 @@ fn stretch_auto_tracks(
   }
   let sizes = state.sizes
   let stretch_auto = state.stretch_auto
-  let stretchable : Array[Int] = []
+  let stretchable : Array[Int32] = []
   for i in 0..<sizes.length() {
     if stretch_auto[i] {
       stretchable.push(i)

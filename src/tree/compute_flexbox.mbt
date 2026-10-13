@@ -592,10 +592,10 @@ fn[C] compute_flexbox_layout(
   }
   if is_wrap && main_is_definite && flow_count > 0 {
     // Build flex lines (single pass, simplified).
-    let lines : Array[Array[Int]] = []
+    let lines : Array[Array[Int32]] = []
     let line_crosses : Array[Double] = []
     let line_baseline_befores : Array[Double] = []
-    let mut current_line : Array[Int] = []
+    let mut current_line : Array[Int32] = []
     let mut current_outer_main = 0.0
     let mut current_cross = 0.0
     let mut current_baseline_before = 0.0

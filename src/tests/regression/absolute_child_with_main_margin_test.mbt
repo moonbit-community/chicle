@@ -14,25 +14,29 @@
 
 ///|
 test "absolute_child_with_main_margin" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let child = chicle.new_leaf(
-    Style::default()
-    .with_position(position_absolute())
-    .with_size(Size(width=length(9.0), height=length(9.0)))
+    @regression.Style::default()
+    .with_position(@regression.position_absolute())
+    .with_size(
+      Size(width=@regression.length(9.0), height=@regression.length(9.0)),
+    )
     .with_margin(
       Rect(
-        left=length(7.0),
-        right=length(0.0),
-        top=length(0.0),
-        bottom=length(0.0),
+        left=@regression.length(7.0),
+        right=@regression.length(0.0),
+        top=@regression.length(0.0),
+        bottom=@regression.length(0.0),
       ),
     ),
   )
   let root = chicle.new_with_children(
-    Style::default().with_size(Size(width=length(20.0), height=length(37.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(20.0), height=@regression.length(37.0)),
+    ),
     [child],
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let layout = chicle.layout(root)
   assert_eq(layout.size.width, 20.0)
   assert_eq(layout.size.height, 37.0)

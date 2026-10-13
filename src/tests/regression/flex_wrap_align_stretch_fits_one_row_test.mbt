@@ -14,20 +14,26 @@
 
 ///|
 test "flex_wrap_align_stretch_fits_one_row" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let node0 = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(50.0), height=auto())),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(50.0), height=@regression.auto()),
+    ),
   )
   let node1 = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(50.0), height=auto())),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(50.0), height=@regression.auto()),
+    ),
   )
   let root = chicle.new_with_children(
-    Style::default()
-    .with_flex_wrap(flex_wrap_wrap())
-    .with_size(Size(width=length(150.0), height=length(100.0))),
+    @regression.Style::default()
+    .with_flex_wrap(@regression.flex_wrap_wrap())
+    .with_size(
+      Size(width=@regression.length(150.0), height=@regression.length(100.0)),
+    ),
     [node0, node1],
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let layout = chicle.layout(root)
   assert_eq(layout.size.width, 150.0)
   assert_eq(layout.size.height, 100.0)

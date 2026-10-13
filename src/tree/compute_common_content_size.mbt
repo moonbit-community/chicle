@@ -138,7 +138,7 @@ fn expand_grid_template_axis(
   template : Array[Dimension],
   content_size : Double,
   gap : Double,
-) -> (Array[Dimension], Int, Bool) {
+) -> (Array[Dimension], Int32, Bool) {
   let expanded : Array[Dimension] = []
   let mut used = 0.0
   let mut first = true

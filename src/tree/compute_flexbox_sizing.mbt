@@ -110,7 +110,7 @@ fn[C] resolve_flex_auto_min_main(
 fn[C] resolve_wrap_line_main_sizes(
   view : ChicleView[C],
   flow_children : Array[NodeId],
-  indices : Array[Int],
+  indices : Array[Int32],
   is_col : Bool,
   container_main : Double,
   gap_main : Double,
@@ -282,7 +282,7 @@ fn[C] resolve_wrap_line_main_sizes(
 
 ///|
 fn compute_single_line_auto_intrinsic_main(
-  flow_count : Int,
+  flow_count : Int32,
   gap_main : Double,
   base_main_sizes : Array[Double],
   preferred_main_sizes : Array[Double?],

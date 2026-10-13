@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-fn origin_zero_line(value : Int, explicit_track_count : Int) -> Int? {
+fn origin_zero_line(value : Int32, explicit_track_count : Int32) -> Int32? {
   if value == 0 {
     None
   } else if value > 0 {

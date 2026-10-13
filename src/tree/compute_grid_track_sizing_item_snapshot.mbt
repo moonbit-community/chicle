@@ -15,8 +15,8 @@
 ///|
 priv struct GridTrackSizingItemSnapshot {
   placed : Array[Bool]
-  start : Array[Int]
-  span : Array[Int]
+  start : Array[Int32]
+  span : Array[Int32]
   minimum_contribution : Array[Double]
   min_content_contribution : Array[Double]
   max_content_contribution : Array[Double]
@@ -29,8 +29,8 @@ fn grid_column_track_sizing_item_snapshot(
   items : Array[GridItem],
 ) -> GridTrackSizingItemSnapshot {
   let placed : Array[Bool] = []
-  let start : Array[Int] = []
-  let span : Array[Int] = []
+  let start : Array[Int32] = []
+  let span : Array[Int32] = []
   let minimum_contribution : Array[Double] = []
   let min_content_contribution : Array[Double] = []
   let max_content_contribution : Array[Double] = []
@@ -64,8 +64,8 @@ fn grid_row_track_sizing_item_snapshot(
   items : Array[GridItem],
 ) -> GridTrackSizingItemSnapshot {
   let placed : Array[Bool] = []
-  let start : Array[Int] = []
-  let span : Array[Int] = []
+  let start : Array[Int32] = []
+  let span : Array[Int32] = []
   let minimum_contribution : Array[Double] = []
   let min_content_contribution : Array[Double] = []
   let max_content_contribution : Array[Double] = []

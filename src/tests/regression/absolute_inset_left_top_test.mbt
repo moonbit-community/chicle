@@ -14,24 +14,33 @@
 
 ///|
 test "absolute_inset_left_top (github:issue#1 repro)" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
-  let root_style = Style::default()
-    .with_display(display_flex())
-    .with_position(position_relative())
-    .with_size(Size(width=length(800.0), height=length(600.0)))
-  let child_style = Style::default()
-    .with_position(position_absolute())
-    .with_inset(
-      Rect(left=length(40.0), right=auto(), top=length(50.0), bottom=auto()),
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
+  let root_style = @regression.Style::default()
+    .with_display(@regression.display_flex())
+    .with_position(@regression.position_relative())
+    .with_size(
+      Size(width=@regression.length(800.0), height=@regression.length(600.0)),
     )
-    .with_size(Size(width=length(200.0), height=length(60.0)))
+  let child_style = @regression.Style::default()
+    .with_position(@regression.position_absolute())
+    .with_inset(
+      Rect(
+        left=@regression.length(40.0),
+        right=@regression.auto(),
+        top=@regression.length(50.0),
+        bottom=@regression.auto(),
+      ),
+    )
+    .with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(60.0)),
+    )
   let child = chicle.new_leaf(child_style)
   let root = chicle.new_with_children(root_style, [child])
   chicle.compute_layout(
     root,
     Size(
-      width=available_space_definite(800.0),
-      height=available_space_definite(600.0),
+      width=@regression.available_space_definite(800.0),
+      height=@regression.available_space_definite(600.0),
     ),
   )
   let layout = chicle.layout(child)

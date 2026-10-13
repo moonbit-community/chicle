@@ -16,7 +16,7 @@
 fn cache_slot(
   known_dimensions : Size[Double?],
   available_space : Size[AvailableSpace],
-) -> Int {
+) -> Int32 {
   let has_known_width = known_dimensions.width is Some(_)
   let has_known_height = known_dimensions.height is Some(_)
   if has_known_width && has_known_height {

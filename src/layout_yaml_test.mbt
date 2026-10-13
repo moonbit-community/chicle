@@ -44,8 +44,8 @@ test "compact YAML matches canonical JSON layout" {
     #|  }
     #|}
   assert_eq(
-    @json.parse(compute_layout_yaml(yaml)),
-    @json.parse(compute_layout_json(canonical)),
+    @json.parse(@chicle.compute_layout_yaml(yaml)),
+    @json.parse(@chicle.compute_layout_json(canonical)),
   )
 }
 
@@ -69,7 +69,7 @@ test "compact YAML supports grid and absolute positioning" {
     #|          absolute:
     #|            right: 12
     #|            top: 10
-  guard @json.parse(compute_layout_yaml(input))
+  guard @json.parse(@chicle.compute_layout_yaml(input))
     is { "ok": True, "result": { "nodes": Array(nodes), .. }, .. } else {
     fail("expected successful compact YAML layout")
   }
@@ -78,7 +78,7 @@ test "compact YAML supports grid and absolute positioning" {
 
 ///|
 test "compact YAML reports parser and authoring errors" {
-  guard @json.parse(compute_layout_yaml("layout: ["))
+  guard @json.parse(@chicle.compute_layout_yaml("layout: ["))
     is { "ok": False, "error": { "kind": String("parse"), .. }, .. } else {
     fail("expected YAML parse error")
   }
@@ -86,7 +86,7 @@ test "compact YAML reports parser and authoring errors" {
     #|layout:
     #|  root:
     #|    pading: 12
-  guard @json.parse(compute_layout_yaml(unknown))
+  guard @json.parse(@chicle.compute_layout_yaml(unknown))
     is {
       "ok": False,
       "error": { "kind": String("input"), "message": String(message), .. },

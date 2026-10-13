@@ -14,20 +14,26 @@
 
 ///|
 test "align_baseline" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let node0 = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(50.0), height=length(50.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(50.0), height=@regression.length(50.0)),
+    ),
   )
   let node1 = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(50.0), height=length(20.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(50.0), height=@regression.length(20.0)),
+    ),
   )
   let root = chicle.new_with_children(
-    Style::default()
-    .with_align_items(align_items_baseline())
-    .with_size(Size(width=length(100.0), height=length(100.0))),
+    @regression.Style::default()
+    .with_align_items(@regression.align_items_baseline())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(100.0)),
+    ),
     [node0, node1],
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let layout = chicle.layout(root)
   assert_eq(layout.size.width, 100.0)
   assert_eq(layout.size.height, 100.0)
@@ -43,26 +49,34 @@ test "align_baseline" {
 
 ///|
 test "align_self_baseline" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let node0 = chicle.new_leaf(
-    Style::default()
-    .with_align_self(align_items_baseline())
-    .with_size(Size(width=length(50.0), height=length(50.0))),
+    @regression.Style::default()
+    .with_align_self(@regression.align_items_baseline())
+    .with_size(
+      Size(width=@regression.length(50.0), height=@regression.length(50.0)),
+    ),
   )
   let node10 = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(50.0), height=length(10.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(50.0), height=@regression.length(10.0)),
+    ),
   )
   let node1 = chicle.new_with_children(
-    Style::default()
-    .with_align_self(align_items_baseline())
-    .with_size(Size(width=length(50.0), height=length(20.0))),
+    @regression.Style::default()
+    .with_align_self(@regression.align_items_baseline())
+    .with_size(
+      Size(width=@regression.length(50.0), height=@regression.length(20.0)),
+    ),
     [node10],
   )
   let root = chicle.new_with_children(
-    Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(100.0)),
+    ),
     [node0, node1],
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let layout = chicle.layout(root)
   assert_eq(layout.size.width, 100.0)
   assert_eq(layout.size.height, 100.0)

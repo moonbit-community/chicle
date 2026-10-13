@@ -14,21 +14,28 @@
 
 ///|
 test "relative_position_should_not_nudge_siblings" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
-  let child_style = Style::default()
-    .with_size(Size(width=auto(), height=length(10.0)))
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
+  let child_style = @regression.Style::default()
+    .with_size(Size(width=@regression.auto(), height=@regression.length(10.0)))
     .with_inset(
-      Rect(left=auto(), right=auto(), top=length(15.0), bottom=auto()),
+      Rect(
+        left=@regression.auto(),
+        right=@regression.auto(),
+        top=@regression.length(15.0),
+        bottom=@regression.auto(),
+      ),
     )
   let node0 = chicle.new_leaf(child_style)
   let node1 = chicle.new_leaf(child_style)
   let node = chicle.new_with_children(
-    Style::default()
-    .with_flex_direction(flex_direction_column())
-    .with_size(Size(width=length(100.0), height=length(100.0))),
+    @regression.Style::default()
+    .with_flex_direction(@regression.flex_direction_column())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(100.0)),
+    ),
     [node0, node1],
   )
-  chicle.compute_layout(node, Size::max_content())
+  chicle.compute_layout(node, @regression.Size::max_content())
   let layout = chicle.layout(node)
   assert_eq(layout.size.width, 100.0)
   assert_eq(layout.size.height, 100.0)

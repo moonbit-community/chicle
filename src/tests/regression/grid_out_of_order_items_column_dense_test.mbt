@@ -16,39 +16,63 @@
 test "grid_out_of_order_items_column_dense (regression)" {
   // Column-dense auto-placement regression.
   // This covers the ColumnDense variant.
-  let chicle : ChicleTree[Unit] = ChicleTree()
-  let node0 = chicle.new_leaf(Style::default())
-  let node1 = chicle.new_leaf(Style::default())
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(@regression.Style::default())
+  let node1 = chicle.new_leaf(@regression.Style::default())
   let node2 = chicle.new_leaf(
-    Style::default()
-    .with_grid_row(Line(start=line(1), end=place_auto()))
-    .with_size(Size(width=length(35.0), height=length(35.0))),
+    @regression.Style::default()
+    .with_grid_row(
+      Line(start=@regression.line(1), end=@regression.place_auto()),
+    )
+    .with_size(
+      Size(width=@regression.length(35.0), height=@regression.length(35.0)),
+    ),
   )
-  let node3 = chicle.new_leaf(Style::default())
-  let node4 = chicle.new_leaf(Style::default())
+  let node3 = chicle.new_leaf(@regression.Style::default())
+  let node4 = chicle.new_leaf(@regression.Style::default())
   let node5 = chicle.new_leaf(
-    Style::default()
-    .with_grid_row(Line(start=line(1), end=place_auto()))
-    .with_grid_column(Line(start=line(1), end=place_auto()))
-    .with_size(Size(width=length(20.0), height=length(20.0))),
+    @regression.Style::default()
+    .with_grid_row(
+      Line(start=@regression.line(1), end=@regression.place_auto()),
+    )
+    .with_grid_column(
+      Line(start=@regression.line(1), end=@regression.place_auto()),
+    )
+    .with_size(
+      Size(width=@regression.length(20.0), height=@regression.length(20.0)),
+    ),
   )
-  let node6 = chicle.new_leaf(Style::default())
+  let node6 = chicle.new_leaf(@regression.Style::default())
   let node7 = chicle.new_leaf(
-    Style::default()
-    .with_grid_column(Line(start=line(1), end=place_auto()))
-    .with_size(Size(width=length(10.0), height=length(10.0))),
+    @regression.Style::default()
+    .with_grid_column(
+      Line(start=@regression.line(1), end=@regression.place_auto()),
+    )
+    .with_size(
+      Size(width=@regression.length(10.0), height=@regression.length(10.0)),
+    ),
   )
-  let node8 = chicle.new_leaf(Style::default())
+  let node8 = chicle.new_leaf(@regression.Style::default())
   let root = chicle.new_with_children(
-    Style::default()
-    .with_display(display_grid())
-    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
-    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_grid_auto_flow(grid_auto_flow_column_dense())
-    .with_size(Size(width=length(120.0), height=length(120.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_grid_template_rows([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_grid_template_columns([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_grid_auto_flow(@regression.grid_auto_flow_column_dense())
+    .with_size(
+      Size(width=@regression.length(120.0), height=@regression.length(120.0)),
+    ),
     [node0, node1, node2, node3, node4, node5, node6, node7, node8],
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let root_layout = chicle.layout(root)
   assert_eq(root_layout.size.width, 120.0)
   assert_eq(root_layout.size.height, 120.0)

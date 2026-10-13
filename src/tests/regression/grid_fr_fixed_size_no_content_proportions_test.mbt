@@ -14,17 +14,21 @@
 
 ///|
 test "grid_fr_fixed_size_no_content_proportions" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
-  let node0 = chicle.new_leaf(Style::default())
-  let node1 = chicle.new_leaf(Style::default())
-  let node2 = chicle.new_leaf(Style::default())
-  let root_style = Style::default()
-    .with_display(display_grid())
-    .with_grid_template_rows([length(40.0)])
-    .with_grid_template_columns([fr(1.0), fr(2.0), fr(3.0)])
-    .with_size(Size(width=length(200.0), height=auto()))
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(@regression.Style::default())
+  let node1 = chicle.new_leaf(@regression.Style::default())
+  let node2 = chicle.new_leaf(@regression.Style::default())
+  let root_style = @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_grid_template_rows([@regression.length(40.0)])
+    .with_grid_template_columns([
+      @regression.fr(1.0),
+      @regression.fr(2.0),
+      @regression.fr(3.0),
+    ])
+    .with_size(Size(width=@regression.length(200.0), height=@regression.auto()))
   let root = chicle.new_with_children(root_style, [node0, node1, node2])
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let root_layout = chicle.layout(root)
   assert_eq(root_layout.size.width, 200.0)
   assert_eq(root_layout.size.height, 40.0)
@@ -47,26 +51,34 @@ test "grid_fr_fixed_size_no_content_proportions" {
 
 ///|
 test "grid_fr_tracks_subtract_column_gaps" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
-  let node0 = chicle.new_leaf(Style::default())
-  let node1 = chicle.new_leaf(Style::default())
-  let node2 = chicle.new_leaf(Style::default())
-  let root_style = Style::default()
-    .with_display(display_grid())
-    .with_grid_template_rows([length(40.0)])
-    .with_grid_template_columns([length(180.0), fr(1.0), fr(1.0)])
-    .with_gap(Size(width=length(14.0), height=length(0.0)))
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(@regression.Style::default())
+  let node1 = chicle.new_leaf(@regression.Style::default())
+  let node2 = chicle.new_leaf(@regression.Style::default())
+  let root_style = @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_grid_template_rows([@regression.length(40.0)])
+    .with_grid_template_columns([
+      @regression.length(180.0),
+      @regression.fr(1.0),
+      @regression.fr(1.0),
+    ])
+    .with_gap(
+      Size(width=@regression.length(14.0), height=@regression.length(0.0)),
+    )
     .with_padding(
       Rect(
-        left=length(22.0),
-        right=length(22.0),
-        top=length(0.0),
-        bottom=length(0.0),
+        left=@regression.length(22.0),
+        right=@regression.length(22.0),
+        top=@regression.length(0.0),
+        bottom=@regression.length(0.0),
       ),
     )
-    .with_size(Size(width=length(760.0), height=length(40.0)))
+    .with_size(
+      Size(width=@regression.length(760.0), height=@regression.length(40.0)),
+    )
   let root = chicle.new_with_children(root_style, [node0, node1, node2])
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let l0 = chicle.layout(node0)
   assert_eq(l0.location.x, 22.0)
   assert_eq(l0.size.width, 180.0)
@@ -80,26 +92,34 @@ test "grid_fr_tracks_subtract_column_gaps" {
 
 ///|
 test "grid_fr_tracks_subtract_row_gaps" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
-  let node0 = chicle.new_leaf(Style::default())
-  let node1 = chicle.new_leaf(Style::default())
-  let node2 = chicle.new_leaf(Style::default())
-  let root_style = Style::default()
-    .with_display(display_grid())
-    .with_grid_template_rows([length(70.0), fr(1.0), length(92.0)])
-    .with_grid_template_columns([length(40.0)])
-    .with_gap(Size(width=length(0.0), height=length(14.0)))
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
+  let node0 = chicle.new_leaf(@regression.Style::default())
+  let node1 = chicle.new_leaf(@regression.Style::default())
+  let node2 = chicle.new_leaf(@regression.Style::default())
+  let root_style = @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_grid_template_rows([
+      @regression.length(70.0),
+      @regression.fr(1.0),
+      @regression.length(92.0),
+    ])
+    .with_grid_template_columns([@regression.length(40.0)])
+    .with_gap(
+      Size(width=@regression.length(0.0), height=@regression.length(14.0)),
+    )
     .with_padding(
       Rect(
-        left=length(0.0),
-        right=length(0.0),
-        top=length(22.0),
-        bottom=length(22.0),
+        left=@regression.length(0.0),
+        right=@regression.length(0.0),
+        top=@regression.length(22.0),
+        bottom=@regression.length(22.0),
       ),
     )
-    .with_size(Size(width=length(40.0), height=length(480.0)))
+    .with_size(
+      Size(width=@regression.length(40.0), height=@regression.length(480.0)),
+    )
   let root = chicle.new_with_children(root_style, [node0, node1, node2])
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let l0 = chicle.layout(node0)
   assert_eq(l0.location.y, 22.0)
   assert_eq(l0.size.height, 70.0)

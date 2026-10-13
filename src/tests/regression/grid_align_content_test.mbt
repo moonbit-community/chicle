@@ -14,25 +14,35 @@
 
 ///|
 fn mk_grid_root(
-  chicle : ChicleTree[Unit],
-  align : AlignContent,
-  children : Array[NodeId],
-) -> NodeId {
+  chicle : @regression.ChicleTree[Unit],
+  align : @regression.AlignContent,
+  children : Array[@regression.NodeId],
+) -> @regression.NodeId {
   chicle.new_with_children(
-    Style::default()
-    .with_display(display_grid())
+    @regression.Style::default()
+    .with_display(@regression.display_grid())
     .with_align_content(align)
-    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
-    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size(width=length(200.0), height=length(200.0))),
+    .with_grid_template_rows([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_grid_template_columns([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(200.0)),
+    ),
     children,
   )
 }
 
 ///|
 fn check_grid_cell(
-  chicle : ChicleTree[Unit],
-  node : NodeId,
+  chicle : @regression.ChicleTree[Unit],
+  node : @regression.NodeId,
   expected_x : Double,
   expected_y : Double,
 ) -> Unit raise Error {
@@ -49,13 +59,13 @@ fn check_grid_cell(
 
 ///|
 test "grid_align_content_start" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let nodes = Array::make(9, 0)
   for i in 0..<9 {
-    nodes[i] = chicle.new_leaf(Style::default())
+    nodes[i] = chicle.new_leaf(@regression.Style::default())
   }
-  let root = mk_grid_root(chicle, align_content_start(), nodes)
-  chicle.compute_layout(root, Size::max_content())
+  let root = mk_grid_root(chicle, @regression.align_content_start(), nodes)
+  chicle.compute_layout(root, @regression.Size::max_content())
   let layout = chicle.layout(root)
   assert_eq(layout.size.width, 200.0)
   assert_eq(layout.size.height, 200.0)
@@ -74,13 +84,13 @@ test "grid_align_content_start" {
 
 ///|
 test "grid_align_content_center" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let nodes = Array::make(9, 0)
   for i in 0..<9 {
-    nodes[i] = chicle.new_leaf(Style::default())
+    nodes[i] = chicle.new_leaf(@regression.Style::default())
   }
-  let root = mk_grid_root(chicle, align_content_center(), nodes)
-  chicle.compute_layout(root, Size::max_content())
+  let root = mk_grid_root(chicle, @regression.align_content_center(), nodes)
+  chicle.compute_layout(root, @regression.Size::max_content())
   let layout = chicle.layout(root)
   assert_eq(layout.size.width, 200.0)
   assert_eq(layout.size.height, 200.0)
@@ -99,13 +109,13 @@ test "grid_align_content_center" {
 
 ///|
 test "grid_align_content_end" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let nodes = Array::make(9, 0)
   for i in 0..<9 {
-    nodes[i] = chicle.new_leaf(Style::default())
+    nodes[i] = chicle.new_leaf(@regression.Style::default())
   }
-  let root = mk_grid_root(chicle, align_content_end(), nodes)
-  chicle.compute_layout(root, Size::max_content())
+  let root = mk_grid_root(chicle, @regression.align_content_end(), nodes)
+  chicle.compute_layout(root, @regression.Size::max_content())
   let layout = chicle.layout(root)
   assert_eq(layout.size.width, 200.0)
   assert_eq(layout.size.height, 200.0)

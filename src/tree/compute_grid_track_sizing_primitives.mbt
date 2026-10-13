@@ -23,8 +23,8 @@ fn fr_track_weight(track : Dimension) -> Double {
 ///|
 fn apply_col_contribution(
   col_tracks : Array[Dimension],
-  start : Int,
-  span : Int,
+  start : Int32,
+  span : Int32,
   needed : Double,
   contrib : Array[Double],
 ) -> Unit {
@@ -110,8 +110,8 @@ fn track_definite_len(track : Dimension) -> Double? {
 ///|
 fn spanned_definite_len(
   tracks : Array[Dimension],
-  start : Int,
-  span : Int,
+  start : Int32,
+  span : Int32,
   gap : Double,
 ) -> Double? {
   if span <= 0 {
@@ -131,7 +131,7 @@ fn spanned_definite_len(
 }
 
 ///|
-fn track_min_sizing_kind(track : Dimension) -> Int {
+fn track_min_sizing_kind(track : Dimension) -> Int32 {
   // 0 = fixed/other, 1 = min-content, 2 = max-content, 3 = auto
   match track {
     DimMinContent => 1

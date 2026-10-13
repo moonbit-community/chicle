@@ -31,7 +31,7 @@ pub(all) struct LayoutNode {
 
 ///|
 pub(all) struct LayoutDocument {
-  version : Int
+  version : Int32
   available_space : @geometry.Size[@geometry.AvailableSpace]
   root : LayoutNode
 }
@@ -41,7 +41,7 @@ pub(all) struct LayoutResultNode {
   id : String
   label : String
   parent_id : String?
-  depth : Int
+  depth : Int32
   layout : @tree.Layout
 }
 
@@ -56,7 +56,7 @@ priv struct BuiltNode {
   id : String
   label : String
   parent_id : String?
-  depth : Int
+  depth : Int32
   tree_id : @tree.NodeId
 }
 
@@ -164,7 +164,7 @@ pub impl @json.FromJson for LayoutDocument with fn from_json(json, path) {
     } else {
     raise JsonDecodeError((path, "LayoutDocument: expected object with root"))
   }
-  let version : Int = match version_json {
+  let version : Int32 = match version_json {
     Some(value) => @json.from_json(value, path=path.add_key("version"))
     None => 1
   }
@@ -271,7 +271,7 @@ fn build_document_node(
   tree : @tree.ChicleTree[Unit],
   node : LayoutNode,
   parent_id : String?,
-  depth : Int,
+  depth : Int32,
   seen : Map[String, Bool],
   built : Array[BuiltNode],
 ) -> @tree.NodeId raise {

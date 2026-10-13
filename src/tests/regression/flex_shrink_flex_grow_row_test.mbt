@@ -14,34 +14,44 @@
 
 ///|
 test "flex_shrink_flex_grow_row" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let node0 = chicle.new_leaf(
-    Style::default()
+    @regression.Style::default()
     .with_flex_grow(0.0)
     .with_flex_shrink(1.0)
-    .with_size(Size(width=length(500.0), height=length(100.0))),
+    .with_size(
+      Size(width=@regression.length(500.0), height=@regression.length(100.0)),
+    ),
   )
   let node1 = chicle.new_leaf(
-    Style::default()
+    @regression.Style::default()
     .with_flex_grow(0.0)
     .with_flex_shrink(1.0)
-    .with_size(Size(width=length(500.0), height=length(100.0))),
+    .with_size(
+      Size(width=@regression.length(500.0), height=@regression.length(100.0)),
+    ),
   )
   let node = chicle.new_with_children(
-    Style::default().with_size(Size(width=length(500.0), height=length(500.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(500.0), height=@regression.length(500.0)),
+    ),
     [node0, node1],
   )
   fn zero_measure(
-    _known_dimensions : Size[Double?],
-    _available_space : Size[AvailableSpace],
-    _node_id : NodeId,
+    _known_dimensions : @regression.Size[Double?],
+    _available_space : @regression.Size[@regression.AvailableSpace],
+    _node_id : @regression.NodeId,
     _context : Unit?,
-    _style : Style,
-  ) -> Size[Double] {
-    Size::zero()
+    _style : @regression.Style,
+  ) -> @regression.Size[Double] {
+    @regression.Size::zero()
   }
 
-  chicle.compute_layout_with_measure(node, Size::max_content(), zero_measure)
+  chicle.compute_layout_with_measure(
+    node,
+    @regression.Size::max_content(),
+    zero_measure,
+  )
   let layout = chicle.layout(node)
   assert_eq(layout.size.width, 500.0)
   assert_eq(layout.size.height, 500.0)

@@ -22,8 +22,8 @@ priv struct GridTrackContributions {
 
 ///|
 fn GridTrackContributions::GridTrackContributions(
-  column_count~ : Int,
-  row_count~ : Int,
+  column_count~ : Int32,
+  row_count~ : Int32,
 ) -> GridTrackContributions {
   {
     column_minimum: Array::make(column_count, 0.0),
@@ -186,7 +186,7 @@ fn grid_item_known_width_for_row_contribution(
 fn[C] resolve_grid_item_baseline_shims_for_track_sizing(
   view : ChicleView[C],
   grid_items : Array[GridItem],
-  placement_count : Int,
+  placement_count : Int32,
   col_sizes : Array[Double],
   col_gap : Double,
   col_gutter_alignment_adjustment : Double,
@@ -202,7 +202,7 @@ fn[C] resolve_grid_item_baseline_shims_for_track_sizing(
   if row_count == 0 {
     return
   }
-  let baseline_item_count : Array[Int] = Array::make(row_count, 0)
+  let baseline_item_count : Array[Int32] = Array::make(row_count, 0)
   let row_max_baseline : Array[Double] = Array::make(row_count, 0.0)
   let measured_baseline : Array[Double] = Array::make(placement_count, 0.0)
   let measured_margin_top : Array[Double] = Array::make(placement_count, 0.0)
@@ -281,7 +281,7 @@ fn[C] resolve_grid_item_baseline_shims_for_track_sizing(
 fn[C] compute_grid_column_track_contributions(
   view : ChicleView[C],
   grid_items : Array[GridItem],
-  placement_count : Int,
+  placement_count : Int32,
   col_tracks : Array[Dimension],
   row_tracks : Array[Dimension],
   contributions : GridTrackContributions,
@@ -362,7 +362,7 @@ fn[C] compute_grid_column_track_contributions(
 fn[C] compute_grid_row_track_contributions(
   view : ChicleView[C],
   grid_items : Array[GridItem],
-  placement_count : Int,
+  placement_count : Int32,
   col_sizes : Array[Double],
   contributions : GridTrackContributions,
   col_gap : Double,

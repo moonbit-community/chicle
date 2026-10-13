@@ -63,7 +63,7 @@ pub fn fit_content(limit : Dimension) -> Dimension {
 }
 
 ///|
-pub fn repeat_count(count : Int) -> GridTrackRepetition {
+pub fn repeat_count(count : Int32) -> GridTrackRepetition {
   RepeatCount(count)
 }
 
@@ -86,7 +86,7 @@ pub fn repeat(
 }
 
 ///|
-pub fn evenly_sized_tracks(count : Int) -> Array[Dimension] {
+pub fn evenly_sized_tracks(count : Int32) -> Array[Dimension] {
   Array::make(count, DimFr(1.0))
 }
 
@@ -183,12 +183,12 @@ pub fn place_auto() -> GridPlacement {
 }
 
 ///|
-pub fn line(value : Int) -> GridPlacement {
+pub fn line(value : Int32) -> GridPlacement {
   PlaceLine(value)
 }
 
 ///|
-pub fn span(value : Int) -> GridPlacement {
+pub fn span(value : Int32) -> GridPlacement {
   PlaceSpan(value)
 }
 

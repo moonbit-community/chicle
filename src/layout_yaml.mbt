@@ -15,7 +15,7 @@
 ///|
 pub(all) suberror LayoutYamlError {
   EmptyYamlDocument
-  MultipleYamlDocuments(Int)
+  MultipleYamlDocuments(Int32)
 } derive(Debug)
 
 ///|

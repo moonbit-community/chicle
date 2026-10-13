@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-fn matrix_make(rows : Int, cols : Int) -> Array[Array[Bool]] {
+fn matrix_make(rows : Int32, cols : Int32) -> Array[Array[Bool]] {
   let m : Array[Array[Bool]] = []
   for _r in 0..<rows {
     m.push(Array::make(cols, false))
@@ -26,9 +26,9 @@ fn ensure_cols(
   occ : Array[Array[Bool]],
   col_tracks : Array[Dimension],
   auto_cols : Array[Dimension],
-  negative_cols : Int,
-  explicit_cols : Int,
-  target_col : Int,
+  negative_cols : Int32,
+  explicit_cols : Int32,
+  target_col : Int32,
 ) -> Unit {
   while col_tracks.length() <= target_col {
     let pos_existing = col_tracks.length() - negative_cols - explicit_cols
@@ -45,9 +45,9 @@ fn ensure_rows(
   occ : Array[Array[Bool]],
   row_tracks : Array[Dimension],
   auto_rows : Array[Dimension],
-  negative_rows : Int,
-  explicit_rows : Int,
-  target_row : Int,
+  negative_rows : Int32,
+  explicit_rows : Int32,
+  target_row : Int32,
 ) -> Unit {
   while row_tracks.length() <= target_row {
     let pos_existing = row_tracks.length() - negative_rows - explicit_rows
@@ -60,10 +60,10 @@ fn ensure_rows(
 ///|
 fn region_is_free(
   occ : Array[Array[Bool]],
-  row : Int,
-  col : Int,
-  row_span : Int,
-  col_span : Int,
+  row : Int32,
+  col : Int32,
+  row_span : Int32,
+  col_span : Int32,
 ) -> Bool {
   for r in row..<(row + row_span) {
     for c in col..<(col + col_span) {
@@ -83,15 +83,15 @@ fn mark_grid_item_placed(
   col_tracks : Array[Dimension],
   auto_rows : Array[Dimension],
   auto_cols : Array[Dimension],
-  negative_rows : Int,
-  negative_cols : Int,
-  explicit_rows : Int,
-  explicit_cols : Int,
-  idx : Int,
-  row : Int,
-  col : Int,
-  row_span : Int,
-  col_span : Int,
+  negative_rows : Int32,
+  negative_cols : Int32,
+  explicit_rows : Int32,
+  explicit_cols : Int32,
+  idx : Int32,
+  row : Int32,
+  col : Int32,
+  row_span : Int32,
+  col_span : Int32,
 ) -> Unit {
   let row_end = row + row_span - 1
   let col_end = col + col_span - 1

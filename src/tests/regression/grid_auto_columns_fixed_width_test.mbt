@@ -14,18 +14,30 @@
 
 ///|
 test "grid_auto_columns_fixed_width" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
-  let children : Array[NodeId] = []
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
+  let children : Array[@regression.NodeId] = []
   for _ in 0..<16 {
-    children.push(chicle.new_leaf(Style::default()))
+    children.push(chicle.new_leaf(@regression.Style::default()))
   }
-  let root_style = Style::default()
-    .with_display(display_grid())
-    .with_grid_template_rows([length(40.0), auto(), length(40.0), auto()])
-    .with_grid_template_columns([length(40.0), auto(), length(40.0), auto()])
-    .with_size(Size(width=length(200.0), height=length(200.0)))
+  let root_style = @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_grid_template_rows([
+      @regression.length(40.0),
+      @regression.auto(),
+      @regression.length(40.0),
+      @regression.auto(),
+    ])
+    .with_grid_template_columns([
+      @regression.length(40.0),
+      @regression.auto(),
+      @regression.length(40.0),
+      @regression.auto(),
+    ])
+    .with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(200.0)),
+    )
   let root = chicle.new_with_children(root_style, children)
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let col_w = [40.0, 60.0, 40.0, 60.0]
   let row_h = [40.0, 60.0, 40.0, 60.0]
   let col_x = [0.0, 40.0, 100.0, 140.0]

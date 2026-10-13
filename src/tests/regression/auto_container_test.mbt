@@ -14,15 +14,21 @@
 
 ///|
 test "auto_container_sizes_to_children_row" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let child_a = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(10.0), height=length(5.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(10.0), height=@regression.length(5.0)),
+    ),
   )
   let child_b = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(7.0), height=length(20.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(7.0), height=@regression.length(20.0)),
+    ),
   )
-  let root = chicle.new_with_children(Style::default(), [child_a, child_b])
-  chicle.compute_layout(root, Size::max_content())
+  let root = chicle.new_with_children(@regression.Style::default(), [
+    child_a, child_b,
+  ])
+  chicle.compute_layout(root, @regression.Size::max_content())
   let root_layout = chicle.layout(root)
   assert_eq(root_layout.size.width, 17.0)
   assert_eq(root_layout.size.height, 20.0)

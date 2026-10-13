@@ -17,7 +17,7 @@ fn[C] compute_grid_relative_children_final_placement(
   view : ChicleView[C],
   node_id : NodeId,
   grid_items : Array[GridItem],
-  placement_count : Int,
+  placement_count : Int32,
   col_tracks : Array[Dimension],
   row_tracks : Array[Dimension],
   col_sizes : Array[Double],
@@ -32,8 +32,8 @@ fn[C] compute_grid_relative_children_final_placement(
   content_width : Double,
   default_align_items : AlignItems,
   default_justify_items : AlignItems,
-  row_count : Int,
-  col_count : Int,
+  row_count : Int32,
+  col_count : Int32,
 ) -> Unit raise ChicleError {
   let tree = view.tree
   let base_x = absolute_origin.x + border.left + padding.left

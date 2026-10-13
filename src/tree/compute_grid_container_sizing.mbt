@@ -109,7 +109,7 @@ fn resolve_deferred_grid_percent_gaps(
 fn[C] compute_initial_grid_track_sizing(
   view : ChicleView[C],
   grid_items : Array[GridItem],
-  placement_count : Int,
+  placement_count : Int32,
   col_tracks : Array[Dimension],
   row_tracks : Array[Dimension],
   contributions : GridTrackContributions,
@@ -262,7 +262,7 @@ fn[C] compute_initial_grid_track_sizing(
 fn[C] rerun_grid_track_sizing_after_percent_gap_resolution(
   view : ChicleView[C],
   grid_items : Array[GridItem],
-  placement_count : Int,
+  placement_count : Int32,
   col_tracks : Array[Dimension],
   row_tracks : Array[Dimension],
   contributions : GridTrackContributions,

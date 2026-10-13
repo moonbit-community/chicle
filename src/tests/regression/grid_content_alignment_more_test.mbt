@@ -13,18 +13,20 @@
 // limitations under the License.
 
 ///|
-fn mk_9_nodes(chicle : ChicleTree[Unit]) -> Array[NodeId] {
+fn mk_9_nodes(
+  chicle : @regression.ChicleTree[Unit],
+) -> Array[@regression.NodeId] {
   let nodes = Array::make(9, 0)
   for i in 0..<9 {
-    nodes[i] = chicle.new_leaf(Style::default())
+    nodes[i] = chicle.new_leaf(@regression.Style::default())
   }
   nodes
 }
 
 ///|
 fn check_cell(
-  chicle : ChicleTree[Unit],
-  node : NodeId,
+  chicle : @regression.ChicleTree[Unit],
+  node : @regression.NodeId,
   expected_x : Double,
   expected_y : Double,
 ) -> Unit raise Error {
@@ -41,18 +43,28 @@ fn check_cell(
 
 ///|
 test "grid_justify_content_space_between" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let nodes = mk_9_nodes(chicle)
   let root = chicle.new_with_children(
-    Style::default()
-    .with_display(display_grid())
-    .with_justify_content(justify_content_space_between())
-    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
-    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size(width=length(200.0), height=length(200.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_justify_content(@regression.justify_content_space_between())
+    .with_grid_template_rows([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_grid_template_columns([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(200.0)),
+    ),
     nodes,
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   check_cell(chicle, nodes[0], 0.0, 0.0)
   check_cell(chicle, nodes[1], 80.0, 0.0)
   check_cell(chicle, nodes[2], 160.0, 0.0)
@@ -63,18 +75,28 @@ test "grid_justify_content_space_between" {
 
 ///|
 test "grid_justify_content_space_evenly" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let nodes = mk_9_nodes(chicle)
   let root = chicle.new_with_children(
-    Style::default()
-    .with_display(display_grid())
-    .with_justify_content(justify_content_space_evenly())
-    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
-    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size(width=length(200.0), height=length(200.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_justify_content(@regression.justify_content_space_evenly())
+    .with_grid_template_rows([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_grid_template_columns([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(200.0)),
+    ),
     nodes,
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   check_cell(chicle, nodes[0], 20.0, 0.0)
   check_cell(chicle, nodes[1], 80.0, 0.0)
   check_cell(chicle, nodes[2], 140.0, 0.0)
@@ -85,18 +107,28 @@ test "grid_justify_content_space_evenly" {
 
 ///|
 test "grid_align_content_space_between" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let nodes = mk_9_nodes(chicle)
   let root = chicle.new_with_children(
-    Style::default()
-    .with_display(display_grid())
-    .with_align_content(align_content_space_between())
-    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
-    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size(width=length(200.0), height=length(200.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_align_content(@regression.align_content_space_between())
+    .with_grid_template_rows([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_grid_template_columns([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(200.0)),
+    ),
     nodes,
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   check_cell(chicle, nodes[0], 0.0, 0.0)
   check_cell(chicle, nodes[3], 0.0, 80.0)
   check_cell(chicle, nodes[6], 0.0, 160.0)
@@ -104,18 +136,28 @@ test "grid_align_content_space_between" {
 
 ///|
 test "grid_align_content_space_evenly" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let nodes = mk_9_nodes(chicle)
   let root = chicle.new_with_children(
-    Style::default()
-    .with_display(display_grid())
-    .with_align_content(align_content_space_evenly())
-    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
-    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size(width=length(200.0), height=length(200.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_align_content(@regression.align_content_space_evenly())
+    .with_grid_template_rows([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_grid_template_columns([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(200.0)),
+    ),
     nodes,
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   check_cell(chicle, nodes[0], 0.0, 20.0)
   check_cell(chicle, nodes[3], 0.0, 80.0)
   check_cell(chicle, nodes[6], 0.0, 140.0)
@@ -123,34 +165,48 @@ test "grid_align_content_space_evenly" {
 
 ///|
 test "grid_justify_content_center_negative_space_gap" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let leafs = mk_9_nodes(chicle)
   let inner = chicle.new_with_children(
-    Style::default()
-    .with_display(display_grid())
-    .with_align_content(align_content_center())
-    .with_justify_content(justify_content_center())
-    .with_gap(Size(width=length(10.0), height=length(10.0)))
-    .with_grid_template_rows([length(20.0), length(20.0), length(20.0)])
-    .with_grid_template_columns([length(40.0), length(40.0), length(40.0)])
-    .with_size(Size(width=length(120.0), height=length(120.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_align_content(@regression.align_content_center())
+    .with_justify_content(@regression.justify_content_center())
+    .with_gap(
+      Size(width=@regression.length(10.0), height=@regression.length(10.0)),
+    )
+    .with_grid_template_rows([
+      @regression.length(20.0),
+      @regression.length(20.0),
+      @regression.length(20.0),
+    ])
+    .with_grid_template_columns([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_size(
+      Size(width=@regression.length(120.0), height=@regression.length(120.0)),
+    ),
     leafs,
   )
   let root = chicle.new_with_children(
-    Style::default()
-    .with_display(display_grid())
-    .with_size(Size(width=length(240.0), height=length(240.0)))
+    @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_size(
+      Size(width=@regression.length(240.0), height=@regression.length(240.0)),
+    )
     .with_border(
       Rect(
-        left=length(60.0),
-        right=length(60.0),
-        top=length(60.0),
-        bottom=length(60.0),
+        left=@regression.length(60.0),
+        right=@regression.length(60.0),
+        top=@regression.length(60.0),
+        bottom=@regression.length(60.0),
       ),
     ),
     [inner],
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let inner_layout = chicle.layout(inner)
   assert_eq(inner_layout.location.x, 60.0)
   assert_eq(inner_layout.location.y, 60.0)
@@ -165,34 +221,48 @@ test "grid_justify_content_center_negative_space_gap" {
 
 ///|
 test "grid_align_content_center_negative_space_gap" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let leafs = mk_9_nodes(chicle)
   let inner = chicle.new_with_children(
-    Style::default()
-    .with_display(display_grid())
-    .with_align_content(align_content_center())
-    .with_justify_content(justify_content_center())
-    .with_gap(Size(width=length(10.0), height=length(10.0)))
-    .with_grid_template_rows([length(40.0), length(40.0), length(40.0)])
-    .with_grid_template_columns([length(20.0), length(20.0), length(20.0)])
-    .with_size(Size(width=length(120.0), height=length(120.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_align_content(@regression.align_content_center())
+    .with_justify_content(@regression.justify_content_center())
+    .with_gap(
+      Size(width=@regression.length(10.0), height=@regression.length(10.0)),
+    )
+    .with_grid_template_rows([
+      @regression.length(40.0),
+      @regression.length(40.0),
+      @regression.length(40.0),
+    ])
+    .with_grid_template_columns([
+      @regression.length(20.0),
+      @regression.length(20.0),
+      @regression.length(20.0),
+    ])
+    .with_size(
+      Size(width=@regression.length(120.0), height=@regression.length(120.0)),
+    ),
     leafs,
   )
   let root = chicle.new_with_children(
-    Style::default()
-    .with_display(display_grid())
-    .with_size(Size(width=length(240.0), height=length(240.0)))
+    @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_size(
+      Size(width=@regression.length(240.0), height=@regression.length(240.0)),
+    )
     .with_border(
       Rect(
-        left=length(60.0),
-        right=length(60.0),
-        top=length(60.0),
-        bottom=length(60.0),
+        left=@regression.length(60.0),
+        right=@regression.length(60.0),
+        top=@regression.length(60.0),
+        bottom=@regression.length(60.0),
       ),
     ),
     [inner],
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let inner_layout = chicle.layout(inner)
   assert_eq(inner_layout.location.x, 60.0)
   assert_eq(inner_layout.location.y, 60.0)

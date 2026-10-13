@@ -14,19 +14,23 @@
 
 ///|
 test "container content size includes overflowing children" {
-  let block : ChicleTree[Unit] = ChicleTree()
+  let block : @regression.ChicleTree[Unit] = ChicleTree()
   let block_child = block.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=length(200.0), height=length(20.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(20.0)),
+    ),
   )
   let block_root = block.new_with_children(
-    Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=length(100.0), height=length(50.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(50.0)),
+    ),
     [block_child],
   )
-  block.compute_layout(block_root, Size::max_content())
+  block.compute_layout(block_root, @regression.Size::max_content())
   let block_child_layout = block.layout(block_child)
   let block_layout = block.layout(block_root)
   debug_inspect(
@@ -38,17 +42,21 @@ test "container content size includes overflowing children" {
     content="[200, 200, 100]",
   )
 
-  let flexbox : ChicleTree[Unit] = ChicleTree()
+  let flexbox : @regression.ChicleTree[Unit] = ChicleTree()
   let flex_child = flexbox.new_leaf(
-    Style::default()
+    @regression.Style::default()
     .with_flex_shrink(0.0)
-    .with_size(Size(width=length(200.0), height=length(20.0))),
+    .with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(20.0)),
+    ),
   )
   let flex_root = flexbox.new_with_children(
-    Style::default().with_size(Size(width=length(100.0), height=length(50.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(50.0)),
+    ),
     [flex_child],
   )
-  flexbox.compute_layout(flex_root, Size::max_content())
+  flexbox.compute_layout(flex_root, @regression.Size::max_content())
   debug_inspect(
     [
       flexbox.layout(flex_child).size.width,
@@ -57,17 +65,21 @@ test "container content size includes overflowing children" {
     content="[200, 200]",
   )
 
-  let grid : ChicleTree[Unit] = ChicleTree()
+  let grid : @regression.ChicleTree[Unit] = ChicleTree()
   let grid_child = grid.new_leaf(
-    Style::default().with_size(Size(width=length(200.0), height=length(20.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(20.0)),
+    ),
   )
   let grid_root = grid.new_with_children(
-    Style::default()
-    .with_display(display_grid())
-    .with_size(Size(width=length(100.0), height=length(50.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_grid())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(50.0)),
+    ),
     [grid_child],
   )
-  grid.compute_layout(grid_root, Size::max_content())
+  grid.compute_layout(grid_root, @regression.Size::max_content())
   debug_inspect(
     [
       grid.layout(grid_child).size.width,
@@ -76,20 +88,24 @@ test "container content size includes overflowing children" {
     content="[200, 200]",
   )
 
-  let absolute : ChicleTree[Unit] = ChicleTree()
+  let absolute : @regression.ChicleTree[Unit] = ChicleTree()
   let absolute_child = absolute.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_position(position_absolute())
-    .with_size(Size(width=length(200.0), height=length(20.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_position(@regression.position_absolute())
+    .with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(20.0)),
+    ),
   )
   let absolute_root = absolute.new_with_children(
-    Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=length(100.0), height=length(50.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(50.0)),
+    ),
     [absolute_child],
   )
-  absolute.compute_layout(absolute_root, Size::max_content())
+  absolute.compute_layout(absolute_root, @regression.Size::max_content())
   debug_inspect(
     [
       absolute.layout(absolute_child).size.width,
@@ -101,26 +117,34 @@ test "container content size includes overflowing children" {
 
 ///|
 test "clipped descendant overflow does not propagate to its parent" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let grandchild = chicle.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=length(200.0), height=length(20.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(
+      Size(width=@regression.length(200.0), height=@regression.length(20.0)),
+    ),
   )
   let clipped_child = chicle.new_with_children(
-    Style::default()
-    .with_display(display_block())
-    .with_overflow(Point(x=overflow_hidden(), y=overflow_hidden()))
-    .with_size(Size(width=length(50.0), height=length(30.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_overflow(
+      Point(x=@regression.overflow_hidden(), y=@regression.overflow_hidden()),
+    )
+    .with_size(
+      Size(width=@regression.length(50.0), height=@regression.length(30.0)),
+    ),
     [grandchild],
   )
   let root = chicle.new_with_children(
-    Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=length(100.0), height=length(50.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(50.0)),
+    ),
     [clipped_child],
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   debug_inspect(
     [
       chicle.layout(clipped_child).content_size.width,
@@ -133,23 +157,32 @@ test "clipped descendant overflow does not propagate to its parent" {
 
 ///|
 test "content size uses the positive overflow edge" {
-  let positive : ChicleTree[Unit] = ChicleTree()
+  let positive : @regression.ChicleTree[Unit] = ChicleTree()
   let positive_child = positive.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_position(position_absolute())
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_position(@regression.position_absolute())
     .with_inset(
-      Rect(left=length(40.0), right=auto(), top=auto(), bottom=auto()),
+      Rect(
+        left=@regression.length(40.0),
+        right=@regression.auto(),
+        top=@regression.auto(),
+        bottom=@regression.auto(),
+      ),
     )
-    .with_size(Size(width=length(100.0), height=length(20.0))),
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(20.0)),
+    ),
   )
   let positive_root = positive.new_with_children(
-    Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=length(100.0), height=length(50.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(50.0)),
+    ),
     [positive_child],
   )
-  positive.compute_layout(positive_root, Size::max_content())
+  positive.compute_layout(positive_root, @regression.Size::max_content())
   debug_inspect(
     [
       positive.layout(positive_child).location.x,
@@ -158,23 +191,32 @@ test "content size uses the positive overflow edge" {
     content="[40, 140]",
   )
 
-  let negative : ChicleTree[Unit] = ChicleTree()
+  let negative : @regression.ChicleTree[Unit] = ChicleTree()
   let negative_child = negative.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_position(position_absolute())
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_position(@regression.position_absolute())
     .with_inset(
-      Rect(left=length(-40.0), right=auto(), top=auto(), bottom=auto()),
+      Rect(
+        left=@regression.length(-40.0),
+        right=@regression.auto(),
+        top=@regression.auto(),
+        bottom=@regression.auto(),
+      ),
     )
-    .with_size(Size(width=length(100.0), height=length(20.0))),
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(20.0)),
+    ),
   )
   let negative_root = negative.new_with_children(
-    Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=length(100.0), height=length(50.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(50.0)),
+    ),
     [negative_child],
   )
-  negative.compute_layout(negative_root, Size::max_content())
+  negative.compute_layout(negative_root, @regression.Size::max_content())
   debug_inspect(
     [
       negative.layout(negative_child).location.x,

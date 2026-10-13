@@ -15,7 +15,7 @@
 ///|
 fn merged_placement_line(
   placement : Line[GridPlacement],
-  legacy_start : Int?,
+  legacy_start : Int32?,
 ) -> Line[GridPlacement] {
   match legacy_start {
     Some(v) => Line(start=PlaceLine(v), end=placement.end)
@@ -24,7 +24,7 @@ fn merged_placement_line(
 }
 
 ///|
-fn placement_span_value(span : Int) -> Int {
+fn placement_span_value(span : Int32) -> Int32 {
   if span > 0 {
     span
   } else {
@@ -35,8 +35,8 @@ fn placement_span_value(span : Int) -> Int {
 ///|
 fn axis_resolve_start_line_and_span(
   placement : Line[GridPlacement],
-  explicit_track_count : Int,
-) -> (Int?, Int) {
+  explicit_track_count : Int32,
+) -> (Int32?, Int32) {
   let start_line = match placement.start {
     PlaceLine(v) => origin_zero_line(v, explicit_track_count)
     _ => None
@@ -85,7 +85,7 @@ fn axis_auto_track_list(auto_tracks : Array[Dimension]) -> Array[Dimension] {
 ///|
 fn negative_auto_track_at(
   auto_tracks : Array[Dimension],
-  offset_from_explicit : Int,
+  offset_from_explicit : Int32,
 ) -> Dimension {
   let len = auto_tracks.length()
   if len == 0 {
@@ -101,10 +101,10 @@ fn negative_auto_track_at(
 ///|
 fn axis_start_index_and_span(
   placement : Line[GridPlacement],
-  legacy_start : Int?,
-  explicit_track_count : Int,
-  negative_implicit : Int,
-) -> (Int?, Int) {
+  legacy_start : Int32?,
+  explicit_track_count : Int32,
+  negative_implicit : Int32,
+) -> (Int32?, Int32) {
   let merged = merged_placement_line(placement, legacy_start)
   let resolved = axis_resolve_start_line_and_span(merged, explicit_track_count)
   let start = match resolved.0 {
@@ -117,11 +117,11 @@ fn axis_start_index_and_span(
 ///|
 fn child_start_indexes_and_spans(
   child_style : Style,
-  explicit_cols : Int,
-  explicit_rows : Int,
-  negative_cols : Int,
-  negative_rows : Int,
-) -> (Int?, Int, Int?, Int) {
+  explicit_cols : Int32,
+  explicit_rows : Int32,
+  negative_cols : Int32,
+  negative_rows : Int32,
+) -> (Int32?, Int32, Int32?, Int32) {
   let col = axis_start_index_and_span(
     child_style.grid_column,
     child_style.grid_column_start,
@@ -138,7 +138,10 @@ fn child_start_indexes_and_spans(
 }
 
 ///|
-fn resolve_grid_abs_line_position(lines : Array[Double], line : Int) -> Double {
+fn resolve_grid_abs_line_position(
+  lines : Array[Double],
+  line : Int32,
+) -> Double {
   let last = lines.length() - 1
   if last <= 0 {
     lines[0]

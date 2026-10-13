@@ -14,20 +14,29 @@
 
 ///|
 test "block_absolute_layout_width_height_start_top" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
-  let child_style = Style::default()
-    .with_display(display_block())
-    .with_position(position_absolute())
-    .with_size(Size(width=length(10.0), height=length(10.0)))
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
+  let child_style = @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_position(@regression.position_absolute())
+    .with_size(
+      Size(width=@regression.length(10.0), height=@regression.length(10.0)),
+    )
     .with_inset(
-      Rect(left=length(10.0), right=auto(), top=length(10.0), bottom=auto()),
+      Rect(
+        left=@regression.length(10.0),
+        right=@regression.auto(),
+        top=@regression.length(10.0),
+        bottom=@regression.auto(),
+      ),
     )
   let child = chicle.new_leaf(child_style)
-  let root_style = Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=length(100.0), height=length(100.0)))
+  let root_style = @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(100.0)),
+    )
   let root = chicle.new_with_children(root_style, [child])
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let root_layout = chicle.layout(root)
   assert_eq(root_layout.size.width, 100.0)
   assert_eq(root_layout.size.height, 100.0)

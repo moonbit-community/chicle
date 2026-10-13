@@ -14,29 +14,31 @@
 
 ///|
 test "box_sizing_content_box_expands_to_border_box" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let node = chicle.new_leaf(
-    Style::default()
-    .with_box_sizing(box_sizing_content_box())
-    .with_size(Size(width=length(100.0), height=length(50.0)))
+    @regression.Style::default()
+    .with_box_sizing(@regression.box_sizing_content_box())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(50.0)),
+    )
     .with_padding(
       Rect(
-        left=length(10.0),
-        right=length(10.0),
-        top=length(5.0),
-        bottom=length(5.0),
+        left=@regression.length(10.0),
+        right=@regression.length(10.0),
+        top=@regression.length(5.0),
+        bottom=@regression.length(5.0),
       ),
     )
     .with_border(
       Rect(
-        left=length(2.0),
-        right=length(2.0),
-        top=length(3.0),
-        bottom=length(3.0),
+        left=@regression.length(2.0),
+        right=@regression.length(2.0),
+        top=@regression.length(3.0),
+        bottom=@regression.length(3.0),
       ),
     ),
   )
-  chicle.compute_layout(node, Size::max_content())
+  chicle.compute_layout(node, @regression.Size::max_content())
   let layout = chicle.layout(node)
   assert_eq(layout.size.width, 124.0)
   assert_eq(layout.size.height, 66.0)
@@ -46,34 +48,40 @@ test "box_sizing_content_box_expands_to_border_box" {
 
 ///|
 test "layout_exposes_bevy_metadata_fields" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let child = chicle.new_leaf(
-    Style::default().with_size(Size(width=length(10.0), height=length(10.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(10.0), height=@regression.length(10.0)),
+    ),
   )
   let root = chicle.new_with_children(
-    Style::default()
-    .with_size(Size(width=length(100.0), height=length(80.0)))
-    .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
+    @regression.Style::default()
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(80.0)),
+    )
+    .with_overflow(
+      Point(x=@regression.overflow_scroll(), y=@regression.overflow_scroll()),
+    )
     .with_scrollbar_width(7.0)
     .with_padding(
       Rect(
-        left=length(5.0),
-        right=length(6.0),
-        top=length(3.0),
-        bottom=length(4.0),
+        left=@regression.length(5.0),
+        right=@regression.length(6.0),
+        top=@regression.length(3.0),
+        bottom=@regression.length(4.0),
       ),
     )
     .with_border(
       Rect(
-        left=length(1.0),
-        right=length(2.0),
-        top=length(8.0),
-        bottom=length(9.0),
+        left=@regression.length(1.0),
+        right=@regression.length(2.0),
+        top=@regression.length(8.0),
+        bottom=@regression.length(9.0),
       ),
     ),
     [child],
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let layout = chicle.layout(root)
   assert_eq(layout.content_size.width, 79.0)
   assert_eq(layout.content_size.height, 49.0)

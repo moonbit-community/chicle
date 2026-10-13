@@ -17,7 +17,7 @@ fn grid_area_axis_origin(
   track_sizes : Array[Double],
   gap : Double,
   start_offset : Double,
-  start_index : Int,
+  start_index : Int32,
 ) -> Double {
   let mut origin = start_offset
   for i in 0..<start_index {
@@ -30,8 +30,8 @@ fn grid_area_axis_origin(
 fn grid_area_axis_size(
   track_sizes : Array[Double],
   gap : Double,
-  start_index : Int,
-  span : Int,
+  start_index : Int32,
+  span : Int32,
 ) -> Double {
   let mut size = 0.0
   for i in start_index..<(start_index + span) {
@@ -90,10 +90,10 @@ fn[C] compute_grid_absolute_placement(
   padding : Rect[Double],
   border_box_width : Double,
   border_box_height : Double,
-  explicit_col_count : Int,
-  explicit_row_count : Int,
-  negative_cols : Int,
-  negative_rows : Int,
+  explicit_col_count : Int32,
+  explicit_row_count : Int32,
+  negative_cols : Int32,
+  negative_rows : Int32,
 ) -> Unit raise ChicleError {
   let padding_origin = Point(
     x=absolute_origin.x + border.left,

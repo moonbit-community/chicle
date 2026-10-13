@@ -14,80 +14,110 @@
 
 ///|
 test "block_absolute_layout_within_border" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let node0 = chicle.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_position(position_absolute())
-    .with_size(Size(width=length(50.0), height=length(50.0)))
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_position(@regression.position_absolute())
+    .with_size(
+      Size(width=@regression.length(50.0), height=@regression.length(50.0)),
+    )
     .with_inset(
-      Rect(left=length(0.0), right=auto(), top=length(0.0), bottom=auto()),
+      Rect(
+        left=@regression.length(0.0),
+        right=@regression.auto(),
+        top=@regression.length(0.0),
+        bottom=@regression.auto(),
+      ),
     ),
   )
   let node1 = chicle.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_position(position_absolute())
-    .with_size(Size(width=length(50.0), height=length(50.0)))
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_position(@regression.position_absolute())
+    .with_size(
+      Size(width=@regression.length(50.0), height=@regression.length(50.0)),
+    )
     .with_inset(
-      Rect(left=auto(), right=length(0.0), top=auto(), bottom=length(0.0)),
+      Rect(
+        left=@regression.auto(),
+        right=@regression.length(0.0),
+        top=@regression.auto(),
+        bottom=@regression.length(0.0),
+      ),
     ),
   )
   let node2 = chicle.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_position(position_absolute())
-    .with_size(Size(width=length(50.0), height=length(50.0)))
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_position(@regression.position_absolute())
+    .with_size(
+      Size(width=@regression.length(50.0), height=@regression.length(50.0)),
+    )
     .with_margin(
       Rect(
-        left=length(10.0),
-        right=length(10.0),
-        top=length(10.0),
-        bottom=length(10.0),
+        left=@regression.length(10.0),
+        right=@regression.length(10.0),
+        top=@regression.length(10.0),
+        bottom=@regression.length(10.0),
       ),
     )
     .with_inset(
-      Rect(left=length(0.0), right=auto(), top=length(0.0), bottom=auto()),
+      Rect(
+        left=@regression.length(0.0),
+        right=@regression.auto(),
+        top=@regression.length(0.0),
+        bottom=@regression.auto(),
+      ),
     ),
   )
   let node3 = chicle.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_position(position_absolute())
-    .with_size(Size(width=length(50.0), height=length(50.0)))
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_position(@regression.position_absolute())
+    .with_size(
+      Size(width=@regression.length(50.0), height=@regression.length(50.0)),
+    )
     .with_margin(
       Rect(
-        left=length(10.0),
-        right=length(10.0),
-        top=length(10.0),
-        bottom=length(10.0),
+        left=@regression.length(10.0),
+        right=@regression.length(10.0),
+        top=@regression.length(10.0),
+        bottom=@regression.length(10.0),
       ),
     )
     .with_inset(
-      Rect(left=auto(), right=length(0.0), top=auto(), bottom=length(0.0)),
+      Rect(
+        left=@regression.auto(),
+        right=@regression.length(0.0),
+        top=@regression.auto(),
+        bottom=@regression.length(0.0),
+      ),
     ),
   )
-  let root_style = Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=length(100.0), height=length(100.0)))
+  let root_style = @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(100.0)),
+    )
     .with_padding(
       Rect(
-        left=length(10.0),
-        right=length(10.0),
-        top=length(10.0),
-        bottom=length(10.0),
+        left=@regression.length(10.0),
+        right=@regression.length(10.0),
+        top=@regression.length(10.0),
+        bottom=@regression.length(10.0),
       ),
     )
     .with_border(
       Rect(
-        left=length(10.0),
-        right=length(10.0),
-        top=length(10.0),
-        bottom=length(10.0),
+        left=@regression.length(10.0),
+        right=@regression.length(10.0),
+        top=@regression.length(10.0),
+        bottom=@regression.length(10.0),
       ),
     )
   let root = chicle.new_with_children(root_style, [node0, node1, node2, node3])
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let l0 = chicle.layout(node0)
   assert_eq(l0.location.x, 10.0)
   assert_eq(l0.location.y, 10.0)

@@ -40,8 +40,8 @@ fn compute_spanned_max_track_size(
 ///|
 fn distribute_track_space_up_to_limits(
   states : Array[GridTrack],
-  start : Int,
-  span : Int,
+  start : Int32,
+  span : Int32,
   space : Double,
   should_affect : (GridTrack) -> Bool,
   limit_of : (GridTrack) -> Double,
@@ -94,8 +94,8 @@ fn distribute_track_space_up_to_limits(
 ///|
 fn distribute_item_space_to_base_size(
   states : Array[GridTrack],
-  start : Int,
-  span : Int,
+  start : Int32,
+  span : Int32,
   space : Double,
   should_affect : (GridTrack) -> Bool,
   limit_of : (GridTrack) -> Double,

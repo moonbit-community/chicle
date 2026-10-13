@@ -24,7 +24,7 @@ pub fn[C] ChicleTree::ChicleTree() -> ChicleTree[C] {
 }
 
 ///|
-pub fn[C] ChicleTree::with_capacity(_capacity : Int) -> ChicleTree[C] {
+pub fn[C] ChicleTree::with_capacity(_capacity : Int32) -> ChicleTree[C] {
   ChicleTree()
 }
 

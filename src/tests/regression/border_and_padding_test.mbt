@@ -14,24 +14,44 @@
 
 ///|
 fn border_padding_single_axis_rect(
-  axis : Int,
-  value : Dimension,
-) -> Rect[Dimension] {
+  axis : Int32,
+  value : @regression.Dimension,
+) -> @regression.Rect[@regression.Dimension] {
   match axis {
     0 =>
-      Rect(left=value, right=length(0.0), top=length(0.0), bottom=length(0.0))
+      Rect(
+        left=value,
+        right=@regression.length(0.0),
+        top=@regression.length(0.0),
+        bottom=@regression.length(0.0),
+      )
     1 =>
-      Rect(left=length(0.0), right=value, top=length(0.0), bottom=length(0.0))
+      Rect(
+        left=@regression.length(0.0),
+        right=value,
+        top=@regression.length(0.0),
+        bottom=@regression.length(0.0),
+      )
     2 =>
-      Rect(left=length(0.0), right=length(0.0), top=value, bottom=length(0.0))
+      Rect(
+        left=@regression.length(0.0),
+        right=@regression.length(0.0),
+        top=value,
+        bottom=@regression.length(0.0),
+      )
     3 =>
-      Rect(left=length(0.0), right=length(0.0), top=length(0.0), bottom=value)
+      Rect(
+        left=@regression.length(0.0),
+        right=@regression.length(0.0),
+        top=@regression.length(0.0),
+        bottom=value,
+      )
     _ =>
       Rect(
-        left=length(0.0),
-        right=length(0.0),
-        top=length(0.0),
-        bottom=length(0.0),
+        left=@regression.length(0.0),
+        right=@regression.length(0.0),
+        top=@regression.length(0.0),
+        bottom=@regression.length(0.0),
       )
   }
 }
@@ -39,17 +59,17 @@ fn border_padding_single_axis_rect(
 ///|
 test "border_on_a_single_axis_doesnt_increase_size" {
   for axis in 0..<4 {
-    let chicle : ChicleTree[Unit] = ChicleTree()
+    let chicle : @regression.ChicleTree[Unit] = ChicleTree()
     let node = chicle.new_leaf(
-      Style::default().with_border(
-        border_padding_single_axis_rect(axis, length(10.0)),
+      @regression.Style::default().with_border(
+        border_padding_single_axis_rect(axis, @regression.length(10.0)),
       ),
     )
     chicle.compute_layout(
       node,
       Size(
-        width=available_space_definite(100.0),
-        height=available_space_definite(100.0),
+        width=@regression.available_space_definite(100.0),
+        height=@regression.available_space_definite(100.0),
       ),
     )
     let layout = chicle.layout(node)
@@ -60,17 +80,17 @@ test "border_on_a_single_axis_doesnt_increase_size" {
 ///|
 test "padding_on_a_single_axis_doesnt_increase_size" {
   for axis in 0..<4 {
-    let chicle : ChicleTree[Unit] = ChicleTree()
+    let chicle : @regression.ChicleTree[Unit] = ChicleTree()
     let node = chicle.new_leaf(
-      Style::default().with_padding(
-        border_padding_single_axis_rect(axis, length(10.0)),
+      @regression.Style::default().with_padding(
+        border_padding_single_axis_rect(axis, @regression.length(10.0)),
       ),
     )
     chicle.compute_layout(
       node,
       Size(
-        width=available_space_definite(100.0),
-        height=available_space_definite(100.0),
+        width=@regression.available_space_definite(100.0),
+        height=@regression.available_space_definite(100.0),
       ),
     )
     let layout = chicle.layout(node)
@@ -81,16 +101,16 @@ test "padding_on_a_single_axis_doesnt_increase_size" {
 ///|
 test "border_and_padding_on_a_single_axis_doesnt_increase_size" {
   for axis in 0..<4 {
-    let chicle : ChicleTree[Unit] = ChicleTree()
-    let rect = border_padding_single_axis_rect(axis, length(10.0))
+    let chicle : @regression.ChicleTree[Unit] = ChicleTree()
+    let rect = border_padding_single_axis_rect(axis, @regression.length(10.0))
     let node = chicle.new_leaf(
-      Style::default().with_border(rect).with_padding(rect),
+      @regression.Style::default().with_border(rect).with_padding(rect),
     )
     chicle.compute_layout(
       node,
       Size(
-        width=available_space_definite(100.0),
-        height=available_space_definite(100.0),
+        width=@regression.available_space_definite(100.0),
+        height=@regression.available_space_definite(100.0),
       ),
     )
     let layout = chicle.layout(node)
@@ -100,22 +120,22 @@ test "border_and_padding_on_a_single_axis_doesnt_increase_size" {
 
 ///|
 test "vertical_padding_percentage_uses_width_as_basis" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let node = chicle.new_leaf(
-    Style::default().with_padding(
+    @regression.Style::default().with_padding(
       Rect(
-        left=percent(1.0),
-        right=length(0.0),
-        top=percent(1.0),
-        bottom=length(0.0),
+        left=@regression.percent(1.0),
+        right=@regression.length(0.0),
+        top=@regression.percent(1.0),
+        bottom=@regression.length(0.0),
       ),
     ),
   )
   chicle.compute_layout(
     node,
     Size(
-      width=available_space_definite(200.0),
-      height=available_space_definite(100.0),
+      width=@regression.available_space_definite(200.0),
+      height=@regression.available_space_definite(100.0),
     ),
   )
   let layout = chicle.layout(node)
@@ -125,22 +145,22 @@ test "vertical_padding_percentage_uses_width_as_basis" {
 
 ///|
 test "vertical_border_and_padding_percentage_values_use_available_space_correctly" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let node = chicle.new_leaf(
-    Style::default().with_padding(
+    @regression.Style::default().with_padding(
       Rect(
-        left=percent(1.0),
-        right=length(0.0),
-        top=percent(1.0),
-        bottom=length(0.0),
+        left=@regression.percent(1.0),
+        right=@regression.length(0.0),
+        top=@regression.percent(1.0),
+        bottom=@regression.length(0.0),
       ),
     ),
   )
   chicle.compute_layout(
     node,
     Size(
-      width=available_space_definite(200.0),
-      height=available_space_definite(100.0),
+      width=@regression.available_space_definite(200.0),
+      height=@regression.available_space_definite(100.0),
     ),
   )
   let layout = chicle.layout(node)

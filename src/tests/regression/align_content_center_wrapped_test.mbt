@@ -14,10 +14,12 @@
 
 ///|
 test "align_content_center_wrapped" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let mk = fn() {
     chicle.new_leaf(
-      Style::default().with_size(Size(width=length(50.0), height=length(10.0))),
+      @regression.Style::default().with_size(
+        Size(width=@regression.length(50.0), height=@regression.length(10.0)),
+      ),
     )
   }
   let node0 = mk()
@@ -27,13 +29,15 @@ test "align_content_center_wrapped" {
   let node4 = mk()
   let node5 = mk()
   let root = chicle.new_with_children(
-    Style::default()
-    .with_flex_wrap(flex_wrap_wrap())
-    .with_align_content(align_content_center())
-    .with_size(Size(width=length(120.0), height=length(100.0))),
+    @regression.Style::default()
+    .with_flex_wrap(@regression.flex_wrap_wrap())
+    .with_align_content(@regression.align_content_center())
+    .with_size(
+      Size(width=@regression.length(120.0), height=@regression.length(100.0)),
+    ),
     [node0, node1, node2, node3, node4, node5],
   )
-  chicle.compute_layout(root, Size::max_content())
+  chicle.compute_layout(root, @regression.Size::max_content())
   let layout = chicle.layout(root)
   assert_eq(layout.size.width, 120.0)
   assert_eq(layout.size.height, 100.0)

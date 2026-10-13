@@ -74,8 +74,8 @@ pub(all) struct Style {
   grid_auto_flow : GridAutoFlow
   grid_row : Line[GridPlacement]
   grid_column : Line[GridPlacement]
-  grid_row_start : Int?
-  grid_column_start : Int?
+  grid_row_start : Int32?
+  grid_column_start : Int32?
 }
 
 ///|

@@ -14,30 +14,39 @@
 
 ///|
 fn measured_scroll_extent_leaf(
-  _known_dimensions : Size[Double?],
-  _available_space : Size[AvailableSpace],
-  _node_id : NodeId,
+  _known_dimensions : @regression.Size[Double?],
+  _available_space : @regression.Size[@regression.AvailableSpace],
+  _node_id : @regression.NodeId,
   _node_context : Unit?,
-  _style : Style,
-) -> Size[Double] {
+  _style : @regression.Style,
+) -> @regression.Size[Double] {
   Size(width=140.0, height=120.0)
 }
 
 ///|
 test "layout_scroll_extent_accessors_match_chicle" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let node = chicle.new_leaf(
-    Style::default()
-    .with_size(Size(width=length(100.0), height=length(80.0)))
-    .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
+    @regression.Style::default()
+    .with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(80.0)),
+    )
+    .with_overflow(
+      Point(x=@regression.overflow_scroll(), y=@regression.overflow_scroll()),
+    )
     .with_scrollbar_width(7.0)
     .with_border(
-      Rect(left=zero(), right=length(2.0), top=zero(), bottom=length(6.0)),
+      Rect(
+        left=@regression.zero(),
+        right=@regression.length(2.0),
+        top=@regression.zero(),
+        bottom=@regression.length(6.0),
+      ),
     ),
   )
   chicle.compute_layout_with_measure(
     node,
-    Size::max_content(),
+    @regression.Size::max_content(),
     measured_scroll_extent_leaf,
   )
   let layout = chicle.layout(node)

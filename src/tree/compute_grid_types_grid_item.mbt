@@ -15,13 +15,13 @@
 ///|
 priv struct GridItem {
   node : NodeId
-  source_order : Int
+  source_order : Int32
   style : Style
   mut placed : Bool
-  mut row : Int
-  mut column : Int
-  mut row_span : Int
-  mut column_span : Int
+  mut row : Int32
+  mut column : Int32
+  mut row_span : Int32
+  mut column_span : Int32
   mut column_minimum_contribution : Double
   mut column_min_content_contribution : Double
   mut column_max_content_contribution : Double
@@ -40,7 +40,7 @@ priv struct GridItem {
 ///|
 fn GridItem::GridItem(
   node~ : NodeId,
-  source_order~ : Int,
+  source_order~ : Int32,
   style~ : Style,
 ) -> GridItem {
   {
@@ -71,10 +71,10 @@ fn GridItem::GridItem(
 ///|
 fn GridItem::place(
   self : GridItem,
-  row~ : Int,
-  column~ : Int,
-  row_span~ : Int,
-  column_span~ : Int,
+  row~ : Int32,
+  column~ : Int32,
+  row_span~ : Int32,
+  column_span~ : Int32,
 ) -> Unit {
   self.placed = true
   self.row = row
@@ -107,11 +107,11 @@ fn GridItem::participates_in_grid(self : GridItem) -> Bool {
 ///|
 fn GridItem::placement_indexes_and_spans(
   self : GridItem,
-  explicit_cols : Int,
-  explicit_rows : Int,
-  negative_cols : Int,
-  negative_rows : Int,
-) -> (Int?, Int, Int?, Int) {
+  explicit_cols : Int32,
+  explicit_rows : Int32,
+  negative_cols : Int32,
+  negative_rows : Int32,
+) -> (Int32?, Int32, Int32?, Int32) {
   child_start_indexes_and_spans(
     self.style,
     explicit_cols,
@@ -257,8 +257,8 @@ fn grid_items_first_row_baseline(items : Array[GridItem]) -> Double? {
 ///|
 fn GridItem::is_in_bounds(
   self : GridItem,
-  row_count : Int,
-  col_count : Int,
+  row_count : Int32,
+  col_count : Int32,
 ) -> Bool {
   if !self.placed {
     false

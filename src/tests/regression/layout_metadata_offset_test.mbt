@@ -14,56 +14,69 @@
 
 ///|
 fn measured_offset_leaf(
-  _known_dimensions : Size[Double?],
-  _available_space : Size[AvailableSpace],
-  _node_id : NodeId,
+  _known_dimensions : @regression.Size[Double?],
+  _available_space : @regression.Size[@regression.AvailableSpace],
+  _node_id : @regression.NodeId,
   _node_context : Unit?,
-  _style : Style,
-) -> Size[Double] {
+  _style : @regression.Style,
+) -> @regression.Size[Double] {
   Size(width=12.0, height=13.0)
 }
 
 ///|
 test "relative subtree offset preserves descendant layout metadata" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let grandchild = chicle.new_leaf(
-    Style::default()
-    .with_size(Size(width=length(20.0), height=length(20.0)))
-    .with_overflow(Point(x=overflow_scroll(), y=overflow_scroll()))
+    @regression.Style::default()
+    .with_size(
+      Size(width=@regression.length(20.0), height=@regression.length(20.0)),
+    )
+    .with_overflow(
+      Point(x=@regression.overflow_scroll(), y=@regression.overflow_scroll()),
+    )
     .with_scrollbar_width(7.0)
     .with_padding(
       Rect(
-        left=length(3.0),
-        right=length(4.0),
-        top=length(5.0),
-        bottom=length(6.0),
+        left=@regression.length(3.0),
+        right=@regression.length(4.0),
+        top=@regression.length(5.0),
+        bottom=@regression.length(6.0),
       ),
     )
     .with_border(
       Rect(
-        left=length(1.0),
-        right=length(2.0),
-        top=length(3.0),
-        bottom=length(4.0),
+        left=@regression.length(1.0),
+        right=@regression.length(2.0),
+        top=@regression.length(3.0),
+        bottom=@regression.length(4.0),
       ),
     ),
   )
-  let sibling = chicle.new_leaf(Style::default())
+  let sibling = chicle.new_leaf(@regression.Style::default())
   let container = chicle.new_with_children(
-    Style::default()
-    .with_size(Size(width=length(50.0), height=length(50.0)))
+    @regression.Style::default()
+    .with_size(
+      Size(width=@regression.length(50.0), height=@regression.length(50.0)),
+    )
     .with_inset(
-      Rect(left=length(10.0), right=auto(), top=auto(), bottom=auto()),
+      Rect(
+        left=@regression.length(10.0),
+        right=@regression.auto(),
+        top=@regression.auto(),
+        bottom=@regression.auto(),
+      ),
     ),
     [sibling, grandchild],
   )
   let root = chicle.new_with_children(
-    Style::default().with_size(Size(width=length(100.0), height=length(100.0))),
+    @regression.Style::default().with_size(
+      Size(width=@regression.length(100.0), height=@regression.length(100.0)),
+    ),
     [container],
   )
   chicle.compute_layout_with_measure(
     root,
-    Size::max_content(),
+    @regression.Size::max_content(),
     measured_offset_leaf,
   )
   let layout = chicle.layout(grandchild)
@@ -89,118 +102,120 @@ test "relative subtree offset preserves descendant layout metadata" {
 
 ///|
 test "block margin collapse offset preserves descendant metadata" {
-  let chicle : ChicleTree[Unit] = ChicleTree()
+  let chicle : @regression.ChicleTree[Unit] = ChicleTree()
   let first_flow_leaf = chicle.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=auto(), height=length(10.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(Size(width=@regression.auto(), height=@regression.length(10.0))),
   )
   let metadata_leaf = chicle.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_position(position_absolute())
-    .with_size(Size(width=length(20.0), height=length(20.0)))
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_position(@regression.position_absolute())
+    .with_size(
+      Size(width=@regression.length(20.0), height=@regression.length(20.0)),
+    )
     .with_padding(
       Rect(
-        left=length(3.0),
-        right=length(4.0),
-        top=length(5.0),
-        bottom=length(6.0),
+        left=@regression.length(3.0),
+        right=@regression.length(4.0),
+        top=@regression.length(5.0),
+        bottom=@regression.length(6.0),
       ),
     ),
   )
   let first_inner = chicle.new_with_children(
-    Style::default()
-    .with_display(display_block())
+    @regression.Style::default()
+    .with_display(@regression.display_block())
     .with_margin(
       Rect(
-        left=length(0.0),
-        right=length(0.0),
-        top=length(-10.0),
-        bottom=length(0.0),
+        left=@regression.length(0.0),
+        right=@regression.length(0.0),
+        top=@regression.length(-10.0),
+        bottom=@regression.length(0.0),
       ),
     ),
     [first_flow_leaf],
   )
   let first_middle = chicle.new_with_children(
-    Style::default()
-    .with_display(display_block())
+    @regression.Style::default()
+    .with_display(@regression.display_block())
     .with_margin(
       Rect(
-        left=length(0.0),
-        right=length(0.0),
-        top=length(10.0),
-        bottom=length(0.0),
+        left=@regression.length(0.0),
+        right=@regression.length(0.0),
+        top=@regression.length(10.0),
+        bottom=@regression.length(0.0),
       ),
     ),
     [first_inner],
   )
   let first_child = chicle.new_with_children(
-    Style::default()
-    .with_display(display_block())
+    @regression.Style::default()
+    .with_display(@regression.display_block())
     .with_margin(
       Rect(
-        left=length(0.0),
-        right=length(0.0),
-        top=length(-10.0),
-        bottom=length(0.0),
+        left=@regression.length(0.0),
+        right=@regression.length(0.0),
+        top=@regression.length(-10.0),
+        bottom=@regression.length(0.0),
       ),
     ),
     [first_middle, metadata_leaf],
   )
   let second_flow_leaf = chicle.new_leaf(
-    Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=auto(), height=length(10.0))),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(Size(width=@regression.auto(), height=@regression.length(10.0))),
   )
   let second_inner = chicle.new_with_children(
-    Style::default()
-    .with_display(display_block())
+    @regression.Style::default()
+    .with_display(@regression.display_block())
     .with_margin(
       Rect(
-        left=length(0.0),
-        right=length(0.0),
-        top=length(-2.0),
-        bottom=length(0.0),
+        left=@regression.length(0.0),
+        right=@regression.length(0.0),
+        top=@regression.length(-2.0),
+        bottom=@regression.length(0.0),
       ),
     ),
     [second_flow_leaf],
   )
   let second_middle = chicle.new_with_children(
-    Style::default()
-    .with_display(display_block())
+    @regression.Style::default()
+    .with_display(@regression.display_block())
     .with_margin(
       Rect(
-        left=length(0.0),
-        right=length(0.0),
-        top=length(5.0),
-        bottom=length(0.0),
+        left=@regression.length(0.0),
+        right=@regression.length(0.0),
+        top=@regression.length(5.0),
+        bottom=@regression.length(0.0),
       ),
     ),
     [second_inner],
   )
   let second_child = chicle.new_with_children(
-    Style::default()
-    .with_display(display_block())
+    @regression.Style::default()
+    .with_display(@regression.display_block())
     .with_margin(
       Rect(
-        left=length(0.0),
-        right=length(0.0),
-        top=length(-10.0),
-        bottom=length(0.0),
+        left=@regression.length(0.0),
+        right=@regression.length(0.0),
+        top=@regression.length(-10.0),
+        bottom=@regression.length(0.0),
       ),
     ),
     [second_middle],
   )
   let root = chicle.new_with_children(
-    Style::default()
-    .with_display(display_block())
-    .with_size(Size(width=length(50.0), height=auto())),
+    @regression.Style::default()
+    .with_display(@regression.display_block())
+    .with_size(Size(width=@regression.length(50.0), height=@regression.auto())),
     [first_child, second_child],
   )
   chicle.compute_layout_with_measure(
     root,
-    Size::max_content(),
+    @regression.Size::max_content(),
     measured_offset_leaf,
   )
   let layout = chicle.layout(metadata_leaf)

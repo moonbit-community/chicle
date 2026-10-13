@@ -255,7 +255,7 @@ pub fn Style::with_grid_column(
 }
 
 ///|
-pub fn Style::with_grid_row_start(self : Style, start : Int) -> Style {
+pub fn Style::with_grid_row_start(self : Style, start : Int32) -> Style {
   {
     ..self,
     grid_row_start: Some(start),
@@ -264,7 +264,7 @@ pub fn Style::with_grid_row_start(self : Style, start : Int) -> Style {
 }
 
 ///|
-pub fn Style::with_grid_column_start(self : Style, start : Int) -> Style {
+pub fn Style::with_grid_column_start(self : Style, start : Int32) -> Style {
   {
     ..self,
     grid_column_start: Some(start),

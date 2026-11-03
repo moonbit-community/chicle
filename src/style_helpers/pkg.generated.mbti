@@ -55,7 +55,7 @@ pub fn display_grid() -> @style.Display
 
 pub fn display_none() -> @style.Display
 
-pub fn evenly_sized_tracks(Int) -> Array[@style.Dimension]
+pub fn evenly_sized_tracks(Int32) -> Array[@style.Dimension]
 
 pub fn fit_content(@style.Dimension) -> @style.Dimension
 
@@ -109,7 +109,7 @@ pub fn justify_content_stretch() -> @style.AlignContent
 
 pub fn length(Double) -> @style.Dimension
 
-pub fn line(Int) -> @style.GridPlacement
+pub fn line(Int32) -> @style.GridPlacement
 
 pub fn max_content() -> @geometry.AvailableSpace
 
@@ -159,11 +159,11 @@ pub fn repeat_auto_fill() -> @style.GridTrackRepetition
 
 pub fn repeat_auto_fit() -> @style.GridTrackRepetition
 
-pub fn repeat_count(Int) -> @style.GridTrackRepetition
+pub fn repeat_count(Int32) -> @style.GridTrackRepetition
 
 pub fn repeated_track_sizing_function(@style.GridTrackRepetition, Array[@style.NonRepeatedTrackSizingFunction]) -> @style.TrackSizingFunction
 
-pub fn span(Int) -> @style.GridPlacement
+pub fn span(Int32) -> @style.GridPlacement
 
 pub fn track_sizing_function(@style.NonRepeatedTrackSizingFunction) -> @style.TrackSizingFunction
 

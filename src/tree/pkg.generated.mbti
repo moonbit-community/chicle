@@ -21,29 +21,29 @@ pub struct ChicleTree[C] {
   // private fields
 }
 pub fn[C] ChicleTree::ChicleTree() -> Self[C]
-pub fn[C] ChicleTree::add_child(Self[C], Int, Int) -> Unit raise ChicleError
-pub fn[C] ChicleTree::clear_node_context(Self[C], Int) -> Unit raise ChicleError
-pub fn[C] ChicleTree::compute_layout(Self[C], Int, @geometry.Size[@geometry.AvailableSpace]) -> Unit raise ChicleError
-pub fn[C] ChicleTree::compute_layout_with_measure(Self[C], Int, @geometry.Size[@geometry.AvailableSpace], (@geometry.Size[Double?], @geometry.Size[@geometry.AvailableSpace], Int, C?, @style.Style) -> @geometry.Size[Double]) -> Unit raise ChicleError
-pub fn[C] ChicleTree::dirty(Self[C], Int) -> Bool raise ChicleError
+pub fn[C] ChicleTree::add_child(Self[C], Int32, Int32) -> Unit raise ChicleError
+pub fn[C] ChicleTree::clear_node_context(Self[C], Int32) -> Unit raise ChicleError
+pub fn[C] ChicleTree::compute_layout(Self[C], Int32, @geometry.Size[@geometry.AvailableSpace]) -> Unit raise ChicleError
+pub fn[C] ChicleTree::compute_layout_with_measure(Self[C], Int32, @geometry.Size[@geometry.AvailableSpace], (@geometry.Size[Double?], @geometry.Size[@geometry.AvailableSpace], Int32, C?, @style.Style) -> @geometry.Size[Double]) -> Unit raise ChicleError
+pub fn[C] ChicleTree::dirty(Self[C], Int32) -> Bool raise ChicleError
 pub fn[C] ChicleTree::disable_rounding(Self[C]) -> Unit
 pub fn[C] ChicleTree::enable_rounding(Self[C]) -> Unit
-pub fn[C] ChicleTree::layout(Self[C], Int) -> Layout raise ChicleError
-pub fn[C] ChicleTree::mark_dirty(Self[C], Int) -> Unit raise ChicleError
-pub fn[C] ChicleTree::new_leaf(Self[C], @style.Style) -> Int
-pub fn[C] ChicleTree::new_leaf_with_context(Self[C], @style.Style, C) -> Int
-pub fn[C] ChicleTree::new_with_children(Self[C], @style.Style, Array[Int]) -> Int
-pub fn[C] ChicleTree::node_context(Self[C], Int) -> C? raise ChicleError
-pub fn[C] ChicleTree::remove(Self[C], Int) -> Unit raise ChicleError
-pub fn[C] ChicleTree::remove_child(Self[C], Int, Int) -> Int raise ChicleError
-pub fn[C] ChicleTree::remove_subtree(Self[C], Int) -> Unit raise ChicleError
-pub fn[C] ChicleTree::set_children(Self[C], Int, Array[Int]) -> Unit raise ChicleError
-pub fn[C] ChicleTree::set_node_context(Self[C], Int, C) -> Unit raise ChicleError
-pub fn[C] ChicleTree::set_style(Self[C], Int, @style.Style) -> Unit raise ChicleError
-pub fn[C] ChicleTree::with_capacity(Int) -> Self[C]
+pub fn[C] ChicleTree::layout(Self[C], Int32) -> Layout raise ChicleError
+pub fn[C] ChicleTree::mark_dirty(Self[C], Int32) -> Unit raise ChicleError
+pub fn[C] ChicleTree::new_leaf(Self[C], @style.Style) -> Int32
+pub fn[C] ChicleTree::new_leaf_with_context(Self[C], @style.Style, C) -> Int32
+pub fn[C] ChicleTree::new_with_children(Self[C], @style.Style, Array[Int32]) -> Int32
+pub fn[C] ChicleTree::node_context(Self[C], Int32) -> C? raise ChicleError
+pub fn[C] ChicleTree::remove(Self[C], Int32) -> Unit raise ChicleError
+pub fn[C] ChicleTree::remove_child(Self[C], Int32, Int32) -> Int32 raise ChicleError
+pub fn[C] ChicleTree::remove_subtree(Self[C], Int32) -> Unit raise ChicleError
+pub fn[C] ChicleTree::set_children(Self[C], Int32, Array[Int32]) -> Unit raise ChicleError
+pub fn[C] ChicleTree::set_node_context(Self[C], Int32, C) -> Unit raise ChicleError
+pub fn[C] ChicleTree::set_style(Self[C], Int32, @style.Style) -> Unit raise ChicleError
+pub fn[C] ChicleTree::with_capacity(Int32) -> Self[C]
 
 pub(all) struct Layout {
-  order : Int
+  order : Int32
   location : @geometry.Point[Double]
   size : @geometry.Size[Double]
   content_size : @geometry.Size[Double]
@@ -142,7 +142,7 @@ pub using @style {type MaxTrackSizingFunction}
 
 pub using @style {type MinTrackSizingFunction}
 
-pub type NodeId = Int
+pub type NodeId = Int32
 
 pub using @style {type NonRepeatedTrackSizingFunction}
 

@@ -127,18 +127,18 @@ pub impl @json.FromJson for GridAutoFlow
 
 pub(all) enum GridPlacement {
   PlaceAuto
-  PlaceLine(Int)
-  PlaceSpan(Int)
+  PlaceLine(Int32)
+  PlaceSpan(Int32)
 }
 pub fn GridPlacement::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn GridPlacement::indefinite_span(@geometry.Line[Self]) -> Int
+pub fn GridPlacement::indefinite_span(@geometry.Line[Self]) -> Int32
 pub fn GridPlacement::is_definite(@geometry.Line[Self]) -> Bool
 pub fn GridPlacement::to_json(Self) -> Json
 pub impl ToJson for GridPlacement
 pub impl @json.FromJson for GridPlacement
 
 pub(all) enum GridTrackRepetition {
-  RepeatCount(Int)
+  RepeatCount(Int32)
   RepeatAutoFill
   RepeatAutoFit
 }
@@ -252,8 +252,8 @@ pub(all) struct Style {
   grid_auto_flow : GridAutoFlow
   grid_row : @geometry.Line[GridPlacement]
   grid_column : @geometry.Line[GridPlacement]
-  grid_row_start : Int?
-  grid_column_start : Int?
+  grid_row_start : Int32?
+  grid_column_start : Int32?
 }
 pub fn Style::default() -> Self
 pub fn Style::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
@@ -277,9 +277,9 @@ pub fn Style::with_grid_auto_flow(Self, GridAutoFlow) -> Self
 pub fn Style::with_grid_auto_rows(Self, Array[Dimension]) -> Self
 pub fn Style::with_grid_auto_rows_chicle(Self, Array[NonRepeatedTrackSizingFunction]) -> Self
 pub fn Style::with_grid_column(Self, @geometry.Line[GridPlacement]) -> Self
-pub fn Style::with_grid_column_start(Self, Int) -> Self
+pub fn Style::with_grid_column_start(Self, Int32) -> Self
 pub fn Style::with_grid_row(Self, @geometry.Line[GridPlacement]) -> Self
-pub fn Style::with_grid_row_start(Self, Int) -> Self
+pub fn Style::with_grid_row_start(Self, Int32) -> Self
 pub fn Style::with_grid_template_columns(Self, Array[Dimension]) -> Self
 pub fn Style::with_grid_template_columns_chicle(Self, Array[TrackSizingFunction]) -> Self
 pub fn Style::with_grid_template_rows(Self, Array[Dimension]) -> Self

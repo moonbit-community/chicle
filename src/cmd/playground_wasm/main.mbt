@@ -13,11 +13,13 @@
 // limitations under the License.
 
 ///|
+#export_name("compute_layout_json")
 pub fn compute_layout_json(input : String) -> String {
   @chicle.compute_layout_json(input)
 }
 
 ///|
+#export_name("compute_layout_yaml")
 pub fn compute_layout_yaml(input : String) -> String {
   @chicle.compute_layout_yaml(input)
 }

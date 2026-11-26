@@ -4,10 +4,11 @@ import {
 
 supported_targets = "wasm-gc"
 
+pkgtype(kind: "foreign_library")
+
 options(
   link: {
     "wasm-gc": {
-      "exports": [ "compute_layout_json", "compute_layout_yaml" ],
       "use-js-builtin-string": true,
       "imported-string-constants": "_",
     },

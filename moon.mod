@@ -1,6 +1,6 @@
 name = "Milky2018/chicle"
 
-version = "0.6.4"
+version = "0.6.5"
 
 readme = "README.mbt.md"
 

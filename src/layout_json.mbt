@@ -16,10 +16,11 @@
 type JsonDecodeError = @json.JsonDecodeError
 
 ///|
+#derive(Debug)
 pub(all) suberror LayoutDocumentError {
   EmptyNodeId
   DuplicateNodeId(String)
-} derive(Debug)
+}
 
 ///|
 pub(all) struct LayoutNode {

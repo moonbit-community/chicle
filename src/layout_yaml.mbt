@@ -13,10 +13,11 @@
 // limitations under the License.
 
 ///|
+#derive(Debug)
 pub(all) suberror LayoutYamlError {
   EmptyYamlDocument
   MultipleYamlDocuments(Int32)
-} derive(Debug)
+}
 
 ///|
 priv struct CompactLayoutDocument {

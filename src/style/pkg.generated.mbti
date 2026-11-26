@@ -32,10 +32,10 @@ pub(all) enum AlignContent {
   AlignSpaceEvenly
   AlignSpaceAround
 }
-pub fn AlignContent::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn AlignContent::to_json(Self) -> Json
-pub impl ToJson for AlignContent
+pub fn AlignContent::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
+pub fn AlignContent::to_json(Self) -> @json.Json
 pub impl @json.FromJson for AlignContent
+pub impl @json.ToJson for AlignContent
 
 #alias(AlignSelf)
 #alias(JustifyItems)
@@ -49,19 +49,19 @@ pub(all) enum AlignItems {
   ItemsBaseline
   ItemsStretch
 }
-pub fn AlignItems::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn AlignItems::to_json(Self) -> Json
-pub impl ToJson for AlignItems
+pub fn AlignItems::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
+pub fn AlignItems::to_json(Self) -> @json.Json
 pub impl @json.FromJson for AlignItems
+pub impl @json.ToJson for AlignItems
 
 pub(all) enum BoxSizing {
   BorderBox
   ContentBox
 }
-pub fn BoxSizing::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn BoxSizing::to_json(Self) -> Json
-pub impl ToJson for BoxSizing
+pub fn BoxSizing::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
+pub fn BoxSizing::to_json(Self) -> @json.Json
 pub impl @json.FromJson for BoxSizing
+pub impl @json.ToJson for BoxSizing
 
 pub(all) enum Dimension {
   DimAuto
@@ -74,11 +74,11 @@ pub(all) enum Dimension {
   DimFitContent(Dimension)
   DimRepeat(GridTrackRepetition, Array[Dimension])
 }
-pub fn Dimension::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn Dimension::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
 pub fn Dimension::into_option(Self) -> Double?
-pub fn Dimension::to_json(Self) -> Json
-pub impl ToJson for Dimension
+pub fn Dimension::to_json(Self) -> @json.Json
 pub impl @json.FromJson for Dimension
+pub impl @json.ToJson for Dimension
 
 pub(all) enum Display {
   DisplayBlock
@@ -86,10 +86,10 @@ pub(all) enum Display {
   DisplayGrid
   DisplayNone
 }
-pub fn Display::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn Display::to_json(Self) -> Json
-pub impl ToJson for Display
+pub fn Display::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
+pub fn Display::to_json(Self) -> @json.Json
 pub impl @json.FromJson for Display
+pub impl @json.ToJson for Display
 
 pub(all) enum FlexDirection {
   FlexRow
@@ -97,20 +97,20 @@ pub(all) enum FlexDirection {
   FlexColumn
   FlexColumnReverse
 }
-pub fn FlexDirection::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn FlexDirection::to_json(Self) -> Json
-pub impl ToJson for FlexDirection
+pub fn FlexDirection::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
+pub fn FlexDirection::to_json(Self) -> @json.Json
 pub impl @json.FromJson for FlexDirection
+pub impl @json.ToJson for FlexDirection
 
 pub(all) enum FlexWrap {
   FlexNoWrap
   FlexWrap
   FlexWrapReverse
 }
-pub fn FlexWrap::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn FlexWrap::to_json(Self) -> Json
-pub impl ToJson for FlexWrap
+pub fn FlexWrap::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
+pub fn FlexWrap::to_json(Self) -> @json.Json
 pub impl @json.FromJson for FlexWrap
+pub impl @json.ToJson for FlexWrap
 
 pub(all) enum GridAutoFlow {
   Row
@@ -118,34 +118,34 @@ pub(all) enum GridAutoFlow {
   RowDense
   ColumnDense
 }
-pub fn GridAutoFlow::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn GridAutoFlow::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
 pub fn GridAutoFlow::is_dense(Self) -> Bool
 pub fn GridAutoFlow::primary_axis(Self) -> @geometry.AbsoluteAxis
-pub fn GridAutoFlow::to_json(Self) -> Json
-pub impl ToJson for GridAutoFlow
+pub fn GridAutoFlow::to_json(Self) -> @json.Json
 pub impl @json.FromJson for GridAutoFlow
+pub impl @json.ToJson for GridAutoFlow
 
 pub(all) enum GridPlacement {
   PlaceAuto
   PlaceLine(Int32)
   PlaceSpan(Int32)
 }
-pub fn GridPlacement::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
+pub fn GridPlacement::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
 pub fn GridPlacement::indefinite_span(@geometry.Line[Self]) -> Int32
 pub fn GridPlacement::is_definite(@geometry.Line[Self]) -> Bool
-pub fn GridPlacement::to_json(Self) -> Json
-pub impl ToJson for GridPlacement
+pub fn GridPlacement::to_json(Self) -> @json.Json
 pub impl @json.FromJson for GridPlacement
+pub impl @json.ToJson for GridPlacement
 
 pub(all) enum GridTrackRepetition {
   RepeatCount(Int32)
   RepeatAutoFill
   RepeatAutoFit
 }
-pub fn GridTrackRepetition::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn GridTrackRepetition::to_json(Self) -> Json
-pub impl ToJson for GridTrackRepetition
+pub fn GridTrackRepetition::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
+pub fn GridTrackRepetition::to_json(Self) -> @json.Json
 pub impl @json.FromJson for GridTrackRepetition
+pub impl @json.ToJson for GridTrackRepetition
 
 pub(all) enum LengthPercentage {
   LengthPercentageLength(Double)
@@ -205,19 +205,19 @@ pub(all) enum Overflow {
   OverflowHidden
   OverflowScroll
 }
-pub fn Overflow::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn Overflow::to_json(Self) -> Json
-pub impl ToJson for Overflow
+pub fn Overflow::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
+pub fn Overflow::to_json(Self) -> @json.Json
 pub impl @json.FromJson for Overflow
+pub impl @json.ToJson for Overflow
 
 pub(all) enum Position {
   PosRelative
   PosAbsolute
 }
-pub fn Position::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn Position::to_json(Self) -> Json
-pub impl ToJson for Position
+pub fn Position::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
+pub fn Position::to_json(Self) -> @json.Json
 pub impl @json.FromJson for Position
+pub impl @json.ToJson for Position
 
 pub(all) struct Style {
   display : Display
@@ -256,8 +256,8 @@ pub(all) struct Style {
   grid_column_start : Int32?
 }
 pub fn Style::default() -> Self
-pub fn Style::from_json(Json, @json.JsonPath) -> Self raise @json.JsonDecodeError
-pub fn Style::to_json(Self) -> Json
+pub fn Style::from_json(@json.Json, @json.DecodeContext) -> Self raise @json.JsonDecodeError
+pub fn Style::to_json(Self) -> @json.Json
 pub fn Style::with_align_content(Self, AlignContent) -> Self
 pub fn Style::with_align_items(Self, AlignItems) -> Self
 pub fn Style::with_align_self(Self, AlignItems) -> Self
@@ -296,8 +296,8 @@ pub fn Style::with_padding(Self, @geometry.Rect[Dimension]) -> Self
 pub fn Style::with_position(Self, Position) -> Self
 pub fn Style::with_scrollbar_width(Self, Double) -> Self
 pub fn Style::with_size(Self, @geometry.Size[Dimension]) -> Self
-pub impl ToJson for Style
 pub impl @json.FromJson for Style
+pub impl @json.ToJson for Style
 
 pub(all) enum TrackSizingFunction {
   Single(NonRepeatedTrackSizingFunction)

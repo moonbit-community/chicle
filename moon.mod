@@ -1,6 +1,6 @@
 name = "Milky2018/chicle"
 
-version = "0.6.3"
+version = "0.6.4"
 
 readme = "README.mbt.md"
 
@@ -15,5 +15,5 @@ description = "A UI layout engine for MoonBit"
 source = "src"
 
 import {
-  "moonbit-community/yaml@0.0.8",
+  "moonbit-community/yaml@0.0.10",
 }
